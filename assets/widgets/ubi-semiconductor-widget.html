@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UBI and Semiconductor R&D Spending Model</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+/* Light Mode (Default) */
+:root {
+--bg-color: #ffffff;
+--widget-bg-color: #f8f9fa;
+--card-bg-color: #ffffff;
+--text-primary-color: #2c3e50;
+--text-secondary-color: #34495e;
+--text-muted-color: #7f8c8d;
+--shadow-color: rgba(0,0,0,0.1);
+--info-bg-color: #fff3cd;
+--info-border-color: #f39c12;
+--info-text-color: #664d03;
+}
+
+/* Rule 1: Handles the initial load based on browser/OS preference. */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-mode="light"]) {
+        --bg-color: #1a202c;
+        --widget-bg-color: #2c3e50;
+        --card-bg-color: #34495e;
+        --text-primary-color: #ecf0f1;
+        --text-secondary-color: #bdc3c7;
+        --text-muted-color: #95a5a6;
+        --shadow-color: rgba(0,0,0,0.4);
+        --info-bg-color: #4a4a2a;
+        --info-border-color: #f39c12;
+        --info-text-color: #fff3cd;
+    }
+}
+
+/* Rule 2: Handles manual toggle to dark mode. */
+html[data-mode="dark"] {
+    --bg-color: #1a202c;
+    --widget-bg-color: #2c3e50;
+    --card-bg-color: #34495e;
+    --text-primary-color: #ecf0f1;
+    --text-secondary-color: #bdc3c7;
+    --text-muted-color: #95a5a6;
+    --shadow-color: rgba(0,0,0,0.4);
+    --info-bg-color: #4a4a2a;
+    --info-border-color: #f39c12;
+    --info-text-color: #fff3cd;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: var(--bg-color);
+    color: var(--text-secondary-color);
+}
+.widget-container {
+    background: var(--widget-bg-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+h2 { margin-top: 0; color: var(--text-primary-color); font-size: 1.5em; }
+.controls {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+.control-group { display: flex; flex-direction: column; }
+label { font-weight: 600; margin-bottom: 5px; color: var(--text-secondary-color); font-size: 0.9em; }
+input[type="range"] { width: 100%; margin: 5px 0; }
+.value-display { font-size: 0.9em; color: var(--text-muted-color); text-align: right; }
+.chart-container { position: relative; height: 400px; margin-top: 20px; }
+.metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 20px;
+}
+.metric-card {
+    background: var(--card-bg-color);
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+    box-shadow: 0 1px 3px var(--shadow-color);
+}
+.metric-label { font-size: 0.85em; color: var(--text-muted-color); margin-bottom: 5px; }
+.metric-value { font-size: 1.8em; font-weight: bold; color: var(--text-primary-color); }
+.metric-value.danger { color: #e74c3c; }
+.info-box {
+    background: var(--info-bg-color);
+    border-left: 4px solid var(--info-border-color);
+    padding: 12px; margin-top: 20px; font-size: 0.9em; line-height: 1.5; color: var(--info-text-color);
+}
+.equation {
+    background: var(--card-bg-color); padding: 10px; border-radius: 4px; font-family: 'Courier New', monospace; margin: 10px 0; overflow-x: auto; font-size: 0.85em;
+}
+</style>
+</head>
+<body>
+<div class="widget-container">
+<h2>📉 UBI and the Semiconductor Spending Trap</h2>
+
+<div class="controls">
+    <div class="control-group">
+        <label>Automation Crisis Year</label>
+        <input type="range" id="automation-speed" min="2028" max="2035" step="1" value="2030">
+        <div class="value-display" id="automation-speed-value">Crisis in 2030</div>
+    </div>
+    <div class="control-group">
+        <label>UBI Policy Lag</label>
+        <input type="range" id="policy-lag" min="1" max="10" step="1" value="5">
+        <div class="value-display" id="policy-lag-value">5 years</div>
+    </div>
+    <div class="control-group">
+        <label>Annual UBI Amount</label>
+        <input type="range" id="ubi-amount" min="0" max="20000" step="1000" value="12000">
+        <div class="value-display" id="ubi-amount-value">$12,000</div>
+    </div>
+    <div class="control-group">
+        <label>Initial Corporate R&D Panic Cut</label>
+        <input type="range" id="recession-fear" min="0" max="100" step="5" value="35">
+        <div class="value-display" id="recession-fear-value">35% cut</div>
+    </div>
+</div>
+
+<div class="chart-container">
+    <canvas id="spendingChart"></canvas>
+</div>
+
+<div class="metrics">
+    <div class="metric-card">
+        <div class="metric-label">Total Spending (2035)</div>
+        <div class="metric-value" id="total-spending">$0B</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">UBI Contribution (2035)</div>
+        <div class="metric-value" id="ubi-contribution">$0B</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Unemployment (2035)</div>
+        <div class="metric-value" id="unemployment-rate">0%</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-label">Years Below Viability</div>
+        <div class="metric-value" id="years-below">0</div>
+    </div>
+</div>
+
+<div class="info-box">
+    <strong>The Trap:</strong> This model shows how total tech spending collapses during a mass automation crisis. Corporate R&D cuts compound over time as unemployment worsens—the "Recession Fear Cut" is the initial panic response, then spending continues to decline as the crisis deepens. UBI fails to prevent this because: (1) it arrives too late, (2) it doesn't restore corporate or government R&D, and (3) people on UBI spend only 0.2% of income on cutting-edge semiconductors vs. 2% for employed workers—a <strong>10x difference</strong>. Total spending falls catastrophically below the <strong>$300B threshold</strong> required for new fabs.
+</div>
+</div>
+<script>
+const ctx = document.getElementById('spendingChart').getContext('2d');
+let chart;
+const S_MIN = 300; // $300B viability threshold
+const S_TOTAL_2024 = 600; // Baseline total spending
+
+// Spending coefficients (corrected based on real calculations)
+const ALPHA = 0.02;   // 2% of wages go to cutting-edge semiconductors
+const BETA = 0.002;   // 0.2% of UBI goes to semiconductors (10x less, mostly mature nodes)
+
+function getTheme() {
+try {
+if (window.parent && window.parent !== window) {
+const parentTheme = window.parent.document.documentElement.getAttribute('data-mode');
+if (parentTheme) return parentTheme;
+return window.parent.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+} catch (e) { /* Cross-origin iframe, fall back to own detection */ }
+const theme = document.documentElement.getAttribute('data-mode');
+if (theme) return theme;
+return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function applyTheme(theme) {
+document.documentElement.setAttribute('data-mode', theme);
+}
+
+function runSimulation(crisisYear, policyLag, ubiAmount, recessionFear) {
+// Baseline 2024 values
+const LABOR_FORCE = 198; // Millions
+const AVERAGE_WAGE = 60; // $60k/year (in thousands)
+
+// Initial spending breakdown (consumer 35%, corporate 55%, government 10%)
+const s_consumer_base_2024 = S_TOTAL_2024 * 0.35;  // $210B
+const s_corporate_base = S_TOTAL_2024 * 0.55;      // $330B
+const s_government_base = S_TOTAL_2024 * 0.10;     // $60B
+
+// Calculate baseline total wages at 95% employment
+const baseline_employment_rate = 0.95;
+const baseline_employed = LABOR_FORCE * baseline_employment_rate; // 188M
+const baseline_total_wages = baseline_employed * AVERAGE_WAGE; // $11,280B
+
+// Verify: $11,280B × 0.02 = $225.6B ≈ $210B target ✓ (close enough)
+
+const timeSeries = {
+years: [], s_consumer_data: [], s_corp_data: [], s_govt_data: [], s_total_data: [],
+metrics2035: { totalSpending: 0, unemploymentRate: 0, ubiContribution: 0 },
+yearsBelow: 0
+};
+
+const ubiYear = crisisYear + policyLag;
+let unemploymentRate = 0.05;
+
+for (let year = 2024; year <= 2045; year++) {
+let employmentRate = 1 - unemploymentRate;
+let employed = LABOR_FORCE * employmentRate;
+
+// Calculate wage-based consumer spending: W(t) = employed × avg_wage
+const totalWages = employed * AVERAGE_WAGE;
+let s_consumer = totalWages * ALPHA; // 2% of wages → semiconductors
+
+let s_corporate = s_corporate_base;
+let s_government = s_government_base;
+
+if (year >= crisisYear) {
+// Unemployment increases by 10 percentage points per year after crisis
+if (year === crisisYear) {
+    unemploymentRate = 0.15; // First crisis year jumps to 15%
+} else {
+    unemploymentRate = Math.min(0.60, unemploymentRate + 0.10);
+}
+employmentRate = 1 - unemploymentRate;
+employed = LABOR_FORCE * employmentRate;
+
+// Recalculate wage-based spending with new employment
+const updatedTotalWages = employed * AVERAGE_WAGE;
+s_consumer = updatedTotalWages * ALPHA;
+
+// Gov spending crashes due to welfare burden
+const govtSpendingMultiplier = Math.max(0, 1 - (unemploymentRate - 0.05) * 1.5);
+s_government = s_government_base * govtSpendingMultiplier;
+
+// Corp spending: TWO-PART DECLINE
+// Part 1: Initial panic cut (user-adjustable "recession fear")
+//   e.g., 35% means companies immediately cut R&D by 35% when crisis hits
+// Part 2: Ongoing collapse as unemployment worsens
+//   At 60% unemployment: adds ~52% additional cut (keeps minimum 20% of baseline)
+//   Formula: max(0.2, 1 - unemployment × 0.8)
+//   This means even optimistic companies can't sustain R&D with no customers
+const initialFearMultiplier = 1 - (recessionFear / 100);
+const unemploymentImpact = Math.max(0.2, 1 - (unemploymentRate * 0.8)); 
+s_corporate = s_corporate_base * initialFearMultiplier * unemploymentImpact;
+}
+
+// Add UBI contribution if active (0.2% of UBI vs 2% of wages = 10x less per dollar)
+let ubiTechSpending = 0;
+if (year >= ubiYear) {
+const unemployed = LABOR_FORCE * unemploymentRate;
+const totalUbiPayments = unemployed * (ubiAmount / 1000); // convert dollars to thousands to match units: millions × thousands = billions
+ubiTechSpending = totalUbiPayments * BETA; // 0.2% goes to semiconductors
+s_consumer += ubiTechSpending;
+}
+
+const s_total = s_consumer + s_corporate + s_government;
+if (s_total < S_MIN) {
+timeSeries.yearsBelow++;
+}
+
+timeSeries.years.push(year);
+timeSeries.s_consumer_data.push(s_consumer);
+timeSeries.s_corp_data.push(s_corporate);
+timeSeries.s_govt_data.push(s_government);
+timeSeries.s_total_data.push(s_total);
+
+if (year === 2035) {
+timeSeries.metrics2035.totalSpending = s_total.toFixed(0);
+timeSeries.metrics2035.unemploymentRate = (unemploymentRate * 100).toFixed(0);
+timeSeries.metrics2035.ubiContribution = ubiTechSpending.toFixed(1);
+}
+}
+
+return timeSeries;
+}
+
+function updateChart() {
+const crisisYear = parseInt(document.getElementById('automation-speed').value);
+const policyLag = parseInt(document.getElementById('policy-lag').value);
+const ubiAmount = parseFloat(document.getElementById('ubi-amount').value);
+const recessionFear = parseFloat(document.getElementById('recession-fear').value);
+
+const timeSeries = runSimulation(crisisYear, policyLag, ubiAmount, recessionFear);
+
+document.getElementById('total-spending').textContent = `$${timeSeries.metrics2035.totalSpending}B`;
+document.getElementById('ubi-contribution').textContent = `$${timeSeries.metrics2035.ubiContribution}B`;
+document.getElementById('unemployment-rate').textContent = `${timeSeries.metrics2035.unemploymentRate}%`;
+document.getElementById('years-below').textContent = timeSeries.yearsBelow;
+
+const totalSpendingEl = document.getElementById('total-spending');
+totalSpendingEl.className = 'metric-value';
+if (parseFloat(timeSeries.metrics2035.totalSpending) < S_MIN) {
+totalSpendingEl.className += ' danger';
+}
+
+const currentTheme = getTheme();
+applyTheme(currentTheme);
+const isDarkMode = currentTheme === 'dark';
+const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+const tickColor = isDarkMode ? '#bdc3c7' : '#7f8c8d';
+const titleColor = isDarkMode ? '#ecf0f1' : '#2c3e50';
+const legendColor = isDarkMode ? '#ecf0f1' : '#34495e';
+
+if (chart) chart.destroy();
+
+chart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: timeSeries.years,
+datasets: [
+    { 
+        label: 'Total Spending', 
+        data: timeSeries.s_total_data, 
+        borderColor: '#2ecc71', 
+        backgroundColor: 'rgba(46, 204, 113, 0.2)', 
+        borderWidth: 4, 
+        tension: 0.1, 
+        fill: true 
+    },
+    { 
+        label: 'Fab Viability Threshold ($300B)', 
+        data: Array(timeSeries.years.length).fill(S_MIN), 
+        borderColor: '#e74c3c', 
+        borderDash: [5, 5], 
+        borderWidth: 2, 
+        pointRadius: 0, 
+        fill: false 
+    },
+    { 
+        label: 'Corporate Spending', 
+        data: timeSeries.s_corp_data, 
+        borderColor: '#3498db', 
+        borderWidth: 2, 
+        tension: 0.1, 
+        fill: false 
+    },
+    { 
+        label: 'Consumer (2% wages + 0.2% UBI)', 
+        data: timeSeries.s_consumer_data, 
+        borderColor: '#f1c40f', 
+        borderWidth: 2, 
+        tension: 0.1, 
+        fill: false 
+    },
+    { 
+        label: 'Government Spending', 
+        data: timeSeries.s_govt_data, 
+        borderColor: '#9b59b6', 
+        borderWidth: 2, 
+        tension: 0.1, 
+        fill: false 
+    }
+]
+},
+options: {
+responsive: true, 
+maintainAspectRatio: false,
+plugins: {
+    title: { 
+        display: true, 
+        text: 'Tech Spending Components Over Time ($ Billions)', 
+        font: { size: 16, weight: 'bold' }, 
+        color: titleColor 
+    },
+    legend: { 
+        display: true, 
+        position: 'top', 
+        labels: { color: legendColor, boxWidth: 20, padding: 10, font: { size: 10 } } 
+    }
+},
+scales: {
+    y: { 
+        title: { 
+            display: true, 
+            text: 'Spending ($ Billions)', 
+            color: tickColor 
+        }, 
+        grid: { color: gridColor }, 
+        ticks: { color: tickColor }, 
+        beginAtZero: true, 
+        max: S_TOTAL_2024 * 1.2
+    },
+    x: { 
+        title: { 
+            display: true, 
+            text: 'Year', 
+            color: tickColor 
+        }, 
+        grid: { color: gridColor }, 
+        ticks: { color: tickColor } 
+    }
+}
+}
+});
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+const sliders = {
+'automation-speed': { format: val => `Crisis in ${val}` },
+'policy-lag': { format: val => `${val} years` },
+'ubi-amount': { format: val => `$${parseInt(val).toLocaleString()}` },
+'recession-fear': { format: val => `${val}% cut` }
+};
+
+for (const [id, config] of Object.entries(sliders)) {
+const el = document.getElementById(id);
+const display = document.getElementById(`${id}-value`);
+display.textContent = config.format(el.value);
+el.addEventListener('input', e => {
+    display.textContent = config.format(e.target.value);
+    updateChart();
+});
+}
+
+// Observer for theme changes when embedded in an iframe
+try {
+if (window.parent && window.parent !== window) {
+    const observer = new MutationObserver(() => updateChart());
+    observer.observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
+}
+} catch (e) { /* Cross-origin, won't be able to observe */ }
+
+// Listener for OS-level theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateChart);
+
+updateChart(); // Initial draw
+});
+</script>
+</body>
+</html>

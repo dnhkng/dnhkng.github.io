@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economic Demand Collapse Model</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Light Mode (Default) */
+        :root {
+            --bg-color: #ffffff;
+            --widget-bg-color: #f8f9fa;
+            --card-bg-color: #ffffff;
+            --text-primary-color: #2c3e50;
+            --text-secondary-color: #34495e;
+            --text-muted-color: #7f8c8d;
+            --shadow-color: rgba(0,0,0,0.1);
+            --info-bg-color: #fff3cd;
+            --info-border-color: #f39c12;
+            --info-text-color: #664d03;
+        }
+
+        /* Rule 1: Handles the initial load based on browser/OS preference.
+           It applies dark mode UNLESS Chirpy has explicitly set light mode. */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-mode="light"]) {
+                --bg-color: #1a202c;
+                --widget-bg-color: #2c3e50;
+                --card-bg-color: #34495e;
+                --text-primary-color: #ecf0f1;
+                --text-secondary-color: #bdc3c7;
+                --text-muted-color: #95a5a6;
+                --shadow-color: rgba(0,0,0,0.4);
+                --info-bg-color: #4a4a2a;
+                --info-border-color: #f39c12;
+                --info-text-color: #fff3cd;
+            }
+        }
+        
+        /* Rule 2: Handles Chirpy's manual toggle to dark mode.
+           This rule will always apply when the user clicks the toggle. */
+        html[data-mode="dark"] {
+            --bg-color: #1a202c;
+            --widget-bg-color: #2c3e50;
+            --card-bg-color: #34495e;
+            --text-primary-color: #ecf0f1;
+            --text-secondary-color: #bdc3c7;
+            --text-muted-color: #95a5a6;
+            --shadow-color: rgba(0,0,0,0.4);
+            --info-bg-color: #4a4a2a;
+            --info-border-color: #f39c12;
+            --info-text-color: #fff3cd;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-secondary-color);
+        }
+        .widget-container {
+            background: var(--widget-bg-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px var(--shadow-color);
+        }
+        h2 {
+            margin-top: 0;
+            color: var(--text-primary-color);
+            font-size: 1.5em;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-secondary-color);
+            font-size: 0.9em;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+        .value-display {
+            font-size: 0.9em;
+            color: var(--text-muted-color);
+            text-align: right;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background: var(--card-bg-color);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 3px var(--shadow-color);
+        }
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--text-muted-color);
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--text-primary-color);
+        }
+        .metric-value.warning { color: #e67e22; }
+        .metric-value.danger { color: #e74c3c; }
+        
+        .info-box {
+            background: var(--info-bg-color);
+            border-left: 4px solid var(--info-border-color);
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: var(--info-text-color);
+        }
+        .equation {
+            background: var(--card-bg-color);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <h2>💰 Economic Demand Collapse Model</h2>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Service Automation Growth (%/year)</label>
+                <input type="range" id="service-auto" min="0" max="20" step="0.5" value="6">
+                <div class="value-display" id="service-auto-value">6%/year</div>
+            </div>
+            <div class="control-group">
+                <label>Material Automation Growth (%/year)</label>
+                <input type="range" id="material-auto" min="0" max="10" step="0.5" value="2">
+                <div class="value-display" id="material-auto-value">2%/year</div>
+            </div>
+            <div class="control-group">
+                <label>Service Sector Size (% of workforce)</label>
+                <input type="range" id="service-size" min="0" max="100" step="5" value="70">
+                <div class="value-display" id="service-size-value">70%</div>
+            </div>
+            <div class="control-group">
+                <label>Baseline Consumption (UBI/savings %)</label>
+                <input type="range" id="baseline-consumption" min="0" max="50" step="5" value="10">
+                <div class="value-display" id="baseline-value">10%</div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="demandChart"></canvas>
+        </div>
+        
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-label">Employment Rate (2035)</div>
+                <div class="metric-value" id="employment-rate">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Consumption Level (2035)</div>
+                <div class="metric-value" id="consumption-level">0%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Production Capacity (2035)</div>
+                <div class="metric-value" id="production-capacity">100%</div>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <strong>The Paradox:</strong> Starting from 2025 baseline (20% service automation, 10% material automation), 
+            production capacity grows as automation increases, but consumption collapses because people lose income. 
+            Adjust the annual growth rates to see how different automation speeds create different trajectories. 
+            Notice how faster automation widens the gap, and how baseline consumption (UBI/safety net) affects the outcome.
+        </div>
+    </div>
+
+<script>
+    const ctx = document.getElementById('demandChart').getContext('2d');
+    let chart;
+
+    // --- Function Definitions ---
+
+    function getTheme() {
+        // FIX 1: Check if we're in an iframe, and if so, read theme from parent window
+        try {
+            if (window.parent && window.parent !== window) {
+                const parentTheme = window.parent.document.documentElement.getAttribute('data-mode');
+                if (parentTheme) return parentTheme;
+                
+                // If parent doesn't have explicit theme, check parent's system preference
+                return window.parent.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+        } catch (e) {
+            // Cross-origin iframe - can't access parent, fall back to own detection
+            console.log('Cannot access parent window (cross-origin), using own theme detection');
+        }
+        
+        // Fallback for standalone usage or cross-origin iframes
+        const theme = document.documentElement.getAttribute('data-mode');
+        if (theme) return theme;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+        // Apply the theme to the iframe's document element
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-mode', 'dark');
+        } else if (theme === 'light') {
+            document.documentElement.setAttribute('data-mode', 'light');
+        } else {
+            document.documentElement.removeAttribute('data-mode');
+        }
+    }
+
+    function calculateEconomics(serviceAuto, materialAuto, serviceSize, baselineConsumption, time) {
+        const totalWorkforce = 100;
+        const serviceLaborForce = totalWorkforce * (serviceSize / 100);
+        const materialLaborForce = totalWorkforce * (1 - serviceSize / 100);
+        const serviceEmployed = serviceLaborForce * (1 - serviceAuto / 100);
+        const materialEmployed = materialLaborForce * (1 - materialAuto / 100);
+        const totalEmployed = serviceEmployed + materialEmployed;
+        const employmentRate = (totalEmployed / totalWorkforce) * 100;
+        const annualProductivityGrowth = 1.04;
+        const productivityMultiplier = Math.pow(annualProductivityGrowth, time);
+        const serviceProductionGain = serviceLaborForce * (1 + serviceAuto / 100 * 2);
+        const materialProductionGain = materialLaborForce * (1 + materialAuto / 100 * 1.5);
+        const totalProduction = (serviceProductionGain + materialProductionGain) / totalWorkforce * 100 * productivityMultiplier;
+        const wageConsumption = totalEmployed;
+        const baselineTotal = (totalWorkforce - totalEmployed) * (baselineConsumption / 100);
+        const totalConsumption = (wageConsumption + baselineTotal);
+        return {
+            employmentRate: employmentRate.toFixed(1),
+            consumption: totalConsumption.toFixed(1),
+            production: totalProduction.toFixed(1)
+        };
+    }
+
+    function generateTimeSeriesData(serviceSize, baselineConsumption, serviceAutoGrowthRate, materialAutoGrowthRate) {
+        const years = [], employment = [], consumption = [], production = [];
+        const baseline2025ServiceAuto = 20, baseline2025MaterialAuto = 10;
+        for (let year = 2025; year <= 2040; year++) {
+            const t = year - 2025;
+            const serviceAuto = Math.min(95, baseline2025ServiceAuto + t * serviceAutoGrowthRate);
+            const materialAuto = Math.min(60, baseline2025MaterialAuto + t * materialAutoGrowthRate);
+            const econ = calculateEconomics(serviceAuto, materialAuto, serviceSize, baselineConsumption, t);
+            years.push(year);
+            employment.push(econ.employmentRate);
+            consumption.push(econ.consumption);
+            production.push(econ.production);
+        }
+        return { years, employment, consumption, production };
+    }
+
+    function updateChart() {
+        const serviceAutoGrowthRate = parseFloat(document.getElementById('service-auto').value);
+        const materialAutoGrowthRate = parseFloat(document.getElementById('material-auto').value);
+        const serviceSize = parseFloat(document.getElementById('service-size').value);
+        const baselineConsumption = parseFloat(document.getElementById('baseline-consumption').value);
+        const timeSeries = generateTimeSeriesData(serviceSize, baselineConsumption, serviceAutoGrowthRate, materialAutoGrowthRate);
+        const year2035Index = timeSeries.years.indexOf(2035);
+        let metrics2035 = { employmentRate: '0', consumption: '0', production: '0' };
+        if (year2035Index !== -1) {
+            metrics2035.employmentRate = timeSeries.employment[year2035Index];
+            metrics2035.consumption = timeSeries.consumption[year2035Index];
+            metrics2035.production = timeSeries.production[year2035Index];
+        }
+        document.getElementById('employment-rate').textContent = metrics2035.employmentRate + '%';
+        document.getElementById('consumption-level').textContent = metrics2035.consumption;
+        document.getElementById('production-capacity').textContent = metrics2035.production;
+        const maxVal = Math.max(...timeSeries.production.map(parseFloat), ...timeSeries.consumption.map(parseFloat), ...timeSeries.employment.map(parseFloat));
+        const yAxisMax = Math.ceil(maxVal * 1.1);
+        const employmentEl = document.getElementById('employment-rate');
+        const consumptionEl = document.getElementById('consumption-level');
+        employmentEl.className = 'metric-value';
+        if (parseFloat(metrics2035.employmentRate) < 30) employmentEl.className += ' danger';
+        else if (parseFloat(metrics2035.employmentRate) < 50) employmentEl.className += ' warning';
+        consumptionEl.className = 'metric-value';
+        if (parseFloat(metrics2035.consumption) < 40) consumptionEl.className += ' danger';
+        else if (parseFloat(metrics2035.consumption) < 60) consumptionEl.className += ' warning';
+
+        const currentTheme = getTheme();
+        applyTheme(currentTheme);
+        const isDarkMode = currentTheme === 'dark';
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+        const tickColor = isDarkMode ? '#bdc3c7' : '#7f8c8d';
+        const titleColor = isDarkMode ? '#ecf0f1' : '#2c3e50';
+        const legendColor = isDarkMode ? '#ecf0f1' : '#34495e';
+
+        if (chart) {
+            chart.destroy();
+        }
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timeSeries.years,
+                datasets: [
+                    { label: 'Employment Rate (%)', data: timeSeries.employment, borderColor: '#3498db', backgroundColor: 'rgba(52, 152, 219, 0.1)', borderWidth: 3, tension: 0.4, fill: true, yAxisID: 'y' },
+                    { label: 'Consumption Index', data: timeSeries.consumption, borderColor: '#e74c3c', backgroundColor: 'rgba(231, 76, 60, 0.1)', borderWidth: 3, tension: 0.4, fill: true, yAxisID: 'y' },
+                    { label: 'Production Capacity', data: timeSeries.production, borderColor: '#2ecc71', backgroundColor: 'rgba(46, 204, 113, 0.1)', borderWidth: 3, tension: 0.4, fill: true, yAxisID: 'y' }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: 'Projection from 2025 Baseline', font: { size: 16, weight: 'bold' }, color: titleColor },
+                    legend: { display: true, position: 'top', labels: { color: legendColor } }
+                },
+                scales: {
+                    y: { title: { display: true, text: 'Index (Baseline = 100)', color: tickColor }, grid: { color: gridColor }, ticks: { color: tickColor }, beginAtZero: true, max: yAxisMax },
+                    x: { title: { display: true, text: 'Year', color: tickColor }, grid: { color: gridColor }, ticks: { color: tickColor } }
+                }
+            }
+        });
+    }
+
+    // --- Script Setup ---
+    window.addEventListener('DOMContentLoaded', () => {
+        // Setup for sliders
+        ['service-auto', 'material-auto', 'service-size', 'baseline-consumption'].forEach(id => {
+            const slider = document.getElementById(id);
+            const displayId = id === 'baseline-consumption' ? 'baseline-value' : id + '-value';
+            const display = document.getElementById(displayId);
+            const suffix = id.includes('auto') ? '%/year' : '%';
+            slider.addEventListener('input', (e) => {
+                display.textContent = e.target.value + suffix;
+                updateChart();
+            });
+        });
+
+        // FIX 2: Watch for theme changes in parent document using MutationObserver
+        try {
+            if (window.parent && window.parent !== window) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'data-mode') {
+                            updateChart();
+                        }
+                    });
+                });
+                
+                observer.observe(window.parent.document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['data-mode']
+                });
+            }
+        } catch (e) {
+            // Cross-origin iframe - can't observe parent
+            console.log('Cannot observe parent window (cross-origin)');
+        }
+        
+        // Also listen for OS-level theme changes for standalone usage
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateChart);
+
+        // Initial chart draw with theme applied
+        const initialTheme = getTheme();
+        applyTheme(initialTheme);
+        updateChart();
+    });
+</script>
+</body>
+</html>
