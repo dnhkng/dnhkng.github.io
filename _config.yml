@@ -22,11 +22,12 @@ description: >- # used by seo meta and the atom feed
   ML, Biotech, Hardware, and Coordination Problems.
   Sometimes I write about hard problems and how to solve them.
 
-# Fill in the protocol & hostname for your site.
-# E.g. 'https://username.github.io', note that it does not end with a '/'.
+# The URL of your site's root, e.g. https://example.com
 url: "https://dnhkng.github.io"
-baseurl: ""
 
+# The base URL of your site. Note: if you are hosting on GitHub Pages Project sites,
+# this should be the name of your repository. But for User sites like yours, it should be an empty string.
+baseurl: ""
 
 github:
   username: dnhkng # change to your GitHub username
