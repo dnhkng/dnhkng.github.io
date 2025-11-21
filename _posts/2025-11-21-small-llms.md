@@ -8,12 +8,15 @@ math: true
 
 ### TL;DR
 
-*   **The Surprise:** AI is arriving on consumer hardware *way* faster than anyone predicted. The 12-15B parameter range is getting remarkably good!
-*   **The cool part (a speculative sanity check):** If we compared AI parameter counts to neuron counts in the brain for specific tasks (vision, audio, speech), a consistent ratio of ~1-6 parameters per neuron emerged
-*   **The wild extrapolation:** The human brain's reasoning center (Prefrontal Cortex) has ~1.3 billion neurons. Applying our ratio gives a speculative target of ~1-8 billion parameters for a pure reasoning engine. The fact that the AI industry is empirically landing on a **12-14B sweet spot** for high performance is a stunning convergence
-*   **The evidence:** Models like Phi-4 (14B) are hitting near-expert scores on MMLU (84.8%). Models from Qwen and DeepSeek are crushing math reasoning benchmarks like GSM8K (>90%). These aren't just "good for their size," they are genuinely powerful
-*   **What it means for you:** The Nvidia 3090 was release in September 2020, over two years before ChatGPT (GPT-3.5). That GPU can already run better models than ChatGPT, and small models are still improving rapidly! Don't look at the current state (with issue like benchmaxing, reasoning bugs, bizzare failure modes...), looks at the rate of progess
-*   **Finally:** The stretch goal: With scaling laws, we can get a grip on how much extra compute will be increases the relative performance. Maybe, once we finally saturate the capabilities of small models, we will be able to estimate the number of parameters needed by AGI and ASI by finding the actual capacity of smaller models and extrapolating
+**The Surprise**: 12-15B parameter models are approaching expert-level performance way faster than expected, and they run on consumer GPUs.
+
+**The Convergence**: We compared AI systems to brain regions doing similar tasks (vision, speech, audio). The ratio? Consistently 1-6 parameters per biological neuron. The brain's reasoning center (prefrontal cortex) has ~1.3B neurons. Apply that ratio → predicted 1-13B parameters needed. The AI industry independently converged on 12-14B as the performance sweet spot. That's a stunning alignment.
+
+**The Evidence**: Phi-4 (14B): 84.8% MMLU. Qwen3 (14B): 92% GSM8K. These aren't "good for their size"—they're genuinely powerful.
+
+**What It Means**: Your RTX 3090 from 2020 already runs models better than ChatGPT. Progress at this scale is still accelerating. Don't focus on current limitations—focus on the rate of improvement.
+
+**The Stretch Goal**: Once we saturate small model capabilities, we might extrapolate compute requirements for AGI/ASI using scaling laws.
 
 ***
 
