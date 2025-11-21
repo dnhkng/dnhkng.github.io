@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Rise of Dense Intelligence (Nov 2025 SOTA)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Light Mode (Default) */
+        :root {
+            --bg-color: #ffffff;
+            --widget-bg-color: #f8f9fa;
+            --text-primary-color: #2c3e50;
+            --text-secondary-color: #34495e;
+            --text-muted-color: #7f8c8d;
+            --btn-bg: #e2e6ea;
+            --btn-bg-active: #2980b9;
+            --btn-text-active: #ffffff;
+            --border-color: #dee2e6;
+        }
+
+        /* Dark Mode Rules */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-mode="light"]) {
+                --bg-color: #1a202c;
+                --widget-bg-color: #2c3e50;
+                --text-primary-color: #ecf0f1;
+                --text-secondary-color: #bdc3c7;
+                --text-muted-color: #95a5a6;
+                --btn-bg: #4a5568;
+                --btn-bg-active: #3498db;
+                --btn-text-active: #ffffff;
+                --border-color: #4a5568;
+            }
+        }
+        
+        html[data-mode="dark"] {
+            --bg-color: #1a202c;
+            --widget-bg-color: #2c3e50;
+            --text-primary-color: #ecf0f1;
+            --text-secondary-color: #bdc3c7;
+            --text-muted-color: #95a5a6;
+            --btn-bg: #4a5568;
+            --btn-bg-active: #3498db;
+            --btn-text-active: #ffffff;
+            --border-color: #4a5568;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-secondary-color);
+        }
+        .widget-container {
+            background: var(--widget-bg-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: var(--text-primary-color);
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+        
+        .controls-header {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button {
+            background: var(--btn-bg);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            color: var(--text-secondary-color);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+        }
+
+        button.active {
+            background: var(--btn-bg-active);
+            color: var(--btn-text-active);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        button:hover:not(.active) {
+            filter: brightness(0.95);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        
+        .footer-note {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: var(--text-muted-color);
+            text-align: center;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <h2>🚀 Small Models (< 15B): The Efficiency Curve</h2>
+        
+        <div class="controls-header">
+            <div class="btn-group">
+                <button class="task-btn active" onclick="setMetric('reasoning')">Reasoning (GSM8K)</button>
+                <button class="task-btn" onclick="setMetric('coding')">Coding (HumanEval)</button>
+                <button class="task-btn" onclick="setMetric('knowledge')">Knowledge (MMLU)</button>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="capabilityChart"></canvas>
+        </div>
+        
+        <div class="footer-note">
+            <strong>Timeline: 2019 — May 2025</strong><br>
+            Real benchmark data from GPT-2 through Qwen3 and Gemma 3.<br>
+            Models marked (est.) have estimated scores based on contemporaneous evaluations.<br>
+            Red Line = SOTA Frontier (best performance at each point in time).<br><br>
+            <strong>Human Baselines (Challenging Targets):</strong><br>
+            • GSM8K (Reasoning): 95% - Near-perfect on grade-school math<br>
+            • HumanEval (Coding): 90% - Skilled programmer "puzzle"-coding<br>
+            • MMLU (Knowledge): 89.8% - Domain experts across 57 subjects
+        </div>
+    </div>
+
+<script>
+    // --- Configuration & Data ---
+    
+    const humanBaselines = {
+        reasoning: 95,   // Near-perfect performance on grade-school math
+        coding: 90,      // Highly skilled programmer
+        knowledge: 89.8  // Domain expert across 57 subjects (from MMLU paper)
+    };
+    
+    const humanBaselineDescriptions = {
+        reasoning: "Near-perfect human performance (95%)",
+        coding: "Highly skilled programmer (90%)", 
+        knowledge: "Domain experts (89.8% from MMLU paper)"
+    };
+
+    // Real data + estimates from comprehensive research - strictly < 15B Parameters
+    const allModels = {
+        reasoning: [
+            { x: 2019.2, y: 5, model: "GPT-2 (1.5B)", params: 1.5 },
+            { x: 2020.5, y: 3, model: "GPT-3 6.7B (est.)", params: 6.7 },
+            { x: 2020.5, y: 4, model: "GPT-3 13B (est.)", params: 13 },
+            { x: 2021.25, y: 1.3, model: "GPT-Neo 2.7B", params: 2.7 },
+            { x: 2021.5, y: 3, model: "GPT-J 6B (est.)", params: 6 },
+            { x: 2022.42, y: 3, model: "OPT 6.7B (est.)", params: 6.7 },
+            { x: 2022.42, y: 4, model: "OPT 13B (est.)", params: 13 },
+            { x: 2022.58, y: 3, model: "BLOOM 7.1B (est.)", params: 7.1 },
+            { x: 2023.17, y: 11.0, model: "LLaMA 7B", params: 7 },
+            { x: 2023.17, y: 17.8, model: "LLaMA 13B", params: 13 },
+            { x: 2023.25, y: 6, model: "Falcon 7B (est.)", params: 7 },
+            { x: 2023.58, y: 14.6, model: "LLaMA 2 7B", params: 7 },
+            { x: 2023.58, y: 28.7, model: "LLaMA 2 13B", params: 13 },
+            { x: 2023.75, y: 52.2, model: "Mistral 7B", params: 7 },
+            { x: 2024.17, y: 46.4, model: "Gemma 7B", params: 7 },
+            { x: 2024.33, y: 79.6, model: "Llama 3 8B", params: 8 },
+            { x: 2024.5, y: 68.6, model: "Gemma 2 9B", params: 9 },
+            { x: 2024.58, y: 81.0, model: "Llama 3.1 8B", params: 8 },
+            { x: 2024.75, y: 75.0, model: "Qwen2.5 7B", params: 7 },
+            { x: 2024.75, y: 82.0, model: "Qwen2.5 14B", params: 14 },
+            { x: 2024.75, y: 68.0, model: "Phi-3 Medium 14B", params: 14 },
+            { x: 2025.0, y: 80.4, model: "Phi-4 14B", params: 14 },
+            { x: 2025.08, y: 85.0, model: "DeepSeek R1 Distill Qwen 7B", params: 7 },
+            { x: 2025.08, y: 90.0, model: "DeepSeek R1 Distill Qwen 14B", params: 14 },
+            { x: 2025.25, y: 38.4, model: "Gemma 3 4B", params: 4 },
+            { x: 2025.25, y: 71.0, model: "Gemma 3 12B", params: 12 },
+            { x: 2025.42, y: 85.0, model: "Qwen3 8B", params: 8 },
+            { x: 2025.42, y: 92.0, model: "Qwen3 14B", params: 14 }
+        ],
+        coding: [
+            { x: 2019.2, y: 6, model: "GPT-2 (1.5B)", params: 1.5 },
+            { x: 2020.5, y: 9, model: "GPT-3 6.7B (est.)", params: 6.7 },
+            { x: 2020.5, y: 13, model: "GPT-3 13B (est.)", params: 13 },
+            { x: 2021.25, y: 7, model: "GPT-Neo 2.7B (est.)", params: 2.7 },
+            { x: 2021.5, y: 11, model: "GPT-J 6B (est.)", params: 6 },
+            { x: 2022.42, y: 9, model: "OPT 6.7B (est.)", params: 6.7 },
+            { x: 2022.42, y: 12, model: "OPT 13B (est.)", params: 13 },
+            { x: 2022.58, y: 10, model: "BLOOM 7.1B (est.)", params: 7.1 },
+            { x: 2023.17, y: 10.5, model: "LLaMA 7B", params: 7 },
+            { x: 2023.17, y: 15.8, model: "LLaMA 13B", params: 13 },
+            { x: 2023.25, y: 10, model: "Falcon 7B (est.)", params: 7 },
+            { x: 2023.58, y: 12.8, model: "LLaMA 2 7B", params: 7 },
+            { x: 2023.58, y: 18.3, model: "LLaMA 2 13B", params: 13 },
+            { x: 2023.75, y: 30.5, model: "Mistral 7B", params: 7 },
+            { x: 2024.17, y: 32.3, model: "Gemma 7B", params: 7 },
+            { x: 2024.33, y: 62.0, model: "Llama 3 8B", params: 8 },
+            { x: 2024.5, y: 40.2, model: "Gemma 2 9B", params: 9 },
+            { x: 2024.58, y: 64.0, model: "Llama 3.1 8B", params: 8 },
+            { x: 2024.75, y: 57.9, model: "Qwen2.5 7B", params: 7 },
+            { x: 2024.75, y: 70.0, model: "Qwen2.5 14B", params: 14 },
+            { x: 2024.75, y: 62.0, model: "Phi-3 Medium 14B", params: 14 },
+            { x: 2025.0, y: 82.6, model: "Phi-4 14B", params: 14 },
+            { x: 2025.08, y: 70.0, model: "DeepSeek R1 Distill Qwen 7B", params: 7 },
+            { x: 2025.08, y: 78.0, model: "DeepSeek R1 Distill Qwen 14B", params: 14 },
+            { x: 2025.25, y: 36.0, model: "Gemma 3 4B", params: 4 },
+            { x: 2025.25, y: 45.7, model: "Gemma 3 12B", params: 12 },
+            { x: 2025.42, y: 72.0, model: "Qwen3 8B", params: 8 },
+            { x: 2025.42, y: 80.0, model: "Qwen3 14B", params: 14 }
+        ],
+        knowledge: [
+            { x: 2019.2, y: 30, model: "GPT-2 (1.5B)", params: 1.5 },
+            { x: 2020.5, y: 29, model: "GPT-3 6.7B (est.)", params: 6.7 },
+            { x: 2020.5, y: 33, model: "GPT-3 13B (est.)", params: 13 },
+            { x: 2021.25, y: 26.5, model: "GPT-Neo 2.7B", params: 2.7 },
+            { x: 2021.5, y: 29, model: "GPT-J 6B (est.)", params: 6 },
+            { x: 2022.42, y: 27, model: "OPT 6.7B (est.)", params: 6.7 },
+            { x: 2022.42, y: 30, model: "OPT 13B (est.)", params: 13 },
+            { x: 2022.58, y: 26, model: "BLOOM 7.1B (est.)", params: 7.1 },
+            { x: 2023.17, y: 35.1, model: "LLaMA 7B", params: 7 },
+            { x: 2023.17, y: 46.9, model: "LLaMA 13B", params: 13 },
+            { x: 2023.25, y: 27, model: "Falcon 7B (est.)", params: 7 },
+            { x: 2023.58, y: 45.3, model: "LLaMA 2 7B", params: 7 },
+            { x: 2023.58, y: 54.8, model: "LLaMA 2 13B", params: 13 },
+            { x: 2023.75, y: 62.5, model: "Mistral 7B", params: 7 },
+            { x: 2024.17, y: 64.3, model: "Gemma 7B", params: 7 },
+            { x: 2024.33, y: 66.6, model: "Llama 3 8B", params: 8 },
+            { x: 2024.5, y: 71.3, model: "Gemma 2 9B", params: 9 },
+            { x: 2024.58, y: 68.0, model: "Llama 3.1 8B", params: 8 },
+            { x: 2024.75, y: 74.2, model: "Qwen2.5 7B", params: 7 },
+            { x: 2024.75, y: 78.0, model: "Qwen2.5 14B", params: 14 },
+            { x: 2024.75, y: 78.0, model: "Phi-3 Medium 14B", params: 14 },
+            { x: 2025.0, y: 84.8, model: "Phi-4 14B", params: 14 },
+            { x: 2025.08, y: 72.0, model: "DeepSeek R1 Distill Qwen 7B", params: 7 },
+            { x: 2025.08, y: 79.0, model: "DeepSeek R1 Distill Qwen 14B", params: 14 },
+            { x: 2025.25, y: 59.6, model: "Gemma 3 4B", params: 4 },
+            { x: 2025.25, y: 74.5, model: "Gemma 3 12B", params: 12 },
+            { x: 2025.42, y: 86.0, model: "Qwen3 8B", params: 8 },
+            { x: 2025.42, y: 88.0, model: "Qwen3 14B", params: 14 }
+        ]
+    };
+
+    let currentMetric = 'reasoning';
+    let chart;
+    const ctx = document.getElementById('capabilityChart').getContext('2d');
+
+    // --- Theme Logic ---
+    function getTheme() {
+        try {
+            if (window.parent && window.parent !== window) {
+                const parentTheme = window.parent.document.documentElement.getAttribute('data-mode');
+                if (parentTheme) return parentTheme;
+                return window.parent.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+        } catch (e) {}
+        const theme = document.documentElement.getAttribute('data-mode');
+        if (theme) return theme;
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+        if (theme === 'dark') document.documentElement.setAttribute('data-mode', 'dark');
+        else if (theme === 'light') document.documentElement.setAttribute('data-mode', 'light');
+        else document.documentElement.removeAttribute('data-mode');
+    }
+
+    // --- SOTA Frontier Calculation ---
+    function calculateSOTAFrontier(data) {
+        // Sort by date
+        const sorted = [...data].sort((a, b) => a.x - b.x);
+        
+        // Group by date and keep only the best model at each date
+        const groupedByDate = {};
+        for (const point of sorted) {
+            if (!groupedByDate[point.x] || groupedByDate[point.x].y < point.y) {
+                groupedByDate[point.x] = point;
+            }
+        }
+        
+        // Now build frontier from these best-at-each-date points
+        const frontier = [];
+        let maxScore = 0;
+        
+        const dates = Object.keys(groupedByDate).sort((a, b) => parseFloat(a) - parseFloat(b));
+        for (const date of dates) {
+            const point = groupedByDate[date];
+            if (point.y > maxScore) {
+                maxScore = point.y;
+                frontier.push({ x: point.x, y: point.y, model: point.model });
+            }
+        }
+        
+        return frontier;
+    }
+
+    // --- Chart Logic ---
+    
+    function setMetric(metric) {
+        currentMetric = metric;
+        document.querySelectorAll('.task-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        updateChart();
+    }
+
+    function updateChart() {
+        const currentTheme = getTheme();
+        applyTheme(currentTheme);
+        const isDarkMode = currentTheme === 'dark';
+        
+        const allModelsColor = isDarkMode ? 'rgba(52, 152, 219, 0.6)' : 'rgba(52, 152, 219, 0.5)';
+        const sotaColor = '#e74c3c'; // Red for SOTA line
+        const humanColor = '#2ecc71'; // Green for human baseline
+        const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+        const textColor = isDarkMode ? '#bdc3c7' : '#7f8c8d';
+        
+        const modelData = allModels[currentMetric];
+        const sotaFrontier = calculateSOTAFrontier(modelData);
+        const humanLevel = humanBaselines[currentMetric];
+
+        // Human Baseline extending full year range
+        const humanBaselineData = [
+            { x: 2019, y: humanLevel },
+            { x: 2026, y: humanLevel }
+        ];
+
+        if (chart) chart.destroy();
+
+        chart = new Chart(ctx, {
+            type: 'scatter',
+            data: { 
+                datasets: [
+                    {
+                        label: 'Human: ' + humanBaselineDescriptions[currentMetric],
+                        data: humanBaselineData,
+                        type: 'line',
+                        borderColor: humanColor,
+                        borderWidth: 2,
+                        borderDash: [8, 6],
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        fill: false
+                    },
+                    {
+                        label: 'All Models (<15B)',
+                        data: modelData,
+                        borderColor: allModelsColor,
+                        backgroundColor: allModelsColor,
+                        pointHoverBackgroundColor: '#2ecc71',
+                        pointHoverBorderColor: isDarkMode ? '#2c3e50' : '#fff',
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        pointHitRadius: 8,
+                        pointBorderWidth: 2,
+                        pointBorderColor: isDarkMode ? '#2c3e50' : '#fff',
+                        showLine: false
+                    },
+                    {
+                        label: 'SOTA Frontier',
+                        data: sotaFrontier,
+                        type: 'line',
+                        borderColor: sotaColor,
+                        backgroundColor: sotaColor,
+                        borderWidth: 3,
+                        pointRadius: 7,
+                        pointHoverRadius: 7,
+                        pointHitRadius: 0,
+                        pointBackgroundColor: isDarkMode ? '#2c3e50' : '#fff',
+                        pointBorderWidth: 3,
+                        tension: 0.3,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: true,
+                    axis: 'xy'
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: isDarkMode ? 'rgba(44, 62, 80, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                        titleColor: isDarkMode ? '#fff' : '#2c3e50',
+                        bodyColor: isDarkMode ? '#fff' : '#2c3e50',
+                        borderColor: isDarkMode ? '#4a5568' : '#dee2e6',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: false,
+                        filter: function(tooltipItem) {
+                            // Only show tooltips for the scatter dataset (index 1), not SOTA line (index 2) or human baseline (index 0)
+                            return tooltipItem.datasetIndex === 1;
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const p = context[0].raw;
+                                return p.model || 'Model';
+                            },
+                            label: function(context) {
+                                const p = context.raw;
+                                if (!p || !p.model) return '';
+                                const date = new Date(p.x, 0);
+                                const month = Math.round((p.x - Math.floor(p.x)) * 12);
+                                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                return [
+                                    `Score: ${p.y}%`,
+                                    `Date: ${monthNames[month]} ${Math.floor(p.x)}`,
+                                    `Params: ${p.params}B`
+                                ];
+                            },
+                            afterLabel: function() {
+                                return '';
+                            }
+                        }
+                    },
+                    legend: {
+                        labels: { 
+                            color: textColor,
+                            padding: 15,
+                            font: { size: 12 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        min: 2019,
+                        max: 2026,
+                        title: { display: true, text: 'Year', color: textColor, font: { size: 13 } },
+                        grid: { color: gridColor },
+                        ticks: { 
+                            color: textColor,
+                            stepSize: 1, 
+                            callback: function(value) { return value.toString(); } 
+                        }
+                    },
+                    y: {
+                        min: 0,
+                        max: 100,
+                        title: { display: true, text: 'Benchmark Score (%)', color: textColor, font: { size: 13 } },
+                        grid: { color: gridColor },
+                        ticks: { color: textColor }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+        // Watch parent theme
+        try {
+            if (window.parent && window.parent !== window) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((m) => {
+                        if (m.type === 'attributes' && m.attributeName === 'data-mode') updateChart();
+                    });
+                });
+                observer.observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['data-mode'] });
+            }
+        } catch (e) {}
+        
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateChart);
+        updateChart();
+    });
+</script>
+</body>
+</html>
