@@ -8,13 +8,13 @@ math: true
 
 ### TL;DR
 
-**The Threshold**: A distinct phase change occurs around 12-15B parameters. Models don't just get incrementally better—they suddenly develop robust reasoning capabilities.
+**The Threshold**: A distinct phase change occurs around 12-15B parameters. Models don't just get incrementally better, they 'vibe' more robust reasoning capabilities.
 
 **The Cortical Ratio**: Comparing AI systems to biological brain regions reveals a striking pattern: roughly 1-6 artificial parameters can mimic the functional output of 1 biological neuron. The human reasoning center (PFC) has ~1.3B neurons. Applying this ratio predicts intelligence emergence around 1-8B parameters. The industry stumbled into this range through trial and error, but the alignment is remarkable.
 
 **The Mechanism**: Why are small models suddenly so capable? **Distillation**. We aren't just training small models from scratch; we're compressing the reasoning patterns of massive 405B+ "teacher" models into efficient 14B "student" architectures using synthetic data.
 
-**The Stack**: A 14B reasoning core, specialized sensory modules (~1.5GB), and RAG living in your system RAM. This architecture turns a consumer GPU into a legitimate expert workstation.
+**The Stack**: It seems likely that in the future, we might have a 14B reasoning core, specialized sensory modules (~1.5GB), and RAG living in your system RAM. This architecture turns a consumer GPU into a legitimate expert workstation. It might require architectures beyond transformers, but this seems to be a legitimate target size.
 
 ***
 
