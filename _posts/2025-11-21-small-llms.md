@@ -68,6 +68,23 @@ While benchmarks tell us *what* is happening, biology might tell us *why* 14B se
 
 **Critical caveat**: This is a provocative analogy, not a direct equivalence. Biological neurons are temporal, dynamic, and vastly more complex than static weights. However, if we look at the *functional output* per unit, a curious pattern emerges.
 
+### Comparing Biological and Artificial Systems
+
+We selected brain regions and AI models that perform analogous, well-defined tasks where "human-level performance" can be meaningfully measured:
+
+**Primary Auditory Cortex (~100M neurons)** processes raw sound into phonetic representations and extracts acoustic features. We compare this to **Parakeet (600M parameters)**, a speech recognition model that converts audio waveforms into text with accuracy matching human transcriptionists in 25 European languages. Both systems take acoustic input and produce linguistic output.
+
+**Broca's Area (~100M neurons)**, located in the frontal lobe, is responsible for speech production—converting internal language representations into motor commands for articulation. We compare this to **Kokoro (82M parameters)**, a text-to-speech model that generates natural-sounding human speech from text. Both transform linguistic concepts into spoken output, though through radically different mechanisms.
+
+**Primary Visual Cortex or V1 (~140M neurons)** performs the initial processing of visual information: edge detection, spatial frequency analysis, and basic feature extraction. We compare this to **SAM2 (Segment Anything Model 2, ~224M parameters)**, which achieves human-level performance at visual segmentation—identifying and delineating objects in images with the accuracy of trained human annotators.
+
+These comparisons were chosen because:
+1. **Task specificity**: Each brain region has a well-understood primary function that maps to a specific AI capability
+2. **Measurable parity**: We can objectively assess when AI performance matches human performance (transcription accuracy, speech naturalness, segmentation precision)
+3. **Functional isolation**: These are relatively modular tasks, not requiring the full complexity of general intelligence
+
+What makes these comparisons compelling is their consistency across completely different domains—auditory, motor, and visual processing.
+
 | Modality      | Brain Region               | Neuron Count | AI System | Parameters | Ratio (Param:Neuron) |
 | :------------ | :------------------------- | :----------- | :-------- | :--------- | :------------------- |
 | **Auditory**  | Primary Auditory Cortex    | ~100M        | Parakeet  | 600M       | **6:1**              |
@@ -75,7 +92,7 @@ While benchmarks tell us *what* is happening, biology might tell us *why* 14B se
 | **Vision**    | Primary Visual Cortex (V1) | ~140M        | SAM2      | ~224M      | **1.6:1**            |
 | **Reasoning** | Prefrontal Cortex (PFC)    | ~1.3B        | LLMs?     | ?          | ?                    |
 
-Across distinct sensory functions, digital systems achieve human-level parity using roughly **1 to 6 artificial parameters for every 1 biological neuron**.
+Across these distinct sensory and motor functions, digital systems achieve human-level parity using roughly **1 to 6 artificial parameters for every 1 biological neuron**. This consistency across domains is what makes the pattern worth taking seriously, even as we acknowledge the fundamental differences between biological and artificial computation.
 
 ### The Prediction
 
