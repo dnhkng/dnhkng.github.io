@@ -1,119 +1,81 @@
 ---
-title: "The Cortical Ratio: Why Your GPU Can Finally Think"
+title: "The Cortical Ratio: A Thought Experiment on the 'Final' Size of AGI"
 date: 2025-11-21 10:00:00 +0100
 categories: [LLMs, Neurobiology]
 tags: [LLMs, Neurobiology, Qwen, Phi, Distillation, LocalLLaMA]
 math: true
 ---
 
-# The Structural Isomorphism of AGI: Calibrating the "Reasoning Kernel"
+## Introduction
 
----
+No one actually knows what the final computer that runs AGI will look like.
 
-## Abstract
-Traditional scaling laws ("Chinchilla") attempt to derive AGI thresholds via linear extrapolation of token-training depth. These estimates ignore the biological reality of **functional heterogeneity**. By calibrating the Transformer Block against the specific histological differences between the Visual Ventral Stream and the **Parieto-Frontal Integration Network (P-FIT)**, we challenge the assumption that AGI requires trillion-parameter sparsity.
+The current dogma—the "Scaling Hypothesis"—suggests we are building the Tower of Babel. We look at GPT-4 and assume the next step requires Trillions of parameters and a nuclear power plant to run.
 
-We propose that the "Minimum Viable Core" for stable System 2 reasoning is not a monolith, but a compact dense kernel of approximately **52 Billion Parameters**. This suggests that current "Medium" models (in the 70B class) have already reached the necessary structural mass for human-level logic, and the remaining barrier is not parameter count, but **Inference-Time Search** and **Memory Bandwidth**.
+But there is a second trend happening quietly in the background, one that contradicts the "bigger is better" narrative: **Compression.**
 
----
+For a given model size, capabilities are skyrocketing. We are seeing specific, complex biological functions "solved" by incredibly small silicon brains. This begs a question: If we can map the size of the digital "eye" and the digital "ear," can we use biological ratios to predict the size of the digital "mind"?
 
-## 1. Methodology: The Functional Ratio Approach
-Counting synapses ($1.5 \times 10^{14}$) is a flawed metric due to the stochastic noise of biological neurotransmission (approx. 4.7 bits/synapse). Instead, we employ a **Functional Ratio** approach:
-1.  Identify a "solved" biological domain (Visual Perception) and its silicon equivalent ($U_{vis}$).
-2.  Calculate the neuroanatomical **Volume Multiplier ($V_m$)** of the networks specifically implicated in general intelligence ($g$).
-3.  Apply a **Complexity Multiplier ($C_m$)** based on pyramidal dendritic density.
-4.  Apply an **Integration Scalar ($I_s$)** for global connectivity costs.
+It might be totally wrong, but let’s do some napkin math.
 
----
+### The Anchors: The 1GB Ear and the 4GB Eye
 
-## 2. Domain Analysis: The Predictive Baseline ($U_{vis}$)
-*Target Region: The Ventral Visual Stream (V1 $\rightarrow$ IT)*
+First, let’s look at "Compute Saturation"—the point where adding more parameters stops yielding better results because the task is effectively solved.
 
-To emulate the human ventral stream, we require a model capable of generative video understanding and physics simulation (object permanence, occlusion, motion dynamics).
-Current state-of-the-art Video World Models (e.g., the visual backbones of Sora or Gemini 1.5) achieve near-human fidelity in these tasks with dense parameter counts estimated between **3B and 5B**.
+Take hearing. NVIDIA’s **Canary-1B (v2)** is a shock to the system. With just **1 Billion parameters**, it can transcribe and translate significantly better than models ten times its size, handling over 25 languages with nuance. It fits on a smartphone chip.
 
-*   **The Anchor:** We establish **3.5 Billion Parameters** as the median *Base Unit ($U_{vis}$)* representing the dense mass required to simulate the visual cortex at human fidelity.
+Take vision. To build a system that understands object permanence, physics, and occlusion (a "World Model"), we don't need a trillion parameters. The visual backbones of our best video models achieve near-human fidelity with a dense parameter count estimated between **3 and 5 Billion**.
 
----
+**The Baseline:**
+If nature’s blueprint for an auditory cortex costs ~1B silicon credits, and the visual cortex costs ~3.5B, we have a biological baseline. Sensory processing is "cheap."
 
-## 3. The Derivation: Refining the Constants
+### The Ratio: Scaling the Digital Cortex
 
-To solve for the **Reasoning Core** ($R_{core}$), we must scale the Base Unit by biological constants. Previous attempts erroneously scaled the visual system against the *entire* remaining cortex. We correct this by isolating the specific networks used for reasoning.
+We used to think we had to simulate the *whole* brain to get AGI. But general intelligence doesn't live in the motor cortex or the autonomic stem. It lives in the **Parieto-Frontal Integration Network (P-FIT)**—the specific wiring for reasoning, planning, and logic.
 
-### Constant A: The P-FIT Volume Multiplier ($V_m$)
-General intelligence does not utilize the entire neocortex (which includes vast motor, somatosensory, and auditory processing regions). It resides in the **Parieto-Frontal Integration Theory (P-FIT)** network (Jung & Haier), comprising specific regions of the Dorsolateral Prefrontal Cortex (BAs 9, 10, 46) and the Parietal Lobules (BAs 7, 39, 40).
+If we assume the "Visual Unit" is roughly **3.5 Billion parameters**, let's scale that up to a "Reasoning Unit" using human neuroanatomy:
 
-*   **Visual System Volume:** ~18–20% of the neocortex.
-*   **P-FIT Network Volume:** Conservatively ~40–45% of the neocortex.
-*   **The Ratio:** The reasoning hardware is roughly **2.25x** the volume of the visual hardware.
-*   **$V_m \approx 2.25$** (Range: 2.0 – 2.5)
+1.  **Volume:** The reasoning network (P-FIT) is physically larger than the visual system. It takes up about **2.25x** the volume.
+2.  **Density:** Pyramidal neurons in the prefrontal cortex are "bushier" than visual neurons (more dendritic spines). Let's say a reasoning neuron is **3.75x** more complex.
+3.  **Wiring Tax:** Unlike vision, which is local, reasoning is global. It requires long-range connections. We add a **1.75x** tax for this connectivity overhead.
 
-### Constant B: The Complexity Multiplier ($C_m$)
-A "column" in the Prefrontal Cortex is structurally denser than a visual column.
-*   **Source:** *Elston, G. N. (2003).*
-*   **The Data:** Layer III Pyramidal neurons in the granular Prefrontal Cortex (BA10) possess significantly more expansive dendritic trees than those in V1.
-    *   **Visual Neurons:** ~4,000 spines/neuron.
-    *   **PFC Neurons:** ~15,000–16,000 spines/neuron.
-*   **The Ratio:** The combinatorial logic capacity per neuron is **3.75x** higher in the reasoning core.
-*   **$C_m \approx 3.75$** (Range: 3.5 – 4.5)
+**The Equation:**
 
-### Constant C: The Integration Scalar ($I_s$)
-The P-FIT network operates as a "Global Workspace," requiring massive long-range White Matter connectivity to fuse multimodal data. In Transformers, this maps to the overhead of Global Attention routing and Mixture-of-Experts (MoE) gating.
-*   **The Standard:** We apply a conservative scalar to account for the "Small World" routing overhead lacking in the local-only visual cortex.
-*   **$I_s \approx 1.75$** (Range: 1.5 – 2.0)
+$$ 3.5\text{B (Vision)} \times 2.25\text{ (Volume)} \times 3.75\text{ (Density)} \times 1.75\text{ (Wiring)} $$
 
----
+$$ \approx \mathbf{51.6 \text{ Billion Parameters}} $$
 
-## 4. The Calculation: The Mass of the Reasoning Engine
+### The "Final" Architecture
 
-We solve for the Reasoning Core ($R_{core}$) using the median values:
+This number—**~52 Billion**—is fascinating.
 
-$$ R_{core} = U_{vis} \times V_m \times C_m \times I_s $$
+Right now, we see models like Llama 3 70B performing very well. But we have to remember: **Transformers are likely not the final architecture.** They are amazing, but they are inefficient. They are the vacuum tubes of AI.
 
-$$ R_{core} = 3.5B \times 2.25 \times 3.75 \times 1.75 $$
+As we move toward newer architectures—perhaps State Space Models (SSMs), hybrids, or recursive architectures we haven't invented yet—we will likely shed the "bloat."
 
-$$ R_{core} \approx \mathbf{51.6 \text{ Billion Parameters}} $$
+The "Cortical Ratio" suggests that once we strip away the inefficiencies, the **Minimum Viable Core** for human-level reasoning isn't a trillion parameters. It is a compact, dense kernel of roughly **50B parameters**.
 
-**The Error Bars:**
-*   *Lower Bound (High Efficiency):* $2B \times 2.0 \times 3.5 \times 1.5 = \mathbf{31.5B}$
-*   *Upper Bound (Maximalist):* $5B \times 2.5 \times 4.5 \times 2.0 = \mathbf{112.5B}$
+### Why 50B changes the Physics of AGI
 
-This derivation suggests that the "Sweet Spot" for a dense logic kernel is **~72B parameters**.
+If the "Mind" fits in 50B, the problem stops being about storage and starts being about **Time.**
 
----
+A 50B parameter model is small enough to fit entirely onto the VRAM of a single high-end consumer GPU (like a future RTX 6090 or a workstation card). This changes everything.
 
-## 5. The "70B Inflection" & System 2 Scaling
+Current LLMs are feed-forward; they take a snapshot of a thought. But thinking is a loop. We ruminate. To match the "gamma frequency" of the human brain (thinking at ~50Hz), we need to run that 50B model in a loop, checking its own work, searching for answers.
 
-This calculation aligns seamlessly with empirical industry observations from 2024-2025. Models in the **70B parameter class** (e.g., Llama 3 70B, Qwen 72B) represented a distinct inflection point where reasoning stabilized. Why?
-
-**Because 70B is the biological isomorphism of the P-FIT network.**
-
-If we already possess the necessary mass, why do these models still hallucinate?
-**The Missing Variable: Recurrence (Time).**
-Biological columns use the same 72B-equivalent structure in a recurrent loop over time (Thinking). Transformers are feed-forward. To match the biological reasoning of a human brain over 10 seconds, a 72B Transformer must perform **Inference-Time Search** (e.g., Monte Carlo Tree Search or Chain-of-Thought unrolling).
-
-**72B is the Minimum Viable Core** required to sustain a search tree without the state decaying into hallucination.
-
----
-
-## 6. The Physics: Why the 72B Core is Solvable
-
-The original fear was that AGI required Trillion-parameter models, creating an impossible Memory Wall. The corrected 52B figure renders the problem solvable with current HBM3e hardware.
-
-To run a "Thinking Loop" at biological speed (Gamma frequency, ~50Hz):
-*   **Model Mass:** 52 Billion Parameters.
-*   **Quantization:** INT4 (standard for 2025 inference) $\approx$ **26 GB** memory footprint.
-*   **Bandwidth Requirement:** $26 \text{ GB} \times 50 \text{ Hz} = \mathbf{1.3 \text{ TB/s}}$.
+*   **Model Mass:** 50 Billion.
+*   **Memory Footprint (Quantized):** ~25-30 GB.
+*   **Required Bandwidth for 50Hz Loop:** ~1.3 TB/s.
 
 **This is the smoking gun.**
-Current consumer-grade/enthusiast hardware (like the Blackwell or H200 series) offers bandwidth in the range of **1.5 – 4.8 TB/s**.
+Current hardware (HBM3e) already hits bandwidths of 1.5 – 4.8 TB/s.
 
-We have matched the biological requirement. The barrier to AGI is no longer hardware capability or model size; it is entirely **software architecture** (converting feed-forward architectures into recurrent search loops).
+### The Verdict
 
-## Final Verdict
+We might be overthinking the scale required for AGI.
 
-1.  **Structural Mass:** **~52B Dense Parameters** (Calibrated via P-FIT volume and Elston’s Dendritic Complexity).
-2.  **Empirical Validation:** This aligns with the "unreasonable effectiveness" of the 70B model class.
-3.  **Feasibility:** At this size, biological-speed cognition (50Hz) requires ~1.3 TB/s bandwidth, which is currently achievable.
+The trend from Canary-1B to modern vision models suggests that biological capabilities compress down to very manageable file sizes. If this ratio holds, the era of "Giant Models" is a temporary detour.
 
-The era of training massive foundational models is over. The era of the **Reasoning Kernel**—a highly optimized ~50B core driven by massive inference-time search—has begun.
+The future isn't a trillion-parameter God-AI living in a cloud data center. It is a highly optimized **50B Reasoning Kernel**—a digital prefrontal cortex—that fits on your local machine, running in a continuous, high-speed loop.
+
+The hardware is ready. We're just waiting for the architecture to catch up to the math.
