@@ -10,13 +10,9 @@ math: true
 
 ## Introduction
 
-So you’ve built a ridiculous **€9,000 Grace–Hopper “desktop”** (see: [my previous adventure involving 16-million-degree GPU temperatures](/posts/hopper/)). Now what?
+So you've built a **€9,000 Grace–Hopper "desktop"** (see: [my previous post involving 16-million-degree GPU temperatures](/posts/hopper/)). Running `llama.cpp` benchmarks is fine, but the real test of local AI hardware is whether it works as a daily driver. My goal was to serve a **230 Billion Parameter** model via **vLLM** as an **OpenAI-compatible API** backend to power **Claude Code**.
 
-Running `llama.cpp` benchmarks is fun, but the real test of local AI hardware is whether it can be a daily driver. My goal was to serve a **230 Billion Parameter** model via **vLLM** as an **OpenAI-compatible API** backend—specifically to power **Claude Code**, Anthropic’s agentic coding tool. Think: “swap Claude’s brain for a local model” while keeping all the Claude Code orchestration magic.
-
-What followed was a week of flag-tweaking, benchmark-running, and learning (again) that the “obvious” configuration choice can be spectacularly wrong. No hardware caught fire this time (progress!), but I did find some surprisingly sharp edges around tensor parallelism, pipeline parallelism, and why your GPU topology readout doesn’t get the final vote.
-
-This post is a practical walkthrough of what actually worked on **two GH200 96GB GPUs with SYS connectivity**—including the dead ends.
+This took a week of flag-tweaking and benchmarking, and I learned (again) that the "obvious" configuration choice can be wrong. This post covers what actually worked on **two GH200 96GB GPUs with SYS connectivity**—including the dead ends.
 
 ---
 
@@ -24,7 +20,7 @@ This post is a practical walkthrough of what actually worked on **two GH200 96GB
 
 ### Hardware
 
-Same beast as last time:
+Same system as before:
 
 - 2x Nvidia Grace-Hopper Superchip
 - 2x Nvidia Hopper H100 Tensor Core GPU 96GB of HBM3 memory
@@ -35,13 +31,13 @@ Same beast as last time:
 
 ### The important topology detail
 
-`nvidia-smi topo -mp` reported the GPUs connected as **`SYS`** (PCIe + CPU/NUMA fabric), **not NVLink**. Why? This is a weird Frankenstein-system, and was taken from rack of [NVL2 modules](https://www.nvidia.com/en-us/data-center/grace-hopper-superchip/), and is missing the NVLink hardware!
+`nvidia-smi topo -mp` reported the GPUs connected as **`SYS`** (PCIe + CPU/NUMA fabric), **not NVLink**. This system was taken from a rack of [NVL2 modules](https://www.nvidia.com/en-us/data-center/grace-hopper-superchip/) and is missing the NVLink hardware.
 
-This matters because tensor-parallel all-reduce performance depends heavily on interconnect speed. The conventional wisdom goes:
+This matters because tensor-parallel all-reduce performance depends on interconnect speed. The conventional wisdom:
 
-> “No NVLink? Use pipeline parallelism to reduce cross-GPU communication.”
+> "No NVLink? Use pipeline parallelism to reduce cross-GPU communication."
 
-That advice *can* be correct in some setups. On *this* setup, with *this* model and engine path, it was wrong—because pipeline parallelism introduced other costs (pipeline bubbles, scheduling overhead, and KV/memory headroom issues) that outweighed any comms savings.
+That advice *can* be correct in some setups. On *this* setup, with *this* model and engine path, it was wrong—pipeline parallelism introduced other costs (pipeline bubbles, scheduling overhead, and KV/memory headroom issues) that outweighed any comms savings.
 
 ### The model + workload
 
@@ -53,32 +49,32 @@ That advice *can* be correct in some setups. On *this* setup, with *this* model 
   * Support **very long context** (up to **163,840 tokens**)
   * Handle interactive traffic (**~4–8 concurrent requests**)
   * Prioritize **low TTFT** and stable tail latency
-  * Keep throughput high enough to feel “local-fast”
+  * Keep throughput high enough to feel responsive
 
 ---
 
-## Shoutout: mratsim’s 192GB VRAM FrankenQuant
+## Shoutout: mratsim's 192GB VRAM FrankenQuant
 
-The specific build I’m serving is based on **mratsim’s [MiniMax-M2.1 mixed-precision “FrankenQuant”](https://huggingface.co/mratsim/MiniMax-M2.1-FP8-INT4-AWQ)**, explicitly tuned to be “the highest quality quant that can run on **192GiB VRAM**” (which is exactly our 2×96GB class of machine).
+The specific build I'm serving is based on **mratsim's [MiniMax-M2.1 mixed-precision "FrankenQuant"](https://huggingface.co/mratsim/MiniMax-M2.1-FP8-INT4-AWQ)**, tuned to be "the highest quality quant that can run on **192GiB VRAM**" (which is exactly our 2×96GB class of machine).
 
-If you’re trying to run MiniMax-M2.1 on a 2×96GB setup, start there. mratsim also documents *why* the calibration details matter for MoE models (and why “all experts must be calibrated” is not optional).
+If you're trying to run MiniMax-M2.1 on a 2×96GB setup, start there. mratsim also documents *why* the calibration details matter for MoE models (and why "all experts must be calibrated" is not optional).
 
 ---
 
 ## Why MiniMax-M2.1 for Claude Code workflows
 
-Right now, **MiniMax-M2.1 is one of the best “Claude Code-shaped” local models** I’ve used: strong coding, solid agent behavior, and it plugs cleanly into tool-using workflows.
+**MiniMax-M2.1 is one of the best "Claude Code-shaped" local models** I've used: strong coding, solid agent behavior, and it plugs cleanly into tool-using workflows.
 
-This isn’t just vibes. MiniMax explicitly positions M2.1 around robustness in coding + tool use, and their own evaluation notes call out **Claude Code as scaffolding** for multiple benchmarks.
+MiniMax explicitly positions M2.1 around robustness in coding + tool use, and their own evaluation notes call out **Claude Code as scaffolding** for multiple benchmarks.
 
-It’s also a sweet spot for this specific box:
+It's also a sweet spot for this specific box:
 
 * **[MiniMax-M2.1](https://huggingface.co/MiniMaxAI/MiniMax-M2.1):** **229B params**
 * **[GLM-4.7](https://huggingface.co/zai-org/GLM-4.7):** **358B params** 
 * **[DeepSeek-V3.2](https://huggingface.co/deepseek-ai/DeepSeek-V3.2):** **685 params** 
 * **[Kimi K2](https://huggingface.co/moonshotai/Kimi-K2-Thinking) Thinking:** **1T params** 
 
-In other words: M2.1 is still huge, but it’s meaningfully more “servable” on 2×96GB than some of the bigger open-weight coding monsters *if* we do careful quantisation. There is such a huge difference in inferences speed (>10x!), we *really* want to keep things in VRAM whenever possible. Unfortunately, both high quantisation and REAP seriously 'lobotimise' these models.
+M2.1 is huge, but it's meaningfully more servable on 2×96GB than the bigger open-weight coding models *if* you do careful quantisation. The difference in inference speed is >10x, so keeping things in VRAM matters. Unfortunately, both high quantisation and REAP seriously degrade these models.
 
 ---
 
@@ -88,7 +84,7 @@ These were the best overall settings after running a benchmark matrix (warmup + 
 
 * **Tensor parallel** across 2 GPUs: `--tensor-parallel-size 2`
 * Keep **max model length high**: `--max-model-len 163840`
-* **Max concurrent sequences**: `--max-num-seqs 16` (the “felt UX” knob)
+* **Max concurrent sequences**: `--max-num-seqs 16` (the "felt UX" knob)
 * Keep vLLM V1 chunked prefill (default; it reported `max_num_batched_tokens=8192`)
 * Avoid pipeline parallelism (PP2) on this stack (big regressions + KV fit issues)
 * Avoid FP8 KV cache (quality risk without a real eval harness)
@@ -148,17 +144,15 @@ docker run --rm --runtime nvidia --gpus '"device=0,1"' \
 Key decisions:
 
 * **Tensor parallel** (TP2), not pipeline parallel (PP2)
-* `--max-num-seqs 16` is the “don’t ruin TTFT under real concurrency” setting
-* Chunked prefill default was already very good
-* `VLLM_SLEEP_WHEN_IDLE=0` to avoid “first request after idle” weirdness
-
-Now, let me tell you *why*.
+* `--max-num-seqs 16` is the "don't ruin TTFT under real concurrency" setting
+* Chunked prefill default was already good
+* `VLLM_SLEEP_WHEN_IDLE=0` to avoid "first request after idle" latency spikes
 
 ---
 
 ## Wiring Claude Code to your local vLLM
 
-Claude Code can be pointed at a local backend by setting the Anthropic base URL + model aliases. I keep a wrapper so I can type `claude-minimax` and always hit the same vLLM instance.
+Claude Code can be pointed at a local backend by setting the Anthropic base URL + model aliases. I use a wrapper script:
 
 ```bash
 #!/usr/bin/env bash
@@ -182,7 +176,7 @@ export API_TIMEOUT_MS=3000000
 exec claude "$@"
 ```
 
-**Why override all model aliases?** Claude Code will sometimes pick a “small/fast” model for parts of the workflow (summaries, lightweight steps, etc.). If you don’t override those, you’re not benchmarking your local backend—you’re benchmarking an accidental model roulette wheel.
+**Why override all model aliases?** Claude Code picks a "small/fast" model for parts of the workflow (summaries, lightweight steps). Without overriding those, you're not benchmarking your local backend consistently.
 
 **Why disable nonessential traffic?** Keeps the setup quiet and avoids latency surprises from background requests.
 
@@ -190,7 +184,7 @@ exec claude "$@"
 
 ## Benchmark methodology
 
-### Baseline definition (so we don’t fight about “baseline” later)
+### Baseline definition
 
 Unless otherwise stated, **baseline** means:
 
@@ -202,7 +196,7 @@ Unless otherwise stated, **baseline** means:
 
 ### Layer 1: API microbench (TTFT + throughput)
 
-I used a small async benchmark script that:
+I used an async benchmark script that:
 
 1. Hits `/v1/chat/completions` with `stream=true` to measure **TTFT**
 2. Runs a matrix:
@@ -219,11 +213,11 @@ Key metrics:
 * Completion tokens/sec (overall and decode-only)
 * Effective RPS
 
-The critical lesson: **don’t trust a single run**. Tail behavior changes depending on compilation caches, prefix cache state, and what happens to land in front of a long prefill chunk. Run multiple iterations. Then run more.
+Don't trust a single run. Tail behavior changes depending on compilation caches, prefix cache state, and what happens to land in front of a long prefill chunk. Run multiple iterations.
 
 ### Layer 2: end-to-end UX bench (Claude Code wall time)
 
-Microbenchmarks measure *requests*. They don’t measure *developer experience*.
+Microbenchmarks measure *requests*. They don't measure *developer experience*.
 
 Claude Code adds overhead:
 
@@ -232,27 +226,25 @@ Claude Code adds overhead:
 * intermediate steps and formatting
 * file writes (notes, markdown artifacts)
 
-So I added a second benchmark layer:
+So I added a second benchmark layer: run Claude Code headlessly on a real repo task and measure wall-clock time.
 
-> “Run Claude Code headlessly on a real repo task and measure wall-clock time.”
-
-This is where the optimisation stops being about tok/s and starts being about “do I want to throw the computer out the window.”
+This is where the optimisation stops being about tok/s and starts being about actual usability.
 
 ---
 
-## Flag-by-flag: what mattered and what didn’t
+## Flag-by-flag: what mattered and what didn't
 
 ### `--tensor-parallel-size 2` ✅
 
 **What it does:** shards model compute across both GPUs.
 
-**Why:** the model is ~140GB; a single GH200 96GB can’t hold it.
+**Why:** the model is ~140GB; a single GH200 96GB can't hold it.
 
-**Result:** every good configuration used TP=2. Without it, the model can’t load. Physics: undefeated.
+**Result:** every good configuration used TP=2. Without it, the model can't load.
 
 ---
 
-### `--pipeline-parallel-size 2` ❌ (the obvious wrong choice)
+### `--pipeline-parallel-size 2` ❌
 
 This is where I burned a day.
 
@@ -262,11 +254,11 @@ This is where I burned a day.
 
 **What actually happened:**
 
-* PP2 couldn’t even start at `max-model-len=163840` due to **insufficient KV cache memory**.
+* PP2 couldn't even start at `max-model-len=163840` due to **insufficient KV cache memory**.
 * Lowering max length to **114,688** made it start, but performance was dramatically worse.
 
 **Important note about apples-to-apples:**
-This isn’t a perfect “PP2 vs TP2 at identical settings” comparison because **PP2 couldn’t run at 163k** on this system. The point is stronger than it looks: even after giving PP2 a “helping hand” (shorter max context), it still lost badly on the interactive workload.
+This isn't a perfect "PP2 vs TP2 at identical settings" comparison because **PP2 couldn't run at 163k** on this system. Even after giving PP2 a shorter max context, it still lost badly on the interactive workload.
 
 **Results (PP2 @ max_len=114,688, max_num_seqs=4)**
 
@@ -276,7 +268,7 @@ This isn’t a perfect “PP2 vs TP2 at identical settings” comparison because
 | short_c8 throughput | **28.1 tok/s** |           ~66 tok/s |
 | warmup TTFT tails   |   multi-second |        ~0.1s region |
 
-**Conclusion:** PP2 was a clear loss on this model/engine path. Bench it on your workload—don’t assume topology dictates the answer.
+**Conclusion:** PP2 was a clear loss on this model/engine path. Bench it on your workload—don't assume topology dictates the answer.
 
 ---
 
@@ -284,7 +276,7 @@ This isn’t a perfect “PP2 vs TP2 at identical settings” comparison because
 
 **What it does:** sets maximum supported context length and sizes KV cache planning.
 
-**Why I kept it:** Claude Code workflows benefit from long-context *capability*.
+**Why I kept it:** Claude Code workflows benefit from long-context capability.
 
 **Reality check:** in the startup log, vLLM printed:
 
@@ -293,7 +285,7 @@ GPU KV cache size: 235,280 tokens
 Maximum concurrency for 163,840 tokens per request: 1.44x
 ```
 
-That’s the constraint: you can serve a 163k request, but you cannot serve many of them concurrently. Long context is a capability, not a throughput strategy.
+That's the constraint: you can serve a 163k request, but you cannot serve many of them concurrently. Long context is a capability, not a throughput strategy.
 
 ---
 
@@ -307,7 +299,7 @@ That’s the constraint: you can serve a 163k request, but you cannot serve many
 
 ---
 
-### `--max-num-seqs` ⚡ (the hidden “Claude Code feels fast” knob)
+### `--max-num-seqs` ⚡
 
 This was the most UX-sensitive setting.
 
@@ -339,7 +331,7 @@ Performance was effectively identical to seqs=32 but with less risk of oversubsc
 * short_c8 throughput: **66.89 tok/s**
 * TTFT stayed excellent (short_c8 p99 TTFT ~0.213s)
 
-**Conclusion:** for this workload, **16** is the Goldilocks value.
+**Conclusion:** for this workload, **16** is the right value.
 
 ---
 
@@ -351,7 +343,7 @@ vLLM V1 enabled chunked prefill and reported:
 Chunked prefill is enabled with max_num_batched_tokens=8192.
 ```
 
-I didn’t override it because:
+I didn't override it because:
 
 * TTFT was already excellent for short prompts
 * chunked prefill makes long-prefill behavior fairer to other concurrent requests
@@ -366,23 +358,21 @@ Tried it; vLLM hard-failed:
 NotImplementedError: Concurrent Partial Prefill is not supported.
 ```
 
-Not available on this model/backend path—remove it.
+Not available on this model/backend path.
 
 ---
 
-### FP8 KV cache (`--kv-cache-dtype fp8`) ⚠️ (skipped)
+### FP8 KV cache (`--kv-cache-dtype fp8`) ⚠️
 
-This is the obvious lever to increase KV capacity (and thus long-context concurrency). I skipped it in the final config because I didn’t want quality regressions without a real evaluation harness.
+This is the obvious lever to increase KV capacity (and thus long-context concurrency). I skipped it in the final config because I didn't want quality regressions without a real evaluation harness.
 
-If you can do A/B evals and correctness tests, FP8 KV is worth exploring. If you can’t verify it, keep the default.
+If you can do A/B evals and correctness tests, FP8 KV is worth exploring.
 
 ---
 
 ### `VLLM_SLEEP_WHEN_IDLE=0` ✅
 
-Avoids sleep mode while idle, which helps reduce “first request after idle” latency spikes for interactive use.
-
-(Yes, you can also keep it enabled if you’re optimising idle power/thermals. I was optimising “why did it hitch right when I hit Enter.”)
+Avoids sleep mode while idle, which helps reduce "first request after idle" latency spikes for interactive use.
 
 ---
 
@@ -392,13 +382,13 @@ Avoids sleep mode while idle, which helps reduce “first request after idle” 
 
 [`hyperfine`](https://github.com/sharkdp/hyperfine) is a CLI benchmark tool that runs commands repeatedly, supports warmups, and reports mean/stddev/min/max runtime.
 
-Perfect for: “Did this tuning change make Claude Code feel faster end-to-end?”
+Useful for: "Did this tuning change make Claude Code feel faster end-to-end?"
 
 ### Keeping runs comparable: reset the repo between runs
 
 Claude Code can create files. Repo state can drift. Later runs can accidentally benchmark filesystem artifacts instead of the model.
 
-So I reset the working tree **before each timed run** using `hyperfine --prepare` (cleanup is not counted in the measurement):
+Reset the working tree **before each timed run** using `hyperfine --prepare`:
 
 ```bash
 hyperfine --warmup 1 --runs 3 \
@@ -411,7 +401,7 @@ Notes:
 * `git reset --hard` restores tracked files.
 * `git clean -ffdx` deletes untracked files/dirs including ignored ones (`-x`). Nuclear but consistent.
 
-  * If you don’t want to wipe heavy ignored caches (`node_modules/`, `.venv/`), use `git clean -ffd`.
+  * If you don't want to wipe heavy ignored caches (`node_modules/`, `.venv/`), use `git clean -ffd`.
 * Claude Code requires `--verbose` with `--output-format stream-json` (otherwise it errors).
 
 ### What the wall-time result looks like
@@ -423,13 +413,13 @@ Range (min … max):   29.229 s … 54.086 s    3 runs
 
 The big standard deviation is expected: an agent run is multiple requests plus local orchestration, and step count can vary depending on internal decision paths and caching.
 
-This is exactly why I like this approach: it measures “felt experience,” not just tokens/sec.
+This approach measures "felt experience," not just tokens/sec.
 
 ---
 
 ## Correlating wall time with vLLM engine stats
 
-While hyperfine measures client-side wall time, vLLM logs help explain what’s happening:
+While hyperfine measures client-side wall time, vLLM logs help explain what's happening:
 
 ```
 Engine 000: Avg prompt throughput: 3805.1 tokens/s, Avg generation throughput: 37.0 tokens/s, Running: 3 reqs, ...
@@ -438,18 +428,19 @@ Engine 000: Avg prompt throughput: 12372.3 tokens/s, Avg generation throughput: 
 Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 0 reqs, ...
 ```
 
-A few takeaways:
+Takeaways:
 
 1. **Prompt throughput spikes** (e.g. ~12k tokens/s) are normal when Claude Code sends bursts and vLLM gets batching/prefix reuse.
 2. **Generation throughput varies** because agent workflows mix short control steps with larger responses and occasional long-context calls.
 3. Prefix caching matters a lot for developer workflows (repeated scaffolding prompts + repeated repo context patterns).
-4. Hyperfine includes client-side orchestration and any local file I/O—wall time should be much larger than a single API call.
+4. Hyperfine includes client-side orchestration and any local file I/O—wall time is much larger than a single API call.
 
 ---
 
-### Bonus: how does this compare to real Claude?
+### Comparison to real Claude
 
-Out of curiosity, I ran the same benchmark against Anthropic's actual Claude API (using `claude` without the wrapper):
+I ran the same benchmark against Anthropic's Claude API:
+
 ```bash
 hyperfine --warmup 1 --runs 3 \
   --prepare 'git reset --hard && git clean -ffdx' \
@@ -468,42 +459,40 @@ Time (mean ± σ):     38.994 s ± 13.257 s
 Range (min … max):   29.229 s … 54.086 s    3 runs
 ```
 
-The local setup is **~2.4x faster** on average, so it's genuinely faster for this type of interactive, repo-heavy workflow.
+The local setup is **~2.4x faster** on average for this type of interactive, repo-heavy workflow.
 
 Caveats:
-- Real Claude is doing network round-trips (via Starlink, damn you German Fibre providers!)
+- Real Claude is doing network round-trips (via Starlink—German fibre providers remain unavailable)
 - Real Claude's quality is likely higher on complex reasoning
-- This comparison is specific to this task (repo summarisation + context-heavy agent work)
+- This comparison is specific to this task
 
-But still: spending €9,000 to get a *faster* experience? That's actually a compelling value prop if you do this kind of work all day.
+But for this type of work, the local setup is genuinely faster.
 
 ---
 
-## Example: Claude Code, running locally (transcript)
+## Example: Claude Code running locally
 
-Below is a **representative excerpt** from a real Claude Code session using the local vLLM backend (shortened and lightly redacted for readability). It shows that tooling call works great!  I cloned my [GLaDOS repo](https://github.com/dnhkng/GlaDOS), and had claude-minimax do a review:
+Below is a representative excerpt from a real Claude Code session using the local vLLM backend (shortened and lightly redacted). Tool calling works well. I cloned my [GLaDOS repo](https://github.com/dnhkng/GlaDOS) and had claude-minimax review it:
 
 ![Claude](/assets/img/tool_use.png)
 
-Well, claude-minimax didn't hold back!
+The model didn't hold back:
 
 ![Claude](/assets/img/ouch.png)
 
-And here’s the part that made me laugh:
+And the cost summary:
 
 ![Claude](/assets/img/costs.png)
 
 Hey, it looks like spending **€9,000** on this server saved me about **$1.27**.
 
-Only **a few thousand** repo reviews to break even.
-
 ---
 
 ## Final conclusions
 
-1. **Don’t assume pipeline parallel will be faster** just because you don’t have NVLink. On this specific 140GB model + vLLM V1 + quantisation path, PP2 was both harder to fit and significantly slower.
+1. **Don't assume pipeline parallel will be faster** just because you don't have NVLink. On this 140GB model + vLLM V1 + quantisation path, PP2 was both harder to fit and significantly slower.
 
-2. **`--max-num-seqs` is a real performance knob**, not just a safety limit. Too low causes queueing and TTFT spikes. For this workload, **16** was the best operational setting.
+2. **`--max-num-seqs` is a real performance knob**, not just a safety limit. Too low causes queueing and TTFT spikes. For this workload, **16** was the best setting.
 
 3. **Long context is mostly KV cache capacity**, not just `max-model-len`. vLLM tells you directly what max concurrency you can expect at your configured max context.
 
@@ -515,26 +504,24 @@ Only **a few thousand** repo reviews to break even.
 
 ---
 
-## What I’d do next: Extreme thinking mode (when latency doesn’t matter)
+## What I'd do next: thinking mode for hard problems
 
-If I need “extreme thinking” on a one-off hard problem, I have a ridiculous fallback: **960GB LPDDR5 and 144 CPU cores** means I can run something like **DeepSeek-V3.2-Speciale** locally… slowly.
+If I need deep reasoning on a one-off hard problem, I have a fallback: **960GB LPDDR5 and 144 CPU cores** means I can run something like **DeepSeek-V3.2-Speciale** locally, slowly.
 
-Speciale is designed exclusively for deep reasoning and **[does not support tool calling](https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale?utm_source=chatgpt.com)**.
-So it’s a bad drop-in Claude Code backend. But it can be excellent as an “offline brain”: dump a long, tightly scoped context (logs, relevant files, constraints) and ask for a plan or diagnosis.
+Speciale is designed for deep reasoning and **[does not support tool calling](https://huggingface.co/deepseek-ai/DeepSeek-V3.2-Speciale)**, so it's a bad drop-in Claude Code backend. But it can be useful as an "offline brain": dump a long, tightly scoped context (logs, relevant files, constraints) and ask for a plan or diagnosis.
 
-If you want to operationalise that without turning your whole system into a science project, the clean way is to wrap it behind **[MCP (Model Context Protocol)](https://modelcontextprotocol.io/specification/2025-11-25)** as a dedicated “deep reasoning” endpoint—callable when you hit a wall, not pretending to be a tool-using agent.
+If you want to operationalise that without complicating your setup, wrap it behind **[MCP (Model Context Protocol)](https://modelcontextprotocol.io/specification/2025-11-25)** as a dedicated "deep reasoning" endpoint—callable when needed, not pretending to be a tool-using agent.
 
 ---
 
 ## Cost summary
 
-| What                       |                               Time/Money |
-| -------------------------- | ---------------------------------------: |
-| GH200 “desktop” build      |               €9,000 (see previous post) |
-| vLLM flag-tweaking         |                                 ~5 hours |
-| Wasted time on PP2         |                                 ~1 hours |
-| Claude Code repo reviews   | “free” (I already paid for the hardware) |
-| Speed boost vs real Claude |      2.4x faster (your mileage may vary) |
+| What                       |              Time/Money |
+| -------------------------- | ----------------------: |
+| GH200 "desktop" build      | €9,000 (see prior post) |
+| vLLM flag-tweaking         |                ~5 hours |
+| Wasted time on PP2         |                 ~1 hour |
+| Speed boost vs real Claude |      2.4x faster (YMMV) |
 
 
 Trust the numbers. Run the experiments. And maybe, just maybe, your €9,000 AI desktop will save you that €1.27 per query. At this rate, it'll pay for itself in... *[checks calculator]* ...7,087 code reviews.
