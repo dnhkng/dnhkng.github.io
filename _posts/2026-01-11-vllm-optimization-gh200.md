@@ -481,9 +481,13 @@ But still: spending €9,000 to get a *faster* experience? That's actually a com
 
 ## Example: Claude Code, running locally (transcript)
 
-Below is a **representative excerpt** from a real Claude Code session using the local vLLM backend (shortened and lightly redacted for readability). It shows that tooling call works great!
+Below is a **representative excerpt** from a real Claude Code session using the local vLLM backend (shortened and lightly redacted for readability). It shows that tooling call works great!  I cloned my [GLaDOS repo](https://github.com/dnhkng/GlaDOS), and had claude-minimax do a review:
 
 ![Claude](/assets/img/tool_use.png)
+
+Well, claude-minimax didn't hold back!
+
+![Claude](/assets/img/ouch.png)
 
 And here’s the part that made me laugh:
 
@@ -492,8 +496,6 @@ And here’s the part that made me laugh:
 Hey, it looks like spending **€9,000** on this server saved me about **$1.27**.
 
 Only **a few thousand** repo reviews to break even.
-
-Totally normal. No notes.
 
 ---
 
