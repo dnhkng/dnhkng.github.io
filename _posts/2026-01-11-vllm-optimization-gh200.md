@@ -100,7 +100,7 @@ These were the best overall settings after running a benchmark matrix (warmup + 
 #!/usr/bin/env bash
 set -euo pipefail
 
-HOST_MODEL_DIR="/mnt/storage8tb/MiniMax-M2.1-FP8-INT4-AWQ"
+HOST_MODEL_DIR="/path/to/models/MiniMax-M2.1-FP8-INT4-AWQ"
 CONTAINER_MODEL_DIR="/models/MiniMax-M2.1-FP8-INT4-AWQ"
 MODEL="${CONTAINER_MODEL_DIR}"
 MODELNAME="MiniMax-M2.1-FP8"
