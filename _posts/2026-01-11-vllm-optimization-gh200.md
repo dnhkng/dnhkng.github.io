@@ -12,7 +12,7 @@ math: true
 
 So you've built a **€9,000 Grace–Hopper "desktop"** (see: [my previous post involving 16-million-degree GPU temperatures](/posts/hopper/)). Running `llama.cpp` benchmarks is fine, but the real test of local AI hardware is whether it works as a daily driver. My goal was to serve a **230 Billion Parameter** model via **vLLM** as an **OpenAI-compatible API** backend to power **Claude Code**.
 
-This took a week of flag-tweaking and benchmarking, and I learned (again) that the "obvious" configuration choice can be wrong. This post covers what actually worked on **two GH200 96GB GPUs with SYS connectivity**—including the dead ends.
+This took a week of flag-tweaking and benchmarking, and I learned (again) that the "obvious" configuration choice can be wrong. No hardware caught fire this time (progress!), but I did find some surprisingly sharp edges around tensor parallelism and pipeline parallelism. This post covers what actually worked on **two GH200 96GB GPUs with SYS connectivity**—including the dead ends.
 
 ---
 
@@ -246,7 +246,7 @@ This is where the optimisation stops being about tok/s and starts being about ac
 
 ### `--pipeline-parallel-size 2` ❌
 
-This is where I burned a day.
+This is where I burned a lot of time.
 
 **What it does:** splits layers across GPUs (pipeline stages) instead of sharding tensors within each layer.
 
@@ -462,7 +462,7 @@ Range (min … max):   29.229 s … 54.086 s    3 runs
 The local setup is **~2.4x faster** on average for this type of interactive, repo-heavy workflow.
 
 Caveats:
-- Real Claude is doing network round-trips (via Starlink—German fibre providers remain unavailable)
+- Real Claude is doing network round-trips (via Starlink, damn you German Fibre providers!)
 - Real Claude's quality is likely higher on complex reasoning
 - This comparison is specific to this task
 
