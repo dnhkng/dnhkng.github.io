@@ -25,7 +25,7 @@ Mathematically, differentiating noisy data violently amplifies the noise. We wer
 
 I decided we needed to ditch the derivative entirely. We needed to fit the raw trace analytically using the best thermodynamic models available at the time. 
 
-Here is the story of the math we built to do it, the infrared laser hacks we used to test it, and now looking back from a decade later, how the limits of those early models perfectly predicted the next decade of biophysical hardware.
+Here is the story of the math used built to do it, the infrared laser hacks to test it, and now looking back from a decade later, how the limits of those early models perfectly predicted the next decade of biophysical hardware.
 
 ---
 
@@ -98,9 +98,9 @@ This highlighted a massive problem in biopharma. Formulation scientists were bin
 
 Standard thermal ramps couldn't tell a reversible melt from an irreversible aggregation event. We needed a way to pulse the heat, check if the protein refolded, and do it fast enough to outrun the aggregation step. 
 
-We couldn't use standard Peltier elements—they have too much thermal mass and cool down too slowly. So, I borrowed a toy from NanoTemper’s original instrument, the Monolith: **a 1480 nm, 600 mW infrared laser.**
+We couldn't use standard Peltier elements—they have too much thermal mass and cool down too slowly. So, I borrowed a toy from NanoTemper’s original instrument, the Monolith: **a 1480 nm, 600 mW infrared laser.** (actually, an engineering sample I found in the 'random lasers' box in the storeroom).
 
-Water strongly absorbs at 1480 nm. By firing a collimated IR laser directly into the glass capillary, we bypassed thermal mass entirely. We pulsed the temperature with ~0.5°C resolution, running 200 discrete heat/cool cycles in just 20 minutes. 
+Water strongly absorbs at 1480 nm. By firing a collimated IR laser directly into the glass capillary, I could bypass the thermal mass entirely. I jury rigged a Raspberry Pi GPIO to pulse the laser to heat the sample with ~0.5°C resolution, running 200 discrete heat/cool cycles in just 20 minutes. 
 
 If the protein was reversible, we modeled the renaturation using the Van’t Hoff equation:
 
@@ -108,16 +108,9 @@ $$ F(T) = \frac{F_N(T) + F_U(T) e^{-\frac{\Delta H_m (T-T_m)}{R T T_m}}}{1 + e^{
 
 ![Figure 3: ](assets/img/laser.png)
 
-*1480nm Laser pulsing. You can clearly see the reversible renaturation baseline (blue) pulling away from the forward melt curve (green) the moment irreversible aggregation kicks in.*
+*1480nm Laser pulsing. Each vertical blue line (yes, there are lots), is the sample being heated or cooled ridiculously fast. Why fast cooling? We are only heating a teeny tiny sample, at the focal point of the laser, and as soon as its turned off, the bulk solution around it cools and replaces the targetted zone. You can clearly see the reversible renaturation baseline (blue) pulling away from the forward melt curve (green) the moment irreversible aggregation kicks in.*
 
 We had successfully stress-tested the protein, catching the exact millisecond the reversible Lumry-Eyring equilibrium collapsed into an irreversible aggregate.
-
----
-
-
-
-
-Here is the rewritten second half, dialing back the "vindication" angle and framing it as a fun, slightly surreal anecdote about leaving breadcrumbs in the scientific literature. 
 
 ***
 
