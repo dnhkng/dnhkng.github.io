@@ -1,14 +1,14 @@
 ---
-title: "Arrhenius Integrals, IR Lasers, and the Evolution of Protein Melting"
+title: "Arrhenius Integrals, IR Lasers, and Cooking Proteins"
 date: 2026-02-25 10:00:00 +0100
-categories: [proteins, biophysics]
+categories: [protein engineering, biophysics]
 tags: [laser, proteins]
 math: true
 ---
 
 ***
 
-# Arrhenius Integrals, IR Lasers, and cooking Proteins
+# Introduction
 
 
 May 2016, Munich. I had just joined NanoTemper Technologies as a Bioanalytics Scientist. If you aren't familiar with NanoTemper, they build high-end biophysical instruments. At the time, their newest platform was the Prometheus — a machine that performed nanoDSF (Differential Scanning Fluorimetry) for helping develop new medicines.
