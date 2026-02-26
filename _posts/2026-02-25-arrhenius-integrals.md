@@ -37,13 +37,15 @@ $$ k = A e^{-\frac{E_a}{RT}} $$
 
 To figure out the total amount of denatured protein ($FD$, Fractional Denaturation) generated during a constant-rate temperature ramp ($B$, in K/s), you have to integrate over temperature:
 
-$$ FD = 1 - e^{\left(-\frac{A}{B} \int_{T_0}^{T_{end}} e^{-\frac{E_a}{RT}} dT\right)} $$
+
+$$ FD = 1 - \exp\left(-\frac{A}{B} \int_{T_0}^{T_{end}} e^{-\frac{E_a}{RT}} dT\right) $$
+
 
 Here’s the brick wall: **the Arrhenius integral has no exact analytical solution.** You cannot integrate $e^{-1/T}$ using standard elementary functions. You can numerically integrate it, but doing that iteratively inside a fitting algorithm for 48 parallel capillaries is computationally miserable.
 
-So, I dug into the applied math literature and implemented an analytical approximation by Cai and Liu. It is an absolute monster of an equation, but it calculates the Arrhenius Integral ($AIX$) extremely fast:
+So, I dug into the applied math literature and implemented an analytical approximation by **Cai and Liu**[^Integral]. It is an absolute monster of an equation, but it calculates the Arrhenius Integral ($AIX$) extremely fast:
 
-$$ AIX \approx \frac{R T^2 \left(0.99994 E_a + 0.2786 RT \log\left(\frac{E_a}{RT}\right) + 0.3672 RT\right) e^{-\frac{E_a}{RT}}}{E_a \left(E_a + 2.4383 RT + 0.2647 RT \log\left(\frac{E_a}{RT}\right)\right)} $$
+$$ AIX \approx \frac{R T^2 \left(0.99994 E_a + 0.2786 RT \ln\left(\frac{E_a}{RT}\right) + 0.3672 RT\right) \, e^{-\frac{E_a}{RT}}}{E_a \left(E_a + 2.4383 RT + 0.2647 RT \ln\left(\frac{E_a}{RT}\right)\right)} $$
 
 *(Yes, those constants are real. Don't ask.)*
 
@@ -72,7 +74,8 @@ Traditionally, if you want to find the $E_a$ of a protein melt, you can't just r
 
 This shift is mathematically governed by the **Kissinger equation**:
 
-$$ \frac{v}{T_m^2} = \frac{AR}{E_a} e^{-\frac{E_a}{R T_m}} $$
+$$ \frac{v}{T_m^2} = \frac{AR}{E_a} \, e^{-\frac{E_a}{R T_m}} $$
+
 
 If you plot $\ln(v / T_m^2)$ against $1/T_m$, you get a beautiful straight line. The slope of that line is exactly $-E_a / R$. 
 
@@ -86,7 +89,7 @@ If $E_a$ is an intrinsic thermodynamic barrier, it shouldn't care how fast the P
 
 Real proteins don't follow a simple 1-step irreversible melt ($N \to D$). They follow the **Lumry-Eyring model**: 
 
-$$ N \rightleftharpoons U \to D $$
+$$ N \rightleftharpoons U \longrightarrow D $$
 
 Unfolding is initially a *reversible* thermodynamic equilibrium ($N \rightleftharpoons U$). It only becomes irreversible when the unfolded protein clumps together and aggregates ($U \to D$). Furthermore, unfolding exposes a massive hydrophobic core to water, causing a huge spike in heat capacity ($\Delta C_p$). Because of $\Delta C_p$, the actual energy barrier to unfolding literally changes as the temperature rises!
 
@@ -103,8 +106,8 @@ We couldn't use standard Peltier elements—they have too much thermal mass and 
 Water strongly absorbs at 1480 nm. By firing a collimated IR laser directly into the glass capillary, I could bypass the thermal mass entirely. I jury rigged a Raspberry Pi GPIO to pulse the laser to heat the sample with ~0.5°C resolution, running 200 discrete heat/cool cycles in just 20 minutes. 
 
 If the protein was reversible, we modeled the renaturation using the Van’t Hoff equation:
-
-$$ F(T) = \frac{F_N(T) + F_U(T) e^{-\frac{\Delta H_m (T-T_m)}{R T T_m}}}{1 + e^{-\frac{\Delta H_m (T-T_m)}{R T T_m}}} $$
+ 
+$$ F(T) = \frac{F_N(T) + F_U(T) \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)}{1 + \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)} $$
 
 ![Figure 3: ](assets/img/laser.png)
 
@@ -160,6 +163,11 @@ Don't destroy your data. Stop taking the derivative. The truth is always in the 
 ---
 
 ## Refs
+
+[^Integral]: **Kinetic analysis of nonisothermal solid-state reactions: Determination of the kinetic parameters by means of a nonlinear regression method**<br>
+    *Journal of Mathematical Chemistry* 44(2):551-558 (August 2008)<br>
+    **Authors:** Junmeng Cai, Ronghou Liu<br>
+    **DOI:**[DOI:10.1007/s10910-007-9328-5](DOI:10.1007/s10910-007-9328-5)
 
 [^Thesis]: **Thermodynamic and kinetic unfolding characterization of therapeutic monoclonal antibodies using thermal analytics**<br>
     **Author:** Richard Melien (née Weber)<br>
