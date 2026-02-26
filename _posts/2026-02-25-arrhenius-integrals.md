@@ -165,7 +165,7 @@ Don't destroy your data. Stop taking the derivative. The truth is always in the 
     **Author:** Richard Melien (née Weber)<br>
     **Institution:** Martin-Luther-Universität Halle-Wittenberg (in collaboration with Boehringer Ingelheim & NanoTemper)<br>
     **Defense Date:** June 11, 2021<br>
-    **Link to the full PDF via the Halle University library:**[https://opendata.uni-halle.de/handle/1981185920/35651](https://opendata.uni-halle.de/handle/1981185920/35651) *(Note: Depending on how the repository resolves, you can also search the title directly in the ULB Sachsen-Anhalt catalog, where the open-access PDF is hosted).*
+    **Link to the full PDF via the Halle University library:**[PhD Thesis](https://opendata.uni-halle.de/handle/1981185920/38197)
 
 [^Paper]: **"Expanding the toolbox for predictive parameters describing antibody stability considering thermodynamic and kinetic determinants"**<br>
     *Pharmaceutical Research* (Dec 2021)<br>
