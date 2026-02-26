@@ -16,7 +16,7 @@ I optimize systems across domains.
 
 **Coordination Systems:** Game theory for ASI-human cooperation
 
-Currently Head of AI Product at yoummday, based in Berlin.
+Currently Head of AI Product at yoummday, based in Munich.
 
 ## What I Write About
 
@@ -26,6 +26,7 @@ Hard problems and how to solve them. Sometimes the problems are about aligning s
 
 - GitHub: [dnhkg](https://github.com/dnhkng)
 - HuggingFace: [dnhkng](https://huggingface.co/dnhkng)
+- LinkedIn: [David Noel Ng](https://www.linkedin.com/in/dnhkng/)
 - Email: dnhkng@gmail.com
 
 ---
