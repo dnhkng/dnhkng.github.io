@@ -8,13 +8,17 @@ math: true
 
 ## Introduction
 
-No one actually knows what the final computer that runs AGI will look like.
+No one actually knows what the specs pf the first computer that runs AGI will look like.
 
-The current dogma—the "Scaling Hypothesis"—suggests we are building the Tower of Babel. We look at GPT-4 and assume the next step requires Trillions of parameters and a nuclear power plant to run.
+The current scaling-pilled folk follow the "Scaling Hypothesis", but this suggests we are building the Tower of Babel. We look at GPT-4 and assume the next step requires Trillions of parameters and a nuclear power plant to run.
 
-But there is a second trend happening quietly in the background, one that contradicts the "bigger is better" narrative: **Compression.**
+But there is a second trend happening quietly in parallel, one that contradicts the "bigger is better" narrative: **Compression.**
 
-For a given model size, capabilities are skyrocketing. We are seeing specific, complex biological functions "solved" by incredibly small silicon brains. This begs a question: If we can map the size of the digital "eye" and the digital "ear," can we use biological ratios to predict the size of the digital "mind"?
+![Scaling](/assets/img/qwen3-vs-qwen3-5.webp)
+
+For a given model size, capabilities are skyrocketing. Benchmarks, however flawed, still show tiny models like Qwen3.5-4B now beating behemoths of just a few years ago like Qwen3-235B! 
+
+We are also seeing specific, complex biological functions "solved" by incredibly small silicon brains. This begs a question: If we can map the size of the digital "eye" and the digital "ear," can we use biological ratios to predict the size of the digital "mind"?
 
 It might be totally wrong, but let’s do some napkin math.
 
@@ -22,18 +26,20 @@ It might be totally wrong, but let’s do some napkin math.
 
 First, let’s look at "Compute Saturation"—the point where adding more parameters stops yielding better results because the task is effectively solved.
 
-Take hearing. NVIDIA’s **Canary-1B (v2)** is a shock to the system. With just **1 Billion parameters**, it can transcribe and translate significantly better than models ten times its size, handling over 25 languages with nuance. It fits on a smartphone chip.
+### Hearing
+NVIDIA’s **Canary-1B (v2)** is incredible efficient: With just **1 Billion parameters**, it can transcribe and translate significantly better than LLM-hybrid models ten times its size, handling over 25 languages with solid accuracy. It runs on a smartphone chip in real time.
 
-Take vision. To build a system that understands object permanence, physics, and occlusion (a "World Model"), we don't need a trillion parameters. The visual backbones of our best video models achieve near-human fidelity with a dense parameter count estimated between **3 and 5 Billion**.
+### Vision
+To build a system that understands object permanence, physics, and occlusion (a "World Model"), we don't need a trillion parameters. The visual backbones of our best video models achieve near-human fidelity with a dense parameter count estimated between **3 and 5 Billion**.
 
 **The Baseline:**
 If nature’s blueprint for an auditory cortex costs ~1B silicon credits, and the visual cortex costs ~3.5B, we have a biological baseline. Sensory processing is "cheap."
 
 ### The Ratio: Scaling the Digital Cortex
 
-We used to think we had to simulate the *whole* brain to get AGI. But general intelligence doesn't live in the motor cortex or the autonomic stem. It lives in the **Parieto-Frontal Integration Network (P-FIT)**—the specific wiring for reasoning, planning, and logic.
+We used to think we had to simulate the *whole* brain to get AGI. But general intelligence doesn't live in the motor cortex or the autonomic stem. It lives in the **Parieto-Frontal Integration Network (P-FIT)**, which contains the specific wiring for reasoning, planning, and logic.
 
-If we assume the "Visual Unit" is roughly **3.5 Billion parameters**, let's scale that up to a "Reasoning Unit" using human neuroanatomy:
+If we assume the "*Visual Unit*" is roughly **3.5 Billion parameters**, let's scale that up to a "*Reasoning Unit*" using human neuroanatomy:
 
 1.  **Volume:** The reasoning network (P-FIT) is physically larger than the visual system. It takes up about **2.25x** the volume.
 2.  **Density:** Pyramidal neurons in the prefrontal cortex are "bushier" than visual neurons (more dendritic spines). Let's say a reasoning neuron is **3.75x** more complex.
@@ -47,28 +53,26 @@ $$ \approx \mathbf{51.6 \text{ Billion Parameters}} $$
 
 ### The "Final" Architecture
 
-This number—**~52 Billion**—is fascinating.
+This number—**~52 Billion** is pretty interesting.
 
-Right now, we see models like Llama 3 70B performing very well. But we have to remember: **Transformers are likely not the final architecture.** They are amazing, but they are inefficient. They are the vacuum tubes of AI.
+Right now, we see models like Llama 3 70B performing very well. But we have to remember: **Transformers are likely not the final architecture.** They are amazing, but they are inefficient. They are the vacuum tubes of AI. Newer models like Qwen3.5-27B are much better, at less than half the size.
 
 As we move toward newer architectures—perhaps State Space Models (SSMs), hybrids, or recursive architectures we haven't invented yet—we will likely shed the "bloat."
 
-The "Cortical Ratio" suggests that once we strip away the inefficiencies, the **Minimum Viable Core** for human-level reasoning isn't a trillion parameters. It is a compact, dense kernel of roughly **50B parameters**.
+The "*Cortical Ratio*" suggests that once we strip away the inefficiencies, the **Minimum Viable Core** for human-level reasoning isn't a trillion parameters. It is a compact, dense kernel of roughly **52B parameters**.
 
-### Why 50B changes the Physics of AGI
+### Why 52B changes the Physics of AGI
 
-If the "Mind" fits in 50B, the problem stops being about storage and starts being about **Time.**
+If the "Mind" fits in 52B, the problem stops being about storage and starts being about **Time.**
 
-A 50B parameter model is small enough to fit entirely onto the VRAM of a single high-end consumer GPU (like a future RTX 6090 or a workstation card). This changes everything.
+A 52B parameter model is small enough to fit entirely onto the VRAM of a single high-end consumer GPU (like a future RTX 6090 or a workstation card). Current LLMs are feed-forward; they take a snapshot of a thought. But thinking is a loop. We ruminate. To match the "gamma frequency" of the human brain (thinking at ~50Hz), we need to run that 52B model in a loop, checking its own work, searching for answers.  Basically what we hope for for [OpenClaw](https://openclaw.ai)
 
-Current LLMs are feed-forward; they take a snapshot of a thought. But thinking is a loop. We ruminate. To match the "gamma frequency" of the human brain (thinking at ~50Hz), we need to run that 50B model in a loop, checking its own work, searching for answers.
-
-*   **Model Mass:** 50 Billion.
+*   **Model Mass:** 52 Billion.
 *   **Memory Footprint (Quantized):** ~25-30 GB.
 *   **Required Bandwidth for 50Hz Loop:** ~1.3 TB/s.
 
-**This is the smoking gun.**
-Current hardware (HBM3e) already hits bandwidths of 1.5 – 4.8 TB/s.
+**We are already there!**
+Current hardware (HBM3e) already hits bandwidths of 1.5 – 4.8 TB/s.  We already has the compute AND bandwidth to run such a model, we just need the right architecture and training.
 
 ### The Verdict
 
@@ -76,6 +80,6 @@ We might be overthinking the scale required for AGI.
 
 The trend from Canary-1B to modern vision models suggests that biological capabilities compress down to very manageable file sizes. If this ratio holds, the era of "Giant Models" is a temporary detour.
 
-The future isn't a trillion-parameter God-AI living in a cloud data center. It is a highly optimized **50B Reasoning Kernel**—a digital prefrontal cortex—that fits on your local machine, running in a continuous, high-speed loop.
+The future isn't a trillion-parameter God-AI living in a cloud data center. It is a highly optimized **52B Reasoning Kernel**—a digital prefrontal cortex—that fits on your local machine, running in a continuous, high-speed loop.
 
 The hardware is ready. We're just waiting for the architecture to catch up to the math.
