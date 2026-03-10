@@ -26,5 +26,36 @@
   // Run tasks in macOS
   "terminal.integrated.profiles.osx": {
     "zsh": { "path": "/bin/zsh", "args": ["-l", "-i"] }
-  }
+  },
+  "cSpell.words": [
+    "Alpin",
+    "calme",
+    "dfurman",
+    "dnhkng",
+    "Euryale",
+    "Frankenmerge",
+    "GPQA",
+    "hahaha",
+    "inferencing",
+    "interpretability",
+    "ljust",
+    "logit",
+    "logits",
+    "Marxav",
+    "mathcal",
+    "mathrm",
+    "Maziyar",
+    "mergekit",
+    "MMLU",
+    "Mrmw",
+    "Neuroanatomy",
+    "Orpo",
+    "Panahi",
+    "Panahi's",
+    "qwen",
+    "RLHF",
+    "SLERP",
+    "Xwin",
+    "Yeehaw"
+  ]
 }
