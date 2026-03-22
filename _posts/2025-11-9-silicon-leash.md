@@ -4,7 +4,6 @@ date: 2025-11-9 10:00:00 +0100
 categories: [AI Safety, Coordination]
 tags: [asi, alignment, game-theory, economics, automation]
 math: true
-pin: true
 ---
 
 **The Cooperative Central Planning Handshake: A Positive-Sum Basilisk for ASI Alignment**
