@@ -8,78 +8,142 @@ math: true
 
 ## Introduction
 
-No one actually knows what the specs pf the first computer that runs AGI will look like.
+No one knows how big AGI needs to be. The current consensus among the scaling-pilled crowd is "trillions of parameters and a nuclear power plant." Maybe they're right. But I spent years dissecting rat brains for my PhD, and the one thing neuroscience taught me is that biology is *embarrassingly good at compression*.
 
-The current scaling-pilled folk follow the "Scaling Hypothesis", but this suggests we are building the Tower of Babel. We look at GPT-4 and assume the next step requires Trillions of parameters and a nuclear power plant to run.
+There's a quieter trend happening alongside the scaling race: for a given model size, capabilities are climbing fast. Qwen3.5-4B now matches or beats models 50× its size from just two years ago on standard benchmarks (*yes, benchmarks are flawed, but the trajectory is real*). Distillation keeps working better than it should. Small, purpose-built models keep eating tasks that were supposed to require frontier scale.
 
-But there is a second trend happening quietly in parallel, one that contradicts the "bigger is better" narrative: **Compression.**
+This got me thinking. We already have narrow AI systems that match or exceed human performance on specific sensory tasks — hearing, vision — and we know roughly how many parameters they needed to get there. We also know, from a century of neuroanatomy, roughly how the human brain allocates its computational budget across different functions.
 
-![Scaling](/assets/img/qwen3-vs-qwen3-5.webp)
+So: can we use the known cost of the "digital ear" and the "digital eye" as anchors, and then scale up to the "digital mind" using biological ratios?
 
-For a given model size, capabilities are skyrocketing. Benchmarks, however flawed, still show tiny models like Qwen3.5-4B now beating behemoths of just a few years ago like Qwen3-235B! 
+This is a Fermi estimation. It will be wrong. The question is whether it's *usefully* wrong.
 
-We are also seeing specific, complex biological functions "solved" by incredibly small silicon brains. This begs a question: If we can map the size of the digital "eye" and the digital "ear," can we use biological ratios to predict the size of the digital "mind"?
+---
 
-It might be totally wrong, but let’s do some napkin math.
+## The Anchors
 
-### The Anchors: The 1GB Ear and the 4GB Eye
+The idea here is simple. Find tasks where silicon has caught up with biology, note how many parameters it took, and use those as reference points. I'm looking for **compute saturation**: the point where throwing more parameters at a specific task stops helping, because the task is effectively solved.
 
-First, let’s look at "Compute Saturation"—the point where adding more parameters stops yielding better results because the task is effectively solved.
+### The Digital Ear (~1B parameters)
 
-### Hearing
-NVIDIA’s **Canary-1B (v2)** is incredible efficient: With just **1 Billion parameters**, it can transcribe and translate significantly better than LLM-hybrid models ten times its size, handling over 25 languages with solid accuracy. It runs on a smartphone chip in real time.
+NVIDIA's Canary-1B (v2) handles multilingual ASR and translation across 25+ languages at near-SOTA accuracy. One billion parameters. Runs in real-time on a phone.
 
-### Vision
-To build a system that understands object permanence, physics, and occlusion (a "World Model"), we don't need a trillion parameters. The visual backbones of our best video models achieve near-human fidelity with a dense parameter count estimated between **3 and 5 Billion**.
+Now, ASR is obviously not the full auditory cortex. Humans do source separation, spatial localisation, prosody decoding, musical perception, and a dozen other things beyond "convert pressure wave to text." But transcription is the *core transform*: the fundamental signal-to-symbol conversion, and that's the part that maps most directly onto what a model actually does.
 
-**The Baseline:**
-If nature’s blueprint for an auditory cortex costs ~1B silicon credits, and the visual cortex costs ~3.5B, we have a biological baseline. Sensory processing is "cheap."
+**Anchor 1: ~1B parameters for the core auditory transform.**
 
-### The Ratio: Scaling the Digital Cortex
+### The Digital Eye (~3–5B parameters)
 
-We used to think we had to simulate the *whole* brain to get AGI. But general intelligence doesn't live in the motor cortex or the autonomic stem. It lives in the **Parieto-Frontal Integration Network (P-FIT)**, which contains the specific wiring for reasoning, planning, and logic.
+Similar story for vision. The dense backbones of current video understanding models (SigLIP, InternViT, and friends) hit their stride somewhere in the 3–5B parameter range for core visual understanding: object permanence, occlusion, basic scene physics.
 
-If we assume the "*Visual Unit*" is roughly **3.5 Billion parameters**, let's scale that up to a "*Reasoning Unit*" using human neuroanatomy:
+Again, not the *full* visual cortex. No mental rotation, no visual imagination, no dreaming. It's the feedforward perceptual pipeline: pixels in, scene graph out.
 
-1.  **Volume:** The reasoning network (P-FIT) is physically larger than the visual system. It takes up about **2.25x** the volume.
-2.  **Density:** Pyramidal neurons in the prefrontal cortex are "bushier" than visual neurons (more dendritic spines). Let's say a reasoning neuron is **3.75x** more complex.
-3.  **Wiring Tax:** Unlike vision, which is local, reasoning is global. It requires long-range connections. We add a **1.75x** tax for this connectivity overhead.
+**Anchor 2: ~3.5B parameters (geometric mean) for core visual processing.**
 
-**The Equation:**
+### Are These Anchors Any Good?
 
-$$ 3.5\text{B (Vision)} \times 2.25\text{ (Volume)} \times 3.75\text{ (Density)} \times 1.75\text{ (Wiring)} $$
+Honestly? They're rough. Mapping "human sensory cortex" to "neural network that does a similar task" is full of holes. The architectures are completely different. The representations are probably different. We're comparing a spiking recurrent biological circuit running on 20 watts to a feedforward transformer running on 300.
 
-$$ \approx \mathbf{51.6 \text{ Billion Parameters}} $$
+But for a Fermi estimate, we don't need the mapping to be exact. We need it to be in the right *neighbourhood*. And "sensory processing saturates in the low single-digit billions" seems defensible enough to build on.
 
-### The "Final" Architecture
+---
 
-This number—**~52 Billion** is pretty interesting.
+## Scaling to the Reasoning Core
 
-Right now, we see models like Llama 3 70B performing very well. But we have to remember: **Transformers are likely not the final architecture.** They are amazing, but they are inefficient. They are the vacuum tubes of AI. Newer models like Qwen3.5-27B are much better, at less than half the size.
+Here's where it gets properly speculative. But that's the point of a Fermi estimate: you make your best guesses, write them down, and see what falls out.
 
-As we move toward newer architectures—perhaps State Space Models (SSMs), hybrids, or recursive architectures we haven't invented yet—we will likely shed the "bloat."
+General intelligence doesn't live in the motor cortex or the brainstem. The best neuroscience model we have for the "reasoning hardware" is the **Parieto-Frontal Integration Theory (P-FIT)**, proposed by Jung & Haier (2007). P-FIT identifies a distributed network across the dorsolateral prefrontal cortex, anterior cingulate, and parietal association areas as the structural basis for general intelligence. It's the hardware that does planning, abstraction, logical inference, and working memory.
 
-The "*Cortical Ratio*" suggests that once we strip away the inefficiencies, the **Minimum Viable Core** for human-level reasoning isn't a trillion parameters. It is a compact, dense kernel of roughly **52B parameters**.
+To scale from the visual anchor to a reasoning estimate, I need three multipliers. Each one is genuinely uncertain, so I'll give ranges rather than pretending I know the answer.
 
-### Why 52B changes the Physics of AGI
+### 1. Volume Ratio
 
-If the "Mind" fits in 52B, the problem stops being about storage and starts being about **Time.**
+The P-FIT network is physically larger than the primary visual cortex. MRI volumetric studies put the ratio somewhere between **1.5× and 3×**, depending on how generously you draw the boundaries.
 
-A 52B parameter model is small enough to fit entirely onto the VRAM of a single high-end consumer GPU (like a future RTX 6090 or a workstation card). Current LLMs are feed-forward; they take a snapshot of a thought. But thinking is a loop. We ruminate. To match the "gamma frequency" of the human brain (thinking at ~50Hz), we need to run that 52B model in a loop, checking its own work, searching for answers.  Basically what we hope for for [OpenClaw](https://openclaw.ai)
+Drawing boundaries in the brain is a *lot* like drawing boundaries on a map of the Middle East. Everyone has strong opinions, and nobody agrees.
 
-*   **Model Mass:** 52 Billion.
-*   **Memory Footprint (Quantized):** ~25-30 GB.
-*   **Required Bandwidth for 50Hz Loop:** ~1.3 TB/s.
+**Range: 1.5–3×. Central guess: ~2.25×**
 
-**We are already there!**
-Current hardware (HBM3e) already hits bandwidths of 1.5 – 4.8 TB/s.  We already has the compute AND bandwidth to run such a model, we just need the right architecture and training.
+### 2. Computational Density
 
-### The Verdict
+Not all neurons are equal. Pyramidal neurons in the prefrontal cortex have significantly more dendritic spines than neurons in V1, roughly 2–5× more synaptic connections per neuron, depending on layer and species. More spines means more integration per unit, which maps (*loosely*) to more parameters per computational element.
 
-We might be overthinking the scale required for AGI.
+**Range: 2–5×. Central guess: ~3×**
 
-The trend from Canary-1B to modern vision models suggests that biological capabilities compress down to very manageable file sizes. If this ratio holds, the era of "Giant Models" is a temporary detour.
+### 3. Connectivity Overhead
 
-The future isn't a trillion-parameter God-AI living in a cloud data center. It is a highly optimized **52B Reasoning Kernel**—a digital prefrontal cortex—that fits on your local machine, running in a continuous, high-speed loop.
+Vision is architecturally local: a hierarchy of increasingly abstract feature detectors. Reasoning is architecturally global, requiring long-range white matter connections between distant brain regions. In transformer terms, it's the difference between local attention and full self-attention. Long-range wiring is expensive.
 
-The hardware is ready. We're just waiting for the architecture to catch up to the math.
+How expensive? White matter tract studies suggest prefrontal regions have 1.25–2.5× the long-range connectivity density of sensory cortices.
+
+**Range: 1.25–2.5×. Central guess: ~1.75×**
+
+---
+
+## The Maths
+
+Three multipliers, three ranges. Let's see what falls out.
+
+**Low estimate (optimistic):**
+
+$$ 3.5\text{B} \times 1.5 \times 2.0 \times 1.25 = \mathbf{13.1\text{B}} $$
+
+**Central estimate:**
+
+$$ 3.5\text{B} \times 2.25 \times 3.0 \times 1.75 = \mathbf{41.3\text{B}} $$
+
+**High estimate (conservative):**
+
+$$ 3.5\text{B} \times 3.0 \times 5.0 \times 2.5 = \mathbf{131.3\text{B}} $$
+
+So: **somewhere between 13B and 131B, with a central estimate around 40–50B.**
+
+The spread is about one order of magnitude, which is par for the course with a Fermi estimate built on three uncertain multipliers. The point isn't the specific number. The point is what the range *excludes*.
+
+It doesn't include trillions.
+
+---
+
+## What This Means (If It's Even Roughly Right)
+
+A 40–50B dense model, quantised to 4-bit, fits in about 20–25 GB of VRAM. That's a single high-end consumer GPU. A 130B model at 4-bit needs ~65 GB, so a dual-GPU workstation or one professional card.
+
+Current HBM3e already exceeds 1.5 TB/s bandwidth and the trend is steep. If reasoning-level AGI lives somewhere in this parameter range, the bottleneck isn't memory or bandwidth. It's architecture and training.
+
+This also maps onto what we actually observe in practice, which is either encouraging or suspicious depending on your epistemological temperament. The 30–70B range is where open-weights models start to feel qualitatively different, where they go from "impressive autocomplete" to something that can sustain coherent multi-step reasoning. My own work on [LLM Neuroanatomy](https://dnhkng.github.io/posts/rys/) found that models need a certain minimum size before their internal "reasoning circuits" cleanly separate from encoding and decoding functions. Below that critical mass, everything is entangled. Above it, genuine functional specialisation emerges.
+
+That's not proof of anything. But it's consistent.
+
+---
+
+## Where This Breaks Down
+
+I should be honest about the many ways this could be garbage. In roughly descending order of how much they keep me up at night:
+
+**The anchors might be wrong.** ASR isn't hearing. Video understanding isn't vision. If the "real" sensory compute floor is 10× higher than I've estimated, the whole thing shifts up an order of magnitude and we're back to trillion-parameter territory. I don't *think* that's the case. The saturation curves look genuine. But I could be fooling myself.
+
+**Reasoning might not scale from perception.** The relationship between perceiving and thinking might not be a multiplicative scaling at all. Reasoning might require qualitatively different computational primitives: recursion, persistent state, learned search. Things that don't map onto parameter count in any straightforward way. If that's true, this entire approach is meaningless, and I've just done napkin maths for fun. (*Which, honestly, is also fine.*)
+
+**Transformers might be wildly more or less efficient than biology.** The brain deals with noisy spiking neurons, slow chemical synapses, and a 20-watt power budget. Transformers have none of these constraints. Maybe a transformer parameter is "worth" 10 biological synapses. Maybe it's worth 0.1. We genuinely don't know.
+
+**Architecture matters enormously.** A 50B transformer, a 50B state-space model, and a 50B hybrid with learned routing are three very different things. Parameter count alone is a terrible proxy for capability. The entire estimate assumes that "number of parameters" is a meaningful unit of comparison between biological and artificial systems, which is... optimistic.
+
+**Evolution doesn't optimise for parameter efficiency.** It optimises for survival. There could be massive redundancy in biological neural circuits: backup systems, evolutionary dead ends, dual-coding for robustness. None of that has an equivalent in a trained model. Biology might be *over-provisioned* by 10× for the reasoning task, in which case my biological multipliers are too high.
+
+---
+
+## The Takeaway
+
+This is a thought experiment. I want to be clear about that. The multipliers are guesses. The anchors are approximations. The whole approach assumes a mapping between biological and artificial systems that might not hold.
+
+But I think it's a *useful* thought experiment, because it generates a number that's much smaller than most people's intuition.
+
+When we think about AGI, we default to imagining something enormous. Planetary-scale compute. Trillions of parameters. Billion-dollar training runs. The Cortical Ratio suggests a different possibility: the minimum viable reasoning core might be surprisingly compact, and the "giant model" era might be a temporary consequence of architectural inefficiency rather than a fundamental requirement of the problem.
+
+If even the conservative end of this estimate is in the right ballpark, AGI doesn't need a data centre. It needs a better architecture.
+
+We have the silicon. We're waiting on the blueprint.
+
+---
+
+*The "Cortical Ratio" is my name for this approach. It's not established neuroscience terminology, just a useful framing. If you want to dig into the neuro side, Jung & Haier's 2007 P-FIT paper is the starting point. For the compression trend in LLMs, the Qwen3.5 and Phi-4 technical reports are good recent data points.*
