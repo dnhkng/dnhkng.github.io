@@ -44,7 +44,7 @@ Again, not the *full* visual cortex. No mental rotation, no visual imagination, 
 
 Honestly? They're rough. Mapping "human sensory cortex" to "neural network that does a similar task" is full of holes. The architectures are completely different. The representations are probably different. We're comparing a spiking recurrent biological circuit running on 20 watts to a feedforward transformer running on 300.
 
-But for a Fermi estimate, we don't need the mapping to be exact. We need it to be in the right *neighbourhood*. And "sensory processing saturates in the low single-digit billions" seems defensible enough to build on.
+But for a Fermi estimate, we don't need the mapping to be exact. We need it to be in the right *neighbourhood*. And "sensory processing saturates in the low single-digit billions" seems defensible enough to build on. As a sanity check, we'll run the calculation from *both* anchors independently and see whether they converge.
 
 ---
 
@@ -82,6 +82,8 @@ How expensive? White matter tract studies suggest prefrontal regions have 1.25�
 
 ## The Maths
 
+### From the Visual Anchor
+
 Three multipliers, three ranges. Let's see what falls out.
 
 **Low estimate (optimistic):**
@@ -96,9 +98,46 @@ $$ 3.5\text{B} \times 2.25 \times 3.0 \times 1.75 = \mathbf{41.3\text{B}} $$
 
 $$ 3.5\text{B} \times 3.0 \times 5.0 \times 2.5 = \mathbf{131.3\text{B}} $$
 
-So: **somewhere between 13B and 131B, with a central estimate around 40–50B.**
+Visual pathway range: **13B – 131B, central estimate ~41B.**
 
-The spread is about one order of magnitude, which is par for the course with a Fermi estimate built on three uncertain multipliers. The point isn't the specific number. The point is what the range *excludes*.
+### From the Auditory Anchor
+
+Now let's run the same exercise starting from the ear instead of the eye. The multipliers are different because A1 and V1 have different architectures, so this is genuinely independent.
+
+**1. Volume ratio (5–12×, central ~8×).** Primary auditory cortex (Heschl's gyrus) is tiny — roughly 0.5–1.0 cm³, compared to V1's ~5.4 cm³. The P-FIT network spans 5–12 cm³ of effective reasoning tissue, so the jump is much larger than from vision.
+
+**2. Computational density (1.5–3×, central ~2×).** A1 has high neuron density (~68M/g) but lacks V1's dominant spiny stellate population in layer 4 and has simpler synaptic machinery than prefrontal pyramidal neurons. The multiplier is smaller than for vision (2–5×) because the gap is narrower — A1 is already neuron-dense, just less synaptically complex.
+
+**3. Connectivity overhead (2–4×, central ~3×).** A1 is strongly local: tonotopic organisation, ~400 μm horizontal processing spans. P-FIT requires extensive long-range tracts (SLF II, SLF III, arcuate fasciculus, callosal connections). Larger multiplier than vision (1.25–2.5×) because A1 is more locally wired than V1.
+
+**Low estimate:**
+
+$$ 1\text{B} \times 5 \times 1.5 \times 2 = \mathbf{15\text{B}} $$
+
+**Central estimate:**
+
+$$ 1\text{B} \times 8 \times 2 \times 3 = \mathbf{48\text{B}} $$
+
+**High estimate:**
+
+$$ 1\text{B} \times 12 \times 3 \times 4 = \mathbf{144\text{B}} $$
+
+Auditory pathway range: **15B – 144B, central estimate ~48B.**
+
+### Convergence
+
+Two independent anchors. Different sensory modalities. Different multiplier profiles — vision starts from a larger cortical area with denser computation but less of a connectivity gap; audition starts from a much smaller area with a bigger volume jump but a smaller density correction. And yet:
+
+| | Low | Central | High |
+|---|---|---|---|
+| Visual anchor | 13B | 41B | 131B |
+| Auditory anchor | 15B | 48B | 144B |
+
+The ranges overlap almost entirely. The central estimates differ by less than 20%. This is what you want from a Fermi estimate — robustness to anchor choice. If the answer depended heavily on which sensory system you started from, you'd worry. It doesn't.
+
+**Combined range: ~13B to ~144B, with both central estimates landing in the 40–50B neighbourhood.**
+
+The spread is about one order of magnitude, which is par for the course with a Fermi estimate built on uncertain multipliers. The point isn't the specific number. The point is what the range *excludes*.
 
 It doesn't include trillions.
 
@@ -106,7 +145,7 @@ It doesn't include trillions.
 
 ## What This Means (If It's Even Roughly Right)
 
-A 40–50B dense model, quantised to 4-bit, fits in about 20–25 GB of VRAM. That's a single high-end consumer GPU. A 130B model at 4-bit needs ~65 GB, so a dual-GPU workstation or one professional card.
+Both anchors point to the same neighbourhood: a 40–50B dense model, quantised to 4-bit, fits in about 20–25 GB of VRAM. That's a single high-end consumer GPU. A 130–144B model at 4-bit needs ~65–72 GB, so a dual-GPU workstation or one professional card.
 
 Current HBM3e already exceeds 1.5 TB/s bandwidth and the trend is steep. If reasoning-level AGI lives somewhere in this parameter range, the bottleneck isn't memory or bandwidth. It's architecture and training.
 
