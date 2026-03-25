@@ -6,7 +6,7 @@ tags: [LLMs, Neurobiology, Qwen, Phi, Distillation, LocalLLaMA]
 math: true
 ---
 
-## Introduction
+![Brain Atlas](/assets/img/brain_atlas.png)
 
 No one knows how big AGI needs to be. The current consensus among the scaling-pilled crowd is "trillions of parameters and a nuclear power plant." Maybe they're right. But I spent years dissecting rat brains for my PhD, and the one thing neuroscience taught me is that biology is *embarrassingly good at compression*.
 
@@ -128,10 +128,10 @@ Auditory pathway range: **15B – 144B, central estimate ~48B.**
 
 Two independent anchors. Different sensory modalities. Different multiplier profiles — vision starts from a larger cortical area with denser computation but less of a connectivity gap; audition starts from a much smaller area with a bigger volume jump but a smaller density correction. And yet:
 
-| | Low | Central | High |
-|---|---|---|---|
-| Visual anchor | 13B | 41B | 131B |
-| Auditory anchor | 15B | 48B | 144B |
+|                 | Low | Central | High |
+| --------------- | --- | ------- | ---- |
+| Visual anchor   | 13B | 41B     | 131B |
+| Auditory anchor | 15B | 48B     | 144B |
 
 The ranges overlap almost entirely. The central estimates differ by less than 20%. This is what you want from a Fermi estimate — robustness to anchor choice. If the answer depended heavily on which sensory system you started from, you'd worry. It doesn't.
 
