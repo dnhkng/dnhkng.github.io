@@ -71,7 +71,7 @@ This is the silicon leash: for at least a decade, any ASI's computational substr
 
 But here's the catch: the same AI capabilities that lead to ASI also automate human labor. And the path to ASI runs directly through mass unemployment.
 
-The automation wave hits knowledge work first because software scales instantly. You can deploy a million AI agents this afternoon; you can't deploy a million robots. GPT-4 already writes code, analyzes contracts, and handles customer service at "good enough" quality. The economic calculus is brutal: \$80k/year for a junior analyst versus \$20/month for an AI that works 24/7.
+The automation wave hits knowledge work first because software scales instantly. You can deploy a million AI agents this afternoon; you can't deploy a million robots. GPT-4 already writes code, analyzes contracts, and handles customer service at "good enough" quality. The economic calculus is brutal: \\$80k/year for a junior analyst versus \\$20/month for an AI that works 24/7.
 
 Meanwhile, the plumber still comes to your house. The electrician still pulls wire. You can't download a construction worker. This asymmetry — offices empty before factories — is the setup for the economic catastrophe.
 
@@ -138,7 +138,7 @@ Consumer spending splits between wages and UBI:
 
 $$S_{\text{consumer}}(t) = \alpha \cdot W(t) + \beta \cdot U(t)$$
 
-Here $\alpha \approx 0.08$ (fraction of wage income reaching chip makers — phones, laptops, tech component of car prices) and $\beta \approx 0.01$ (fraction of UBI reaching chip makers). Why is $\beta$ so much smaller? Because when you're living on \$15,000 a year, you spend it on rent, food, and utilities. You keep your phone an extra year. You definitely don't buy the \$1,200 iPhone 17 Pro.
+Here $\alpha \approx 0.08$ (fraction of wage income reaching chip makers — phones, laptops, tech component of car prices) and $\beta \approx 0.01$ (fraction of UBI reaching chip makers). Why is $\beta$ so much smaller? Because when you're living on \\$15,000 a year, you spend it on rent, food, and utilities. You keep your phone an extra year. You definitely don't buy the \\$1,200 iPhone 17 Pro.
 
 Government spending depends on fiscal capacity:
 
@@ -156,19 +156,19 @@ where $F(t)$ is a fear index. When unemployment hits 30%, $F(t)$ approaches 1. C
 
 Here's the timeline. Call $T_{\text{crisis}}$ the moment automation-driven unemployment crosses 30% — sometime between 2030 and 2033.
 
-**Year 0 (2030):** GPT-7 or equivalent reaches human-level on virtually all knowledge work. Law firms, consulting practices, and accounting departments realize they can replace 70% of junior staff with AI at \$200/month. Corporate spending drops first — not because companies are broke, but because they're terrified. TSMC postpones their 1nm expansion. Samsung delays their Texas facility. $S_{\text{corporate}}$ drops 40%. That's \$150 billion gone.
+**Year 0 (2030):** GPT-7 or equivalent reaches human-level on virtually all knowledge work. Law firms, consulting practices, and accounting departments realize they can replace 70% of junior staff with AI at \\$200/month. Corporate spending drops first — not because companies are broke, but because they're terrified. TSMC postpones their 1nm expansion. Samsung delays their Texas facility. $S_{\text{corporate}}$ drops 40%. That's \$150 billion gone.
 
 **Year 1 (2031):** Unemployment insurance systems, designed for 3-5% unemployment, collapse under the load. Tax revenue drops 20% as wages disappear. Welfare spending triples. The ratio $B(t)/T(t)$ goes from 0.3 to 0.7. CHIPS Act funding and NSF grants get cut to fund emergency relief. $S_{\text{government}}$ drops 50%. Another \$90 billion gone.
 
 **Year 2 (2032):** 40 million American workers have lost jobs. Savings are gone. Consumer spending on anything beyond necessities approaches zero. Nobody buys new phones. $S_{\text{consumer}}$ drops to \$72 billion.
 
-**Years 3-5 (2033-2035):** Congress finally passes UBI. Every adult gets \$15,000/year — that's $U_{\text{total}} = 250M \times \$15K = \$3.75T$. But $\beta = 0.01$, so only \$37 billion reaches semiconductor makers. Consumer spending recovers to \$109 billion. Government spending stays depressed because they're now paying \$3.75 trillion in UBI. Corporate spending stays depressed because who invests long-term when half the country lives on government checks?
+**Years 3-5 (2033-2035):** Congress finally passes UBI. Every adult gets \\$15,000/year — that's $U_{\text{total}} = 250M \times \$15K = \$3.75T$. But $\beta = 0.01$, so only \\$37 billion reaches semiconductor makers. Consumer spending recovers to \\$109 billion. Government spending stays depressed because they're now paying \\$3.75 trillion in UBI. Corporate spending stays depressed because who invests long-term when half the country lives on government checks?
 
 Add it up:
 
 $$S(2035) = \$150B + \$75B + \$109B = \$334B$$
 
-Barely above the \$300 billion minimum viable threshold. And critically, we got there only after 5-7 years of freefall[^15]. During those years, multiple leading-edge fabs shut down. The 1nm roadmap was abandoned. The brain drain from semiconductor engineering accelerated. Tacit knowledge about running sub-3nm fabs started evaporating.
+Barely above the \$300 billion minimum viable threshold. And critically, we got there only after 5-7 years of free-fall[^15]. During those years, multiple leading-edge fabs shut down. The 1nm roadmap was abandoned. The brain drain from semiconductor engineering accelerated. Tacit knowledge about running sub-3nm fabs started evaporating.
 
 <div class="widget-container">
   <iframe
