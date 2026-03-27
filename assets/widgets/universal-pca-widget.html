@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Language PCA Viewer</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --widget-bg-color: #f8f9fa;
+            --surface-color: #eef2f7;
+            --text-primary-color: #1f2937;
+            --text-secondary-color: #374151;
+            --text-muted-color: #6b7280;
+            --border-color: #d1d5db;
+            --btn-bg: #ffffff;
+            --btn-hover-bg: #e5e7eb;
+            --btn-active-bg: #111827;
+            --btn-active-text: #ffffff;
+            --accent-encoding: #e24b4a;
+            --accent-reasoning: #639922;
+            --accent-decoding: #378add;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-mode="light"]) {
+                --bg-color: #111827;
+                --widget-bg-color: #1f2937;
+                --surface-color: #111827;
+                --text-primary-color: #f9fafb;
+                --text-secondary-color: #d1d5db;
+                --text-muted-color: #9ca3af;
+                --border-color: #374151;
+                --btn-bg: #273244;
+                --btn-hover-bg: #334155;
+                --btn-active-bg: #f9fafb;
+                --btn-active-text: #111827;
+            }
+        }
+
+        html[data-mode="dark"] {
+            --bg-color: #111827;
+            --widget-bg-color: #1f2937;
+            --surface-color: #111827;
+            --text-primary-color: #f9fafb;
+            --text-secondary-color: #d1d5db;
+            --text-muted-color: #9ca3af;
+            --border-color: #374151;
+            --btn-bg: #273244;
+            --btn-hover-bg: #334155;
+            --btn-active-bg: #f9fafb;
+            --btn-active-text: #111827;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-secondary-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        .widget-container {
+            max-width: 760px;
+            margin: 0 auto;
+            background: var(--widget-bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .button-row,
+        .slider-row,
+        .playback-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .playback-row {
+            justify-content: space-between;
+        }
+
+        .button-row {
+            justify-content: center;
+        }
+
+        button {
+            appearance: none;
+            border: 1px solid var(--border-color);
+            background: var(--btn-bg);
+            color: var(--text-secondary-color);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        button:hover {
+            background: var(--btn-hover-bg);
+        }
+
+        button.active {
+            background: var(--btn-active-bg);
+            border-color: var(--btn-active-bg);
+            color: var(--btn-active-text);
+        }
+
+        label {
+            color: var(--text-muted-color);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .layer-label,
+        .speed-label {
+            min-width: 52px;
+            text-align: right;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary-color);
+        }
+
+        .viewer {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .placeholder {
+            max-width: 80%;
+            padding: 24px;
+            text-align: center;
+            color: var(--text-muted-color);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .phase-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--text-muted-color);
+        }
+
+        .phase-bar {
+            height: 6px;
+            margin-top: 6px;
+            border-radius: 999px;
+            background: linear-gradient(
+                to right,
+                var(--accent-encoding) 0%,
+                var(--accent-encoding) 8%,
+                #b8bec8 8%,
+                #b8bec8 15%,
+                var(--accent-reasoning) 15%,
+                var(--accent-reasoning) 70%,
+                #b8bec8 70%,
+                #b8bec8 80%,
+                var(--accent-decoding) 80%,
+                var(--accent-decoding) 100%
+            );
+        }
+
+        .note {
+            margin: 14px 0 0;
+            color: var(--text-muted-color);
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
+        .speed-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            margin-left: auto;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 12px;
+            }
+
+            .widget-container {
+                padding: 14px;
+            }
+
+            .playback-row {
+                justify-content: flex-start;
+            }
+
+            .speed-controls {
+                width: 100%;
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="button-row" id="model-buttons">
+            <button type="button" class="model-btn active" data-model="qwen">Qwen3.5-27B</button>
+            <button type="button" class="model-btn" data-model="minimax">MiniMax M2.5</button>
+            <button type="button" class="model-btn" data-model="glm">GLM-4.7</button>
+            <button type="button" class="model-btn" data-model="oss">GPT-OSS-120B</button>
+        </div>
+
+        <div class="slider-row">
+            <label for="layer-slider">Layer</label>
+            <input type="range" min="0" max="64" value="0" id="layer-slider" step="1">
+            <span class="layer-label" id="layer-label">0 / 64</span>
+        </div>
+
+        <div class="playback-row">
+            <button type="button" id="play-button">Play</button>
+            <div class="speed-controls">
+                <label for="speed-slider">Speed</label>
+                <input type="range" min="50" max="500" value="150" id="speed-slider" step="10">
+                <span class="speed-label" id="speed-label">150ms</span>
+            </div>
+        </div>
+
+        <div class="viewer">
+            <p id="placeholder-text" class="placeholder">Loading PCA frames...</p>
+            <img id="pca-img" alt="PCA frame">
+        </div>
+
+        <div class="phase-labels">
+            <span>Encoding</span>
+            <span>Reasoning</span>
+            <span>Decoding</span>
+        </div>
+        <div class="phase-bar"></div>
+
+        <p class="note">
+            Aligned PCA of 64 sentence representations across layers. Points are colored by language and shaped by topic.
+        </p>
+    </div>
+
+    <script>
+        const MODELS = {
+            qwen: { basePath: "/assets/img/pca/qwen27b/", maxLayer: 64 },
+            minimax: { basePath: "/assets/img/pca/minimax/", maxLayer: 62 },
+            glm: { basePath: "/assets/img/pca/glm/", maxLayer: 92 },
+            oss: { basePath: "/assets/img/pca/oss/", maxLayer: 36 }
+        };
+
+        let currentModel = "qwen";
+        let playing = false;
+        let timer = null;
+        const preloaded = {};
+
+        const slider = document.getElementById("layer-slider");
+        const layerLabel = document.getElementById("layer-label");
+        const playButton = document.getElementById("play-button");
+        const speedSlider = document.getElementById("speed-slider");
+        const speedLabel = document.getElementById("speed-label");
+        const image = document.getElementById("pca-img");
+        const placeholder = document.getElementById("placeholder-text");
+        const modelButtons = document.querySelectorAll(".model-btn");
+
+        function getTheme() {
+            try {
+                if (window.parent && window.parent !== window) {
+                    const parentTheme = window.parent.document.documentElement.getAttribute("data-mode");
+                    if (parentTheme) return parentTheme;
+                    return window.parent.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+                }
+            } catch (error) {
+                // Same widget also works standalone, so fall through to local detection.
+            }
+
+            const localTheme = document.documentElement.getAttribute("data-mode");
+            if (localTheme) return localTheme;
+            return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+
+        function applyTheme(theme) {
+            if (theme === "dark") {
+                document.documentElement.setAttribute("data-mode", "dark");
+            } else if (theme === "light") {
+                document.documentElement.setAttribute("data-mode", "light");
+            } else {
+                document.documentElement.removeAttribute("data-mode");
+            }
+        }
+
+        function padFrame(index) {
+            return String(index).padStart(4, "0");
+        }
+
+        function framePath(model, index) {
+            return MODELS[model].basePath + "frame_" + padFrame(index) + ".png";
+        }
+
+        function preloadModel(model) {
+            if (preloaded[model]) return;
+            preloaded[model] = true;
+
+            for (let index = 0; index <= MODELS[model].maxLayer; index += 1) {
+                const preload = new Image();
+                preload.src = framePath(model, index);
+            }
+        }
+
+        function updateLayer(index) {
+            const maxLayer = MODELS[currentModel].maxLayer;
+            const clampedIndex = Math.max(0, Math.min(index, maxLayer));
+
+            slider.value = clampedIndex;
+            layerLabel.textContent = clampedIndex + " / " + maxLayer;
+            image.src = framePath(currentModel, clampedIndex);
+        }
+
+        function setModel(model) {
+            if (!MODELS[model]) return;
+
+            currentModel = model;
+            slider.max = MODELS[model].maxLayer;
+            if (parseInt(slider.value, 10) > MODELS[model].maxLayer) {
+                slider.value = MODELS[model].maxLayer;
+            }
+
+            modelButtons.forEach((button) => {
+                button.classList.toggle("active", button.dataset.model === model);
+            });
+
+            preloadModel(model);
+            updateLayer(parseInt(slider.value, 10));
+
+            if (playing) restartPlayback();
+        }
+
+        function restartPlayback() {
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+            }
+
+            if (!playing) return;
+
+            timer = setInterval(() => {
+                const nextLayer = (parseInt(slider.value, 10) + 1) % (MODELS[currentModel].maxLayer + 1);
+                updateLayer(nextLayer);
+            }, parseInt(speedSlider.value, 10));
+        }
+
+        function resizeFrameToContent() {
+            try {
+                if (!window.frameElement) return;
+                const height = Math.ceil(document.documentElement.scrollHeight);
+                window.frameElement.style.height = height + "px";
+            } catch (error) {
+                // Ignore if the widget is opened standalone.
+            }
+        }
+
+        function togglePlayback() {
+            playing = !playing;
+            playButton.textContent = playing ? "Pause" : "Play";
+            restartPlayback();
+        }
+
+        image.addEventListener("load", () => {
+            image.style.display = "block";
+            placeholder.style.display = "none";
+        });
+
+        image.addEventListener("error", () => {
+            image.style.display = "none";
+            placeholder.style.display = "block";
+            placeholder.textContent = "Missing image: " + framePath(currentModel, parseInt(slider.value, 10));
+        });
+
+        slider.addEventListener("input", () => {
+            updateLayer(parseInt(slider.value, 10));
+        });
+
+        speedSlider.addEventListener("input", () => {
+            speedLabel.textContent = speedSlider.value + "ms";
+            if (playing) restartPlayback();
+        });
+
+        playButton.addEventListener("click", togglePlayback);
+
+        modelButtons.forEach((button) => {
+            button.addEventListener("click", () => {
+                setModel(button.dataset.model);
+            });
+        });
+
+        try {
+            if (window.parent && window.parent !== window) {
+                const observer = new MutationObserver(() => {
+                    applyTheme(getTheme());
+                });
+                observer.observe(window.parent.document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ["data-mode"]
+                });
+            }
+        } catch (error) {
+            // Ignore cross-origin or access errors.
+        }
+
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+            applyTheme(getTheme());
+        });
+
+        if (typeof ResizeObserver !== "undefined") {
+            const resizeObserver = new ResizeObserver(() => {
+                resizeFrameToContent();
+            });
+            resizeObserver.observe(document.body);
+        } else {
+            window.addEventListener("resize", resizeFrameToContent);
+        }
+
+        applyTheme(getTheme());
+        preloadModel(currentModel);
+        speedLabel.textContent = speedSlider.value + "ms";
+        setModel(currentModel);
+        resizeFrameToContent();
+    </script>
+</body>
+</html>
