@@ -9,6 +9,8 @@ pin: true
 
 ![cover](/assets/img/universal/universal.png)
 
+> Note: this article is Not Finished!  It is very 'sloppy', and needs a large rewrite.  I will do so when I am back from holiday. If you can wait, come back at the end of April, as the quality will be much higher and will imclude more experimental results!
+
 The Sapir-Whorf hypothesis — the idea that the language you think in shapes or determines what you can think — has been one of the stickiest ideas in linguistics for nearly a century. The strong version says language *determines* thought. The weak version says it *influences* thought. Both assume that cognition and language are deeply entangled.
 
 I have new empirical evidence that, at least in transformer-based language models, ***this entanglement is structurally severed***. In the reasoning layers, thought and language are cleanly separated. Language is I/O. Thought happens somewhere else entirely.
