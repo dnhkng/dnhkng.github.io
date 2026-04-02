@@ -9,7 +9,7 @@ pin: true
 
 
 # UNFINISHED ARTICLE!
-Note: this article is Not Finished!  It is very 'sloppy', and needs a large rewrite.  I will do so when I am back from holiday. If you can wait, come back at the end of April, as the quality will be much higher and will imclude more experimental results!
+**Note:** *this article is Not Finished!  It is very 'sloppy', and needs a large rewrite.  I will do so when I am back from holiday. If you can wait, come back at the end of April, as the quality will be much higher and will imclude more experimental results!*
 
 ![cover](/assets/img/universal/universal.png)
 
