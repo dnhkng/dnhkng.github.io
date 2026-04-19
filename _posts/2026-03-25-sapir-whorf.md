@@ -1,5 +1,5 @@
 ---
-title: "Do LLMs Break the Sapir-Whorf Hypothesis?"
+title: "LLM Neuroanatomy III: Do LLMs Break the Sapir-Whorf Hypothesis?"
 date: 2026-03-26 00:00:00 +0100
 categories: [LLMs, Research]
 tags: [llm, neuroanatomy, sapir-whorf, chomsky, universal-grammar, universal-language, representation]
@@ -7,37 +7,41 @@ math: true
 pin: true
 ---
 
-
-# UNFINISHED ARTICLE!
-**Note:** *this article is Not Finished!  It is very 'sloppy', and needs a large rewrite.  I will do so when I am back from holiday. If you can wait, come back at the end of April, as the quality will be much higher and will imclude more experimental results!*
-
 ![cover](/assets/img/universal/universal.png)
 
-The Sapir-Whorf hypothesis — the idea that the language you think in shapes or determines what you can think — has been one of the stickiest ideas in linguistics for nearly a century. The strong version says language *determines* thought. The weak version says it *influences* thought. Both assume that cognition and language are deeply entangled.
+If you haven't heard about the Sapir-Whorf hypothesis, don't worry, I hadn't either until I saw a [comment on Twitter](https://x.com/othermaciej/status/2036296850291171490) about my [RYS part II](https://dnhkng.github.io/posts/rys-ii/) article. [Maciej Stachowiak](https://x.com/othermaciej) dropped the comment in regards to my small experiment comparing language vs topic in LLMs. The data showed that the middle layers of the Qwen3.5-27B model where focused on the topics of sentences, and had lost track of the language used to write them.
 
-I have new empirical evidence that, at least in transformer-based language models, ***this entanglement is structurally severed***. In the reasoning layers, thought and language are cleanly separated. Language is I/O. Thought happens somewhere else entirely.
+> Some weak evidence against at least the strong form of the Sapir-Whorf hypothesis. - @othermaciej
 
-And the same result replicates across four architecturally different models.
+After digging into the topic, I found that the debate maps surprisingly well onto what we see inside transformer models. The Sapir-Whorf hypothesis is simply the idea that the language you think in shapes or determines what you can think, and has been debated in linguistics for nearly a century. It comes in two versions; both assume that cognition and language are deeply entangled:
+
+ - Linguistic Determinism (*Strong Version*): The now-discredited view that language determines thought, limiting or restricting cognitive categories.
+
+ - Linguistic Relativity (*Weak Version*): The widely accepted view that language structures influence speaker perception, shaping cognitive patterns without strictly limiting them.
+
+Ihave new empirical evidence that, in transformer-based large language models, the usual entanglement between language and meaning is dramatically reduced in the middle of the network. In these layers, semantic content becomes the dominant organising principle, while language identity contributes little to average representational similarity.
+
+The same result replicates across four architecturally different models from several Big AI Labs.
 
 ---
 
 ## Background: The Three-Phase Hypothesis
 
-In [LLM Neuroanatomy Part I](https://dnhkng.github.io/posts/rys/), I showed that you can duplicate a block of middle layers in Qwen2-72B — no weight changes, no training — and produce the #1 model on the HuggingFace Open LLM Leaderboard. The method, called RYS (Repeat Your Self), only works for layers in the middle of the transformer stack. Duplicating early or late layers breaks the model.
+In [LLM Neuroanatomy Part I](https://dnhkng.github.io/posts/rys/), I showed that you can duplicate a block of middle layers in Qwen2-72B (*with no weight changes, no training*), and produce the #1 model on the HuggingFace Open LLM Leaderboard. The method, called RYS (Repeat Your Self), only works for layers in the middle of the transformer stack. Duplicating early or late layers breaks the model in weird ways.
 
 That observation led to a hypothesis: transformer models have a three-phase functional anatomy.
 
-1. **Encoding** (early layers): convert surface-form tokens into an internal representation.
+1. **Decoding** (early layers): convert surface-form tokens into an internal representation.
 2. **Reasoning** (middle layers): process meaning in a format-agnostic space.
-3. **Decoding** (late layers): convert the internal representation back into surface-form tokens.
+3. **Encoding** (late layers): convert the internal representation back into surface-form tokens.
 
-In [Part II](https://dnhkng.github.io/posts/rys-ii/), I confirmed that RYS generalises across models and model sizes, and I showed new evidence — building on work by [Evan Maunder](https://www.linkedin.com/in/evan-maunder/) — that the middle layers really do operate in a language-independent space. This post takes that evidence further and asks what it means.
+In [Part II](https://dnhkng.github.io/posts/rys-ii/), I confirmed that RYS generalises across models and model sizes, and I showed new evidence (building on work by [Evan Maunder](https://www.linkedin.com/in/evan-maunder/)), that the middle layers really do operate in a language-independent space. This post takes that evidence further and asks what it means.
 
 ---
 
 ## The Experiment
 
-The setup is simple. Take eight languages spanning very different language families and writing systems:
+The setup is simple, and easy to replicate: Take eight languages spanning very different language families and writing systems:
 
 - **EN** (English), **FR** (French) — Indo-European, Latin script
 - **ZH** (Chinese), **JA** (Japanese), **KO** (Korean) — CJK
@@ -45,7 +49,7 @@ The setup is simple. Take eight languages spanning very different language famil
 - **RU** (Russian) — Cyrillic
 - **HI** (Hindi) — Devanagari
 
-And eight semantically distinct topics: **science, poetry, history, cooking, law, medicine, sports, economics**.
+And generate eight semantically distinct sentences on various topics: **science, poetry, history, cooking, law, medicine, sports, economics**.
 
 
 <details>
@@ -129,59 +133,77 @@ And eight semantically distinct topics: **science, poetry, history, cooking, law
 
 ---
 
-That gives 64 sentences total — 8 languages × 8 topics. The experiment is trivial: feed all 64 through an LLM model and extract the hidden-state representation at every layer. Then compute pairwise cosine similarity across all $C(64, 2) = 2016$ pairs.
+That gives 64 sentences total (*8 languages × 8 topics*). The experiment is trivial: feed all 64 through an LLM model and extract the hidden-state representation at every layer. Then compute pairwise cosine similarity across all $C(64, 2) = 2016$ pairs.
 
 This gives us three categories of comparison:
 
-- **Cross-language, same content** (224 pairs): e.g. English-science vs Chinese-science
-- **Same language, different content** (224 pairs): e.g. English-science vs English-cooking
-- **Cross-language, different content** (1568 pairs): e.g. English-science vs Arabic-poetry
+- **Different-language, Same-content** (224 pairs): e.g. English-science vs Chinese-science
+- **Same-language, Different-content** (224 pairs): e.g. English-science vs English-cooking
+- **Different-language, Different-content** (1568 pairs): e.g. English-science vs Arabic-poetry
 
-If language shapes thought (Sapir-Whorf), then the *same-language* pairs should be most similar in the reasoning layers — thinking in the same language should produce more similar representations than thinking about the same topic in different languages.  Put another way, we would expect these huge models to have a bunch of circuits that are focused on Chinese, and these are activated reading and writing in Chinese while the French circuits lay dormant.
+To extract the hidden representation in PyTorch, this looks something like:
+```python
+def extract_hidden_states(model, inputs, *, pool: str = "mean_content"):
+      with torch.no_grad():
+          outputs = model(
+              input_ids=inputs["input_ids"],
+              attention_mask=inputs["attention_mask"],
+              output_hidden_states=True,
+              use_cache=False,
+          )
 
-If language is just I/O, the opposite should happen: *same-content* pairs should dominate, regardless of language.
+      if pool == "last_token":
+          states = torch.stack([h[0, -1, :].float() for h in outputs.hidden_states])
+      elif pool == "mean_content":
+          cs = inputs["content_start"]
+          ce = inputs["content_end"]
+          states = torch.stack([h[0, cs:ce, :].float().mean(dim=0) for h in outputs.hidden_states])
+      else:  # mean_all
+          states = torch.stack([h[0, :, :].float().mean(dim=0) for h in outputs.hidden_states])
+
+      return states  # shape: (num_layers + 1, hidden_dim)
+```
+We run a single forward pass per prompt, collect the hidden representation at every layer, and reduce each layer to one vector by averaging over the content tokens (mean_content, the default).
+
+If language shapes thought (*a la* Sapir-Whorf), then the *same-language* pairs should be most similar in the reasoning layers, as thinking in the same language should produce more similar representations than thinking about the same topic in different languages.  Put another way, we would expect these huge models to have a bunch of circuits that are focused on Chinese, and these are activated when reading and writing in Chinese while the French circuits lay dormant.  That way, the model would be able to *think* in the idiosyncracies of Chinese.
+
+If language is just I/O, the opposite should happen: *same-content* pairs should dominate, regardless of language.  That was kind of hinted at in [RYS part II](https://dnhkng.github.io/posts/rys-ii/), but only between English and Chinese in a tiny experiment.
 
 ---
 
 ## The Results
 
-I ran this experiment on four models:
+I ran this experiment on four models, from four different companies (*and I will add Google's Gemma 4 soon for the fifth!*)
 
 - **Qwen3.5-27B** (Alibaba, dense transformer, 64 layers)
 - **MiniMax M2.5** (MiniMax, 256-expert MoE, 62 layers)
 - **GLM-4.7** (Zhipu AI, 160-expert MoE, 92 layers)
 - **GPT-OSS-120B** (OpenAI, 128-expert MoE, 36 layers)
 
-All four show the same pattern.
+***All four show the same pattern!***
 
 ### Cosine Similarity Across Layers
 
-Let's take a look again at Qwen3.5-27B from [Part 2](/posts/rys-ii/#seeing-the-anatomy-directly), and see how expanding the experiment size effects the results.  We would expect to see the center layers show *cross-language, same-content* have the highest similarity *after* the transitioning to 'thinking space'.
+Let's take a look again at Qwen3.5-27B from [Part 2](/posts/rys-ii/#seeing-the-anatomy-directly), and see how expanding the experiment size affects the results.  We would expect to see the center layers show *different-language, same-content* have the highest similarity *after* the transition to 'thinking space'.
 
 
 **Centered cosine similarity for Qwen3.5-27B**
 ![Qwen3.5-27B centered cosine similarity](/assets/img/universal/q27b_nl_category_curves_centered_rgb.png)
-*Red = cross-language same-content. Green = same-language different-content. Blue = cross-language different-content. After per-layer centering, the organisation is stark.*
+*Red = different-language, same-content. Green = same-language, different-content. Blue = different-language, different-content. After per-layer centering, the organisation is stark.*
 
-Again, three phases emerge:
+And this is exactly what we see: three phases emerge.
 
-**Encoding (layers 0–5).** Wild oscillation. The model knows what language it's reading. English representations look like English. Chinese looks like Chinese. The model is doing heavy lifting to normalise radically different surface forms — different scripts, different tokenisations, different character sets.
+**Decoding (layers 0–5).** Wild oscillation, but green (*same-language, different-content*), has the highest similarity. The model knows what language it's reading. English representations look like English. Chinese looks like Chinese. The model is doing heavy lifting to normalise radically different surface forms — different scripts, different tokenisations, different character sets.
 
-**Reasoning (layers ~10–45).** Content dominates. The red line (cross-language, same content) sits *above* the green line (same language, different content). A sentence about photosynthesis in Hindi is more similar to a sentence about photosynthesis in Japanese than it is to a sentence about cooking in Hindi. Language identity has almost vanished. The model has converged on a representation where *meaning* is the primary axis of organisation.
+**Reasoning (layers ~10–45).** Content dominates. The red line (*different-language, same-content*) sits *above* the green line (*same-language, different-content*). A sentence about photosynthesis in Hindi is more similar to a sentence about photosynthesis in Japanese than it is to a sentence about cooking in Hindi. Language identity has largely vanished; the average cosine similarity attributable to shared language is close to zero. The model has converged on a representation where *meaning* is the primary axis of organisation.
 
-**Decoding (layers ~45–64).** Language-specificity returns. The model is preparing to emit tokens, and it needs to commit to a specific language, script, and vocabulary. Cross-language similarity drops. The representations become surface-specific again.
+**Encoding (layers ~45–64).** Language-specificity returns. The model is preparing to emit tokens, and it needs to commit to a specific language, script, and vocabulary. different language similarity drops. The representations become surface-specific again, and by the final layer, the topic similarity has fallen to a cosine similarity of zero.
 
-The aggregate numbers for Qwen3.5-27B after centering:
-
-- Cross-language, same content: **0.902** mean similarity
-- Same language, different content: **0.891**
-- Cross-language, different content: **0.829**
-
-The model literally organises its thoughts by meaning, not by language.  As we go on to examine the other models, we see *the exact same pattern* repeats across architectures:
+In the central layers, the model literally organises its thoughts by meaning, not by language.  As we go on to examine the other models, we see *the exact same pattern* repeats across architectures:
 
 **Centered cosine similarity for MiniMax M2.5**
 ![MiniMax M2.5 centered cosine similarity](/assets/img/universal/m25_nl_category_curves_centered_rgb.png)
-*Red = cross-language same-content. Green = same-language different-content. Blue = cross-language different-content.*
+*Red = different language same-content. Green = same-language different-content. Blue = different language different-content.*
 
 **Centered cosine similarity for GLM-4.7**
 ![GLM-4.7 centered cosine similarity](/assets/img/universal/glm_47_nl_category_curves_centered_rgb.png)
@@ -191,17 +213,17 @@ The model literally organises its thoughts by meaning, not by language.  As we g
 ![GPT-OSS-120B centered cosine similarity](/assets/img/universal/oss120_nl_category_curves_centered_rgb.png)
 *Same colour coding. Even with only 36 layers, GPT-OSS-120B compresses the same three phases into a shorter stack.*
 
-What is extremely interesting is the amount of layers each model spends in the 'reasoning' zone. Empirically, the various models all seem to require about 15 layers to 'decode' reasoning back to text. This gives larger models with deeper transformer stacks like M2.5 and GLM4.7 more time to *stay in the zone*. 
+What is extremely interesting is the number of layers each model spends in the 'reasoning' zone. Empirically, the various models all seem to require about 15 layers to 'encode' reasoning back to text. This gives larger models with deeper transformer stacks like M2.5 and GLM-4.7 more time to *stay in the zone* during thinking. This coincides nicely with my original experiments from 2024: ***Small models don't improve much with RYS***.  *This is probably because the models just don't have enough transformer layers to generate separate decoding, thinking and encoding layers.* Duplicating layers in such a tight, optimised systems breaks stuff!  Once a model is big enough that pre-training allows for the formation of a distinct 'thinking' region, we can finally use the RYS method to find repeatable blocks that improve performance.
 
 ### The PCA Visualisation
 
-But the cosine similarity curves, while convincing, are still averages over many pairs. To see the organisation directly, I ran Principal Component Analysis (PCA) on the hidden states at each layer, reducing each 7168-dimensional representation down to two dimensions so we can plot all 64 sentences in one scatter plot.
+But the cosine similarity curves, while convincing, are still static graphs. To see the organisation directly, I ran Principal Component Analysis (PCA) on the hidden states at each layer, reducing each 7168-dimensional representation down to two dimensions so we can plot all 64 sentences in one scatter plot.
 
 **What PCA is doing.** At each layer, every sentence is a point in a very high-dimensional space (one dimension per hidden unit). PCA finds the two directions in that space that capture the most variance — the two axes along which the 64 points spread out the most — and projects everything onto those axes. The result is a 2D scatter plot where *distance encodes similarity*: two points that are close together had similar internal representations at that layer, and two points far apart had dissimilar ones.
 
 **What clustering means.** If all eight Chinese sentences land in one tight region, and all eight Arabic sentences land in another, and those two regions are far apart, it means the model is organising its representations primarily by language — the feature that most separates the 64 points is "which language is this?" Conversely, if all eight science sentences (across all languages) cluster together, and the cooking sentences form their own cluster, then the dominant organising principle is *topic*, not language. The geometry of the scatter plot is a direct read-out of what the model finds most salient.
 
-A key advantage over the cosine similarity averages is that clusters are visible *structurally*, not just as a number. You can see whether the organisation is clean or messy, whether there are outliers, and — crucially — whether the transition between language-organisation and topic-organisation is abrupt or gradual.
+A key advantage over the cosine similarity averages is that clusters are visible *structurally*, not just as a number. You can see whether the organisation is clean or messy, whether there are outliers, and crucially, whether the transition between language-organisation and topic-organisation is abrupt or gradual.
 
 ***Try exploring the data yourself...***
 
@@ -215,15 +237,16 @@ A key advantage over the cosine similarity averages is that clusters are visible
 </div>
 *Aligned PCA of 64 sentence representations across layers. Points are coloured by language and shaped by topic. Early layers: language clusters. Middle layers: topic clusters. Late layers: language clusters return.*
 
-The interactive analysis makes the story unmistakable. In the early layers, the 64 points cluster into 8 tight groups — one per language. Arabic with Arabic, Chinese with Chinese, regardless of what the sentences are about. By the middle of the stack, the clusters have completely reorganised: now there are 8 groups by *topic*. All the science sentences huddle together, regardless of whether they're in Hindi or French. In the late layers, the language clusters re-emerge as the model prepares its output.
 
-**This isn't just correlation. It's a complete structural reorganisation of the representation space.** The model dissolves the concept of "language" in its middle layers and reconstructs it at the end.
+The interactive analysis is super interesting; dragging the layer sliders back and forth feels like I'm peering into the model's brain, and seeing how it processed its thoughts in some deep and mysterious way (*-that will rack up a huge electricity bill in basement experiments*). In the early layers, the 64 points cluster into 8 tight groups, with one per language. Arabic with Arabic, Chinese with Chinese, regardless of what the sentences are about. By the middle of the stack, the clusters have completely reorganised: now there are 8 groups by *topic*! All the science sentences huddle together, regardless of whether they're in Hindi or French. In the late layers, the language clusters re-emerge as the model prepares its output, and there is no longer any trace on the *topic*.
+
+***The model dissolves the concept of "language" in its middle layers and reconstructs it at the end.***
 
 ### Replication Across Architectures
 
-Here's the critical point: this isn't a Qwen-specific artifact. MiniMax M2.5 is a 256-expert mixture-of-experts model — a fundamentally different architecture. GLM-4.7 is yet another design. GPT-OSS-120B shows the same broad anatomy as well. All four show the same three-phase structure, with the same dominance of content over language in the reasoning layers.
+Here's the critical point: this isn't a Qwen-specific artifact. MiniMax M2.5 is a 256-expert mixture-of-experts model, a fundamentally different architecture. GLM-4.7 is yet another design. GPT-OSS-120B shows the same broad anatomy as well. All four show the same three-phase structure, with the same dominance of content over language in the reasoning layers.
 
-If four architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation — language-agnostic reasoning flanked by language-specific encoding and decoding — then we're not looking at a training artifact. We're looking at a convergent solution. Something about the structure of language itself, or of the transformer computation, drives this outcome.
+If four architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation, *language-agnostic reasoning flanked by language-specific encoding and decoding*, then we're not looking at a training artifact. We're looking at a convergent solution. Maybe it's the structure of language itself or of the transformer architecture that drives this outcome. Either way, for LLM linguistics, it's a fascinating finding.
 
 ---
 
@@ -231,19 +254,19 @@ If four architecturally distinct models, trained by different organisations on d
 
 The Sapir-Whorf hypothesis exists in two forms.
 
-**The strong version** (linguistic determinism) says the language you speak *determines* what thoughts you can have. This is already unfashionable in linguistics — most linguists favour the weak version — but it's never been empirically refuted in a controlled system where you can actually inspect the internal representations.
+**The strong version** (*linguistic determinism*) says the language you speak *determines* what thoughts you can have. This is already unfashionable in linguistics, and from what I read, most linguists favour the weak version. But it's never been empirically refuted in a controlled system where you can actually poke around the internal representations.
 
-LLMs are that controlled system. And the answer is striking: the model's internal representations, in the layers where reasoning happens, are *not* organised by language. Content dominates. Language identity is nearly orthogonal to semantic identity.
+LLMs are that controlled system, and note that *I'm not claiming humans operate at all in the same way*. The striking result is that the model's internal representations, in the layers where reasoning happens, are *not* organised by language. The cosine similarity between different samples in the same language drops to approximately zero in the middle layers. In these layers, language identity is no longer the main geometric organiser of the representation; semantic content is.
 
-Now, a careful reader will note what this experiment does and doesn't show. It shows that the model *categorises* meaning universally — the same topic maps to the same region of the internal space regardless of language. It doesn't directly show that the model *reasons identically* in all languages. Sapir-Whorf, in its most interesting form, isn't about whether you can express the same ideas in different languages (everyone agrees you can). It's about whether the structural quirks of a language — mandatory tense marking, grammatical gender, evidentiality systems — subtly shape how you process information.
+Now, careful reader, you have probably already guessed what this experiment does and doesn't show. It shows that the model *categorises* meaning universally, the same topic maps to the same region of the internal space regardless of language. It doesn't directly show that the model *reasons identically* in all languages. Sapir-Whorf, in its most interesting form, isn't about whether you can express the same ideas in different languages (everyone agrees you can). It's about whether the structural quirks of a language, like mandatory tense marking, grammatical gender, and evidentiality systems, are all subtly shaping how you process information.
 
-That subtler question remains open. But what the data does show is that LLMs create what you might call an *anti-Whorfian bottleneck*: a structural separation of language from reasoning. Whatever language-specific biases enter through the encoding layers, the mid-stack actively strips them out to reach a shared semantic representation. The model is architecturally incentivised — by gradient descent, not by design — to *undo* Whorfian relativity in its reasoning layers.
+That subtler question remains open. But what the data does show is that LLMs create what you might call an *anti-Whorfian bottleneck*: a structural separation of language from reasoning. Whatever language-specific biases enter through the encoding layers, the mid-stack actively strips them out to reach a shared semantic representation. The model is architecturally incentivised (*by gradient descent, not by design*) to *undo* Whorfian relativity in its reasoning layers.
 
-**The weak version** (linguistic relativity) says language *influences* thought. This is subtler and probably still holds. The encoding layers do carry language-specific structure into the stack. Different tokenisations affect how information enters the model. Languages with rich morphology pack more information per token than analytic languages. These differences likely influence downstream processing, even if the mid-stack representation is approximately universal.
+**The weak version** (*linguistic relativity*) says language *influences* thought. This is subtler and probably still holds. The encoding layers do carry language-specific structure into the stack. Different tokenisations affect how information enters the model. Languages with rich morphology pack more information per token than analytic languages. These differences likely influence downstream processing, even if the mid-stack representation is approximately universal.
 
 But here's the key distinction: influence is not determination. The model converges on a shared reasoning space *despite* radically different surface forms. Arabic (right-to-left, consonantal root system), Japanese (mixed script, agglutinative), and English (SVO, relatively simple morphology) all arrive at the same internal representation of "photosynthesis converts light energy into chemical energy."
 
-The model has an interlingua. It's not Esperanto. It's not any human language. It's a high-dimensional geometric structure that represents meaning directly.
+The model appears to learn an interlingua: a high-dimensional geometric structure that represents meaning more directly than surface form. And future article in this series will probe the geometry in more detail.
 
 ---
 
@@ -251,26 +274,28 @@ The model has an interlingua. It's not Esperanto. It's not any human language. I
 
 There's a deeper irony here, and his name is Noam Chomsky.
 
-Chomsky's Universal Grammar hypothesis — proposed in the 1950s and refined over decades — argues that all human languages share an innate deep structure. Surface forms vary wildly (SVO vs SOV word order, inflectional vs analytic morphology, tonal vs non-tonal phonology), but underneath, there's a universal computational skeleton that all languages map onto. Chomsky argued this structure is *biologically innate* — hardwired into the human language faculty, part of our genetic endowment. Crucially, Chomsky's deep structure is *syntactic*: it's about the rules that govern how words combine, how phrases nest, how recursion works.
+Chomsky's Universal Grammar hypothesis was proposed in the 1950s and refined over decades, and argues that all human languages share an innate deep structure. Surface forms vary wildly (SVO vs SOV word order, inflectional vs analytic morphology, tonal vs non-tonal phonology), but underneath, there's a universal computational skeleton that all languages map onto. Chomsky argued this structure is *biologically innate*, and hardwired into the human language faculty, part of our genetic endowment. Crucially, Chomsky's deep structure is *syntactic*: it's about the rules that govern how words combine, how phrases nest, how recursion works.
 
-What the transformers found is something different. The universal representation in the mid-stack isn't organised by syntax — it's organised by *semantics*. The PCA plots don't show sentences clustering by grammatical structure (SVO languages together, SOV languages together). They show sentences clustering by *meaning* (all the photosynthesis sentences together, regardless of grammar).
+What the transformers found is something different. The universal representation in the mid-stack isn't organised by syntax, it's organised by *semantics*. The PCA plots don't show sentences clustering by grammatical structure (SVO languages together, SOV languages together). They show sentences clustering by *meaning* (all the photosynthesis sentences together, regardless of grammar).
 
 Look at the three-phase anatomy again:
 
-1. **Encoding layers** take radically different surface forms — different scripts, different word orders, different morphological strategies — and map them onto a shared internal representation.
+1. **Decoding layers** take radically different surface forms (*different scripts, different word orders, different morphological strategies*) and map them onto a shared internal representation.
 2. **Reasoning layers** operate in that shared space, indifferent to which surface form or syntactic structure produced it.
-3. **Decoding layers** map back out to a specific surface form.
+3. **Encoding layers** map back out to a specific surface form.
 
-The encoding and decoding phases are doing something *analogous* to what Chomsky's framework describes: translating between diverse surface structures and a universal deep structure. But the deep structure the model discovered isn't a tree of syntactic rules — it's a continuous geometric manifold of meaning. Every language gets its own encoder and decoder, but the middle is shared, and what's shared is semantics, not syntax.
+This flow occurs over and over, for each processed token.
 
-Chomsky famously demonstrated that syntax and semantics are independent systems — "Colorless green ideas sleep furiously" is grammatically impeccable and semantically absurd. His argument was that syntax must therefore be the foundational, primitive system: an innate rulebook that operates prior to and independently of meaning. What the transformers show is the opposite priority. You can build universal linguistic structure *entirely* out of semantics, with no foundational syntactic rulebook at all. Syntax, in this picture, is downstream: a surface regularisation that emerges from the need to serialise meaning into a linear token stream, not the bedrock on which meaning rests.
+The encoding and decoding phases are doing something *analogous* to what Chomsky's framework describes: translating between diverse surface structures and a universal deep structure. But the deep structure the model discovered isn't a tree of syntactic rules, which must be present in the initial decoding layers. The interesting finding is in the middle layers, and the continuous geometric manifold of meaning. Every language gets its own encoder and decoder, but the middle is shared, and what's shared is semantics, not syntax.
 
-Chomsky was right about the *what*: there is a universal structure underlying all languages. But he was wrong about the *where* (it's semantics, not syntax) and the *how* (it's learned geometry, not innate grammar). The universal structure isn't a set of rules, parameters, or syntactic primitives. It's a high-dimensional space where semantic relationships are encoded as distances and directions. And it's not innate. It *emerges* from exposure to enough linguistic diversity through gradient descent. No one designed it. No one specified its structure. The optimisation pressure of next-token prediction on multilingual data was sufficient. Whether this geometry emerges purely from the unsupervised crucible of next-token prediction, or whether it gets crystallised later by RLHF alignment, the result is the same: the model learns that the most efficient way to be smart in 100 languages is to strip language away entirely in the middle.
+Chomsky famously demonstrated that syntax and semantics are independent systems with phrase "***Colorless green ideas sleep furiously***", which is grammatically impeccable and semantically absurd. His argument was that syntax must therefore be the foundational, primitive system: an innate rulebook that operates prior to and independently of meaning. What the transformers show is the opposite priority. It seems that gradient descent can build universal linguistic structure *entirely* out of semantics, with no foundational syntactic rulebook at all. Syntax, in this picture, is downstream: a surface regularisation that emerges from the need to serialise meaning into a linear token stream, not the bedrock on which meaning rests.
+
+Chomsky was right about the ***what***: there is a universal structure underlying all languages. For LLMs, it's all about the ***where*** (*it's semantics, not syntax*) and the ***how*** (*it's learned geometry, not innate grammar*). The universal structure isn't a set of rules, parameters, or syntactic primitives. It's a high-dimensional space where semantic relationships are encoded as distances and directions. It *emerges* from exposure to enough linguistic diversity through gradient descent. The optimisation pressure of next-token prediction on multilingual data was sufficient: the model learns that the most efficient way to be smart in 100 languages is to strip language away entirely in the middle.
 
 So we end up with a three-way scorecard:
 
 **Chomsky:** "There's a universal deep structure underlying all languages."
-→ *Right intuition, wrong floor. He looked for it in syntax. It lives in semantics. And it's not innate — it's emergent.*
+→ *Right intuition, wrong floor. He looked for it in syntax. It lives in semantics. And it's not innate, it's emergent.*
 
 **Sapir-Whorf:** "Language shapes (or determines) thought."
 → *The strong form doesn't survive. These models structurally separate language from reasoning — an anti-Whorfian bottleneck baked into the architecture by gradient descent. Language is the I/O layer, not the reasoning layer.*
@@ -278,34 +303,30 @@ So we end up with a three-way scorecard:
 **The transformers:** "We'll just learn whatever works."
 → *Converge on a universal semantic space that vindicates Chomsky's intuition about universality while contradicting his mechanism entirely.*
 
-Chomsky looked for universal grammar. Transformers found universal geometry. The structure exists (Chomsky's core claim survives). But it's not grammar — it's a geometric manifold of meaning that emerges from data, not from biology. And language doesn't shape the structure — the structure shapes language.
-
 ---
 
 ## The Anatomy Predicts the Function
 
-This result connects directly to the [RYS work](https://dnhkng.github.io/posts/rys-ii/). The layers that can be profitably duplicated — the layers where running the computation twice makes the model measurably smarter — are *exactly* the layers where the language-agnostic reasoning space exists.
-
-This isn't a coincidence. It's a mechanistic explanation:
+This result connects directly to the [RYS work](https://dnhkng.github.io/posts/rys-ii/). The layers that can be profitably duplicated  (*the layers where running the computation twice makes the model measurably smarter*) are ***exactly*** the layers where the language-agnostic reasoning space exists.  A reasonable hypothesis is:
 
 - If a layer operates in format-agnostic space, its input and output distributions are similar enough that you can loop back without catastrophic distribution mismatch. The model can "think again" through the same circuit.
 - If a layer is doing format-specific work (encoding or decoding), looping back means feeding decoded representations into a layer that expects abstract ones, or vice versa. The distributions don't match. The model breaks.
 
-The brain scan predicts the surgery map. The three-phase anatomy isn't just a nice observation — it's *functional*. It tells you where you can intervene and where you can't.
+The brain scan predicts the surgery map. The three-phase anatomy isn't just a nice observation, it tells you *why and where you can intervene and where you can't*.
 
 ---
 
 ## Caveats and What This Isn't
 
-**LLMs aren't human brains.** Sapir-Whorf is a hypothesis about human cognition. I'm not claiming that because GPT-scale transformers have language-independent reasoning, therefore human cognition is language-independent. The architectures are different. The training is different. The substrates are different.
+**LLMs aren't human brains.** Sapir-Whorf is a hypothesis about human cognition, thought up nearly a century before LLMs. I'm not claiming that because GPT-scale transformers have language-independent reasoning, therefore human cognition is language-independent. That would be dumb, right?
 
-But LLMs are an unprecedented empirical tool for this question. They are the first systems we can build that process many natural languages at high competence, develop internal representations we can measure at every layer, and let us directly test whether thought is language-shaped or language-independent. Before LLMs, you could only study Sapir-Whorf by comparing human behaviour across language groups — messy, confounded, hard to control. Now we can read out the internal state and ask: is it organised by language or by meaning?
+But LLMs are an unprecedented empirical tool for this question. They are the first systems we can build that process many natural languages at high competence, develop internal representations we can measure at every layer, and let us directly test whether thought is language-shaped or language-independent. Before LLMs, you could only study Sapir-Whorf by comparing human behaviour across language groups, which is messy, confounded, hard to control. Now we can read out the internal state and ask: is it organised by language or by meaning?
 
-**To the cognitive scientists currently screaming at their screens:** yes, I know LLMs are disembodied text-engines with no sensorimotor grounding. Yes, I know "photosynthesis" is an easy 1:1 translation compared to testing culturally entangled concepts like *Schadenfreude* or Quechua evidentiality. Yes, I know modern linguists favour the weak Whorfian view anyway. And yes, 64 sentences is a proof of concept, not a definitive corpus study. But the architectural observation remains: we have a computational substrate that processes 100+ languages, and it *structurally refuses* to let surface grammar dictate deep reasoning. It builds an anti-Whorfian bottleneck. That matters.
+**To the cognitive scientists currently screaming at their screens:** yes, I know LLMs are disembodied text-engines with no sensorimotor grounding. Yes, I know "photosynthesis" is an easy 1:1 translation compared to testing culturally entangled concepts like *Schadenfreude* or Quechua evidentiality. Yes, I know modern linguists favour the weak Whorfian view anyway. And yes, 64 sentences is a proof of concept, not a definitive corpus study. But the architectural observation remains: we have a computational substrate that processes 100+ languages, and it builds an anti-Whorfian bottleneck. That's interesting, right?.
 
-**On parallel corpora and the translation-artifact objection.** A careful reader will note that training data contains parallel corpora — human-translated sentence pairs — and argue that gradient descent simply *had* to learn a shared latent space because that is the mathematically optimal way to predict translations. This is a legitimate mechanistic objection, not just a data-contamination concern. But it doesn't fully dissolve the result. First, the question of *why* the model learns a shared space doesn't negate the fact that it does — the question "is this universal meaning, or just a reverse-engineering of the human semantic map?" may not have a clean answer, because human language and human meaning are co-constituted. Second, and more concretely: the code and math results in the next section provide a harder test. Python functions with single-letter variables and LaTeX equations were almost certainly not aligned by explicit translation training — yet they converge in the mid-stack in exactly the same pattern. That's a natural experiment the translation-artifact story struggles to explain.
+**On parallel corpora and the translation-artifact objection.** A careful reader will note that training data contains parallel corpora (*there are lots of human-translated sentence pairs*), and argue that gradient descent simply *had* to learn a shared latent space because that is the mathematically optimal way to predict translations. This is a pretty fair mechanistic objection, but it doesn't discredit the result. The question of *why* the model learns a shared space doesn't negate the fact that it does! The question "is this universal meaning, or just a reverse-engineering of the human semantic map?" may not have a clean answer, because human language and human meaning are co-constituted.
 
-**Is the "universal" space just latent English?** Legitimate concern. But the strongest counter is architectural: Qwen and GLM are both Chinese-dominant models, trained by Chinese organisations on Chinese-heavy data. If the universal space were latent English, you'd expect Chinese-dominant models to produce a *different* organising structure — one centred on Chinese rather than English. They don't. All four models, including the Chinese-heavy ones, converge on the same three-phase anatomy with the same topic-dominant reasoning layers. A shared structure that is independent of each model's dominant training language is hard to explain as "latent English." A rigorous distance-from-centroid analysis is still on the list to confirm this quantitatively.
+**Is the "universal" space just latent English?** Finally, a legitimate concern. But the strongest counter is architectural: Qwen and GLM are both Chinese-dominant models, trained by Chinese organisations on Chinese-heavy data. If the universal space were latent English, you'd expect Chinese-dominant models to produce a *different* organising structure — one centred on Chinese rather than English. They don't. All four models, including the Chinese-heavy ones, converge on the same three-phase anatomy with the same topic-dominant reasoning layers. A shared structure that is independent of each model's dominant training language is hard to explain as "latent English." A rigorous distance-from-centroid analysis is still on the list to confirm this quantitatively.
 
 ---
 
@@ -313,22 +334,20 @@ But LLMs are an unprecedented empirical tool for this question. They are the fir
 
 The natural language results are striking, but they invite an obvious question: is the universal space specific to *human languages*, or does it extend to formal systems too?
 
-Natural languages, for all their diversity, share a common evolutionary purpose: humans communicating with other humans about a shared physical world. You could argue that convergence across Chinese and French is unsurprising — they're all trying to do the same thing. Code and mathematical notation are a different beast entirely. They weren't shaped by evolution or culture. They express computation and formal relationships using systems that share essentially zero surface structure with any natural language.
+Natural languages, for all their diversity, share a common evolutionary purpose: humans communicating with other humans about a shared physical world. You could argue that convergence across Chinese and French is unsurprising, as they're all trying to do the same thing. Code and mathematical notation are a different beast entirely. They weren't shaped by evolution or culture. They express computation and formal relationships using systems that share essentially zero surface structure with any natural language.
 
 If the model processes Python code, LaTeX equations, and English descriptions of the same concept, do they converge in the mid-stack the way Chinese and French do?
 
-This is a harder test. Natural languages all describe the world using nouns, verbs, and compositional semantics. Python expresses computation using operators and control flow. LaTeX expresses mathematical relationships using a completely different notation system — $\frac{1}{2} m v^2$ shares essentially zero surface tokens with either $0.5 * m * v ** 2$ or "half the mass times velocity squared." Three fundamentally different modalities, zero syntactic overlap.
+Natural languages all describe the world using nouns, verbs, and compositional semantics. Python expresses computation using operators and control flow. LaTeX expresses mathematical relationships using a completely different notation system — $\frac{1}{2} m v^2$ shares essentially zero surface tokens with either $0.5 * m * v ** 2$ or "half the mass times velocity squared." Three fundamentally different modalities, zero syntactic overlap.
 
-To make it honest, the code uses only single-letter variables. No `velocity`, no `principal`, no `kinetic_energy`. Just `m`, `v`, `p`, `r`, `t` — standard math convention, not English words. The model has to understand the *computation*, not read the *labels*.
-
-I tested 12 topics spanning physics, mathematics, and economics — from kinetic energy and gravitational force to the quadratic formula and price elasticity of demand. Each topic expressed in all three systems gives 36 samples, 630 pairwise comparisons. A few representative triplets:
+To make it honest, the code uses only single-letter variables. No `velocity`, no `principal`, no `kinetic_energy`. Just `m`, `v`, `p`, `r`, `t` — standard math convention, not English words. The model has to understand the *computation*, not read the *labels*. I tested 12 topics spanning physics, mathematics, and economics — from kinetic energy and gravitational force to the quadratic formula and price elasticity of demand. Each topic expressed in all three systems gives 36 samples, 630 pairwise comparisons. A few representative triplets:
 
 **Kinetic energy:**
 - EN: *"The kinetic energy of a moving object equals one half of its mass multiplied by the square of its velocity."*
 - Python: 
  ```
  def f(m, v):
-  return 0.5 * m * v ** 2`
+  return 0.5 * m * v ** 2
 ```
 - LaTeX: $\ E_k = \frac{1}{2} m v^2$
 
@@ -408,41 +427,35 @@ def f(fv, r, t):
 </details>
 
 **Centered cosine similarity for MiniMax M2.5**
-![Cross-modal cosine similarity](/assets/img/universal/m25_peer_system_category_curves_centered_rgb.png)
-*Centered cosine similarity across English, Python, and LaTeX. Red = cross-system same-topic. Green = within-system different-topic. Blue = cross-system different-topic.*
+![different modal cosine similarity](/assets/img/universal/m25_peer_system_category_curves_centered_rgb.png)
+*Centered cosine similarity across English, Python, and LaTeX. Red = different system same-topic. Green = within-system different-topic. Blue = different system different-topic.*
 
 **Centered cosine similarity for MiniMax M2.5**
-![Cross-modal cosine similarity](/assets/img/universal/m25_peer_system_category_bands_centered_mean_std_rgb.png)
+![different modal cosine similarity](/assets/img/universal/m25_peer_system_category_bands_centered_mean_std_rgb.png)
 *Same data with ±1 standard deviation bands.*
 
 
-The result is unambiguous. Three phases, same as the natural language case, but now across *modalities*:
+The results are not as clear now. There are still three phases, same as the natural language case, but now across *modalities. However, the middle layers show a blend between syntax and semantics, as opposed to pure semantics as with language comparisons:
 
-**Layers 0–10: System identity dominates.** The green line (within-system, different topic) peaks above 0.6. The red line (cross-system, same topic) sits below -0.2. The model overwhelmingly sees "this is Python" versus "this is LaTeX" versus "this is English." The distinction between executable code, mathematical notation, and natural language prose swamps everything else. This is more extreme than the natural language case — the gap between English and Chinese is much smaller than the gap between English and $\ \frac{1}{2} m v^2$.
+**Layers 0–30: System identity dominates.** The green line (*same-system, different-topic)* peaks above 0.6, and then steadily falls to ~0.2. The red line (*different-system, same-topic*) starts at below -0.2 and rises to ~0.25, slightly higher than the green line. Early in this phase, the model overwhelmingly sees "this is Python" versus "this is LaTeX" versus "this is English." The distinction between executable code, mathematical notation, and natural language prose swamps everything else.
 
-**Layers 10–25: The crossover.** Green drops steadily. Red rises. Around layer 25, they cross. The model is dissolving the distinction between code, equations, and text. It's finding the meaning underneath.
+**Layers 30–52: Topic has caught up.** Red sits *slightly* above green, so $\ \frac{1}{2} m v^2$ is now slightly closer to "kinetic energy equals half mass times velocity squared" than it is to $\ A = \pi r^2$. A Python function computing compound interest clusters with the English description of compound interest and the LaTeX formula for compound interest, and not with a Python function computing something else. And blue (different system, different topic) stays firmly negative throughout, confirming that the model isn't just blurring everything together. It's maintaining semantic discrimination while erasing format discrimination.
 
-**Layers 25–52: Topic catches up.** Red even sits *slightly* above green between layers ~27-33, so $\ \frac{1}{2} m v^2$ is now closer to "kinetic energy equals half mass times velocity squared" than it is to $\ A = \pi r^2$! A Python function computing compound interest clusters with the English description of compound interest and the LaTeX formula for compound interest — not with a Python function computing something else. And blue (cross-system, different topic) stays firmly negative throughout, confirming that the model isn't just blurring everything together. It's maintaining semantic discrimination while erasing format discrimination.
+**Layers 52+: System identity returns.** Green spikes back up, and red falls. The model is preparing to emit tokens and needs to commit: Python syntax, LaTeX markup, or English words.
 
-**Layers 52+: System identity returns.** Green spikes back up. The model is preparing to emit tokens and needs to commit: Python syntax, LaTeX markup, or English words.
+The universal space in the mid-stack isn't just language-agnostic — it's becoming *modality*-agnostic. It encodes meaning whether that meaning arrives as French prose, Arabic script, Python functions with single-letter variables, or LaTeX notation. $\ \frac{1}{2} m v^2$ and "half the mass times velocity squared" and $\ 0.5 * m * v ** 2$ all start to converge to the same region of a high-dimensional geometric space, despite sharing essentially zero surface-level features.
 
-This is the result that upgrades the thesis. The universal space in the mid-stack isn't just language-agnostic — it's *modality*-agnostic. It encodes meaning whether that meaning arrives as French prose, Arabic script, Python functions with single-letter variables, or LaTeX notation. $\ \frac{1}{2} m v^2$ and "half the mass times velocity squared" and $\ 0.5 * m * v ** 2$ all converge to the same region of a high-dimensional geometric space, despite sharing essentially zero surface-level features.
-
-The interlingua isn't just for human languages. It's for anything that expresses structured meaning.
+This suggests the interlingua isn't just for human languages, it might be for anything that expresses structured meaning.  These results are not as strong as for languages, but these are also models much less 'intelligent' than the best from Anthropic and OpenAI. I would speculate that the better a model is at reasoning, the more we see this effect (***anyone working at either Lab is more than welcome to reach out and offer me access to test this theory!***).
 
 ---
 
-## The Uncomfortable Implication
+## The Implication
 
-If you take this result at face value — four models, two experiments, the same convergent structure every time — then the most conservative reading is: transformer-based language models discover that the most efficient internal organisation separates meaning from format. Content goes to one space, language/syntax/notation goes to the I/O layers. This is an engineering observation about how these models solve their training objective.
+If you take this result at face value (*four models, two experiments, the same convergent structure every time*) then the most conservative reading is: transformer-based language models discover that the most efficient internal organisation separates meaning from format. Content goes to one space, language/syntax/notation goes to the I/O layers. This is an engineering observation about how these models solve their training objective.
 
-The more aggressive reading is that this separation reflects something about the structure of meaning itself. That there exists a space of semantic relationships — photosynthesis is closer to respiration than to contract law, regardless of whether you express it in Mandarin or in LaTeX — and that gradient descent on enough data will reliably find it.
+The more aggressive reading is that this separation reflects something about the structure of meaning itself. That there exists a space of semantic relationships, that photosynthesis is closer to respiration than to contract law, regardless of whether you express it in Mandarin or in LaTeX, and that gradient descent on enough data will reliably find it. Not totally unexpected given precedents like word2vec, but it's fascinating that it's structurally separate, and that *duplicating parts of this structure materially improves multiple benchmarks*. 
 
-I don't know which reading is correct, and I'm not sure the distinction is as clean as it sounds. The "engineering" explanation (it's just efficient compression) and the "philosophical" explanation (meaning has structure independent of language) might not be separable. If every sufficiently capable system that processes multilingual data converges on the same semantic geometry, then asking whether that geometry is "real" or "just compression" starts to look like asking whether mathematics is discovered or invented. You can have the argument. It may not have a resolution.
-
-What the data *does* clearly show: these models don't just tolerate the separation of language and meaning — they *demand* it. The three-phase structure isn't a quirk of one architecture or one training run. Four different models, built by different organisations, on different data, with different architectures, all converge on the same solution. And that solution extends beyond human languages to formal systems that share no surface features with natural language at all.
-
-Sapir and Whorf had it backwards. Language doesn't shape thought — at least not in these systems. The model strips language away to think, then puts it back on to speak. And Chomsky was half right: there is a universal structure underneath. But it's not grammar. It's geometry.
+Sapir and Whorf had it backwards. Language doesn't shape thought — at least not in these systems. The model appears to compress away much of the language-specific structure before reintroducing it during decoding. And Chomsky was half right: there is a universal structure underneath. But it's not grammar; it seems to be geometry.
 
 ---
 
@@ -451,12 +464,12 @@ Sapir and Whorf had it backwards. Language doesn't shape thought — at least no
 Several experiments would strengthen or complicate this picture:
 
 - **Adversarial pairs.** "The bank of the river" vs "the bank raised rates" — testing whether the semantic space resolves polysemy correctly.
-- **Cross-lingual steering.** Taking a direction vector between topics in one language and applying it to another language's representations. If the space is truly shared, cross-lingual vector arithmetic should work.
+- **cross-lingual steering.** Taking a direction vector between topics in one language and applying it to another language's representations. If the space is truly shared, cross-lingual vector arithmetic should work.
 - **Scaling laws.** Does the universal space emerge more cleanly in larger models? Do smaller models show a noisier or more entangled version of the same structure?
-- **Scaling the evaluation.** 64 natural-language sentences and 36 code/math samples are proofs of concept. Running this on established multilingual benchmarks like FLORES-200 or XNLI — with hundreds of languages and thousands of sentence pairs — would map the exact topology of the space. Adding more formal languages (Rust, Haskell, maybe assembly) would test where cross-modal convergence breaks down.
+- **Scaling the evaluation.** 64 natural-language sentences and 36 code/math samples are proofs of concept. Running this on established multilingual benchmarks like FLORES-200 or XNLI — with hundreds of languages and thousands of sentence pairs — would map the exact topology of the space. Adding more formal languages (Rust, Haskell, maybe assembly) would test where different modal convergence breaks down.
 - **Culturally entangled concepts.** Testing with concepts that resist clean translation — *Schadenfreude*, Japanese *wabi-sabi*, Quechua evidentiality markers — to probe the limits of universality.
 
-The data is clear. The interpretation is provocative. The experiments continue.
+The data is clear. The interpretation is provocative. The GPUs continue to grind.
 
 Code and datasets: [github.com/dnhkng/RYS](https://github.com/dnhkng/RYS)
 
