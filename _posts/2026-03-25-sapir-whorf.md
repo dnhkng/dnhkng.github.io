@@ -21,7 +21,7 @@ After digging into the topic, I found that the debate maps surprisingly well ont
 
 I have new empirical evidence that, in transformer-based large language models, the usual entanglement between language and meaning is dramatically reduced in the middle of the network. In these layers, semantic content becomes the dominant organising principle, while language identity contributes little to average representational similarity.
 
-The same result replicates across four architecturally distinct models from four major AI labs.
+The same result replicates across five architecturally distinct models from five major AI labs.
 
 ---
 
@@ -173,14 +173,15 @@ If language is just I/O, the opposite should happen: *same-content* pairs should
 
 ## The Results
 
-I ran this experiment on four models, from four different companies (*and I will add Google's Gemma 4 soon for the fifth!*).
+I ran this experiment on five models, from five different companies:
 
 - **Qwen3.5-27B** (Alibaba, dense transformer, 64 layers)
 - **MiniMax M2.5** (MiniMax, 256-expert MoE, 62 layers)
 - **GLM-4.7** (Zhipu AI, 160-expert MoE, 92 layers)
+- **Gemma-4 31B** (Google, dense transformer, 60 layers)
 - **GPT-OSS-120B** (OpenAI, 128-expert MoE, 36 layers)
 
-***All four show the same pattern!***
+***All five show the same pattern!***
 
 ### Cosine Similarity Across Layers
 
@@ -208,6 +209,10 @@ In the central layers, the model's representations are organised more by meaning
 **Centered cosine similarity for GLM-4.7**
 ![GLM-4.7 centered cosine similarity](/assets/img/universal/glm_47_nl_category_curves_centered_rgb.png)
 *Same colour coding. The three-phase pattern replicates cleanly despite GLM-4.7's 160-expert MoE architecture.*
+
+**Centered cosine similarity for Gemma-4 31B**
+![GPT-OSS-120B centered cosine similarity](/assets/img/universal/gemma-4_31b_nl_category_curves_centered_rgb.png)
+*Same colour coding. With 60 layers, the small Gemma-4 31B compresses the same three phases but with interesting middle section forms.*
 
 **Centered cosine similarity for GPT-OSS-120B**
 ![GPT-OSS-120B centered cosine similarity](/assets/img/universal/oss120_nl_category_curves_centered_rgb.png)
@@ -244,9 +249,9 @@ The interactive analysis makes the transition unusually vivid. In the early laye
 
 ### Replication Across Architectures
 
-Here's the critical point: this isn't a Qwen-specific artifact. MiniMax M2.5 is a 256-expert mixture-of-experts model, a fundamentally different architecture. GLM-4.7 is yet another design. GPT-OSS-120B shows the same broad anatomy as well. All four show the same three-phase structure, with the same dominance of content over language in the reasoning layers.
+Here's the critical point: this isn't a Qwen-specific artifact. MiniMax M2.5 is a 256-expert mixture-of-experts model, a fundamentally different architecture. GLM-4.7 is yet another design. GPT-OSS-120B shows the same broad anatomy as well. All five show the same three-phase structure, with the same dominance of content over language in the reasoning layers.
 
-If four architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation, *language-agnostic reasoning flanked by language-specific encoding and decoding*, then we're not looking at a training artifact. We're looking at a convergent solution. Maybe it's the structure of language itself or of the transformer architecture that drives this outcome. Either way, for LLM linguistics, it's a fascinating finding.
+If five architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation, *language-agnostic reasoning flanked by language-specific encoding and decoding*, then we're not looking at a training artifact. We're looking at a convergent solution. Maybe it's the structure of language itself or of the transformer architecture that drives this outcome. Either way, for LLM linguistics, it's a fascinating finding.
 
 ---
 
@@ -326,7 +331,7 @@ But LLMs are an unprecedented empirical tool for this question. They are the fir
 
 **On parallel corpora and the translation-artifact objection.** A careful reader will note that training data contains parallel corpora (*there are lots of human-translated sentence pairs*), and argue that gradient descent simply *had* to learn a shared latent space because that is the mathematically optimal way to predict translations. This is a pretty fair mechanistic objection, but it doesn't discredit the result. The question of *why* the model learns a shared space doesn't negate the fact that it does! The question "is this universal meaning, or just a reverse-engineering of the human semantic map?" may not have a clean answer, because human language and human meaning are co-constituted.
 
-**Is the "universal" space just latent English?** Finally, a legitimate concern. But the strongest counter is architectural: Qwen and GLM are both Chinese-dominant models, trained by Chinese organisations on Chinese-heavy data. If the universal space were latent English, you'd expect Chinese-dominant models to produce a *different* organising structure — one centred on Chinese rather than English. They don't. All four models, including the Chinese-heavy ones, converge on the same three-phase anatomy with the same topic-dominant reasoning layers. A shared structure that is independent of each model's dominant training language is hard to explain as "latent English." A rigorous distance-from-centroid analysis is still on the list to confirm this quantitatively.
+**Is the "universal" space just latent English?** Finally, a legitimate concern. But the strongest counter is architectural: Qwen and GLM are both Chinese-dominant models, trained by Chinese organisations on Chinese-heavy data. If the universal space were latent English, you'd expect Chinese-dominant models to produce a *different* organising structure — one centred on Chinese rather than English. They don't. All five models, including the Chinese-heavy ones, converge on the same three-phase anatomy with the same topic-dominant reasoning layers. A shared structure that is independent of each model's dominant training language is hard to explain as "latent English." A rigorous distance-from-centroid analysis is still on the list to confirm this quantitatively.
 
 ---
 
@@ -451,7 +456,7 @@ This suggests the interlingua isn't just for human languages — it might be for
 
 ## The Implication
 
-If you take this result at face value (*four models, two experiments, the same convergent structure every time*) then the most conservative reading is: transformer-based language models discover that the most efficient internal organisation separates meaning from format. Content goes to one space, language/syntax/notation goes to the I/O layers. This is an engineering observation about how these models solve their training objective.
+If you take this result at face value (*five models, two experiments, the same convergent structure every time*) then the most conservative reading is: transformer-based language models discover that the most efficient internal organisation separates meaning from format. Content goes to one space, language/syntax/notation goes to the I/O layers. This is an engineering observation about how these models solve their training objective.
 
 The more aggressive reading is that this separation reflects something about the structure of meaning itself. That there exists a space of semantic relationships, that photosynthesis is closer to respiration than to contract law, regardless of whether you express it in Mandarin or in LaTeX, and that gradient descent on enough data will reliably find it. Not totally unexpected given precedents like word2vec, but it's fascinating that it's structurally separate, and that *duplicating parts of this structure materially improves multiple benchmarks*. 
 
