@@ -256,7 +256,7 @@ A key advantage over the cosine similarity averages is that clusters are visible
 
 ***Try exploring the data yourself...***
 
-
+### LayerScope
 <div class="widget-container">
   <iframe
     src="{{ '/assets/widgets/universal-pca-widget.html' | relative_url }}"
