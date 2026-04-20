@@ -1,5 +1,5 @@
 ---
-title: "LLM Neuroanatomy III: Do LLMs Break the Sapir-Whorf Hypothesis?"
+title: "LLM Neuroanatomy III: Why RYS Works — The Language-Agnostic Middle"
 date: 2026-03-26 00:00:00 +0100
 categories: [LLMs, Research]
 tags: [llm, neuroanatomy, sapir-whorf, chomsky, universal-grammar, universal-language, representation]
