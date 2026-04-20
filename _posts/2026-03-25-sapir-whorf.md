@@ -51,6 +51,8 @@ The core empirical observation, that multilingual transformers develop a shared 
 
 [Fierro, Foroutan, Elliott, and Søgaard (2025)](https://aclanthology.org/2025.findings-acl.827), "How Do Multilingual Language Models Remember Facts?" (ACL Findings 2025), decomposes factual recall into a language-independent subject-enrichment stage and a language-specific object-extraction stage. That functional factorisation lines up cleanly with the encode/reason/decode picture from [RYS Part I](/posts/rys/).
 
+Sitting above all of these is the [Platonic Representation Hypothesis](https://arxiv.org/abs/2405.07987) (Huh, Cheung, Wang, and Isola, 2024), which argues that models trained on enough diverse data converge — across architectures and modalities — on a shared statistical representation of the underlying world. The language-agnostic middle is essentially a special case: if the Platonic claim holds, you'd expect multilingual transformers to converge on a language-invariant space for the same reason a vision model and a language model converge on similar object representations. Treat what follows as evidence consistent with that hypothesis on the multilingual axis.
+
 So what does this post add on top?
 
 1. **The RYS link.** None of the above work connects the language-agnostic middle to a concrete intervention that measurably improves benchmarks. If the middle layers are the format-agnostic reasoning zone, those are exactly the layers where you can run the computation twice without breaking the model, and that is exactly where RYS layer duplication produces its gains. I think this is the real contribution here, and I'll spend a whole section on it.
@@ -343,7 +345,7 @@ Chomsky was right about the ***what***: there is a universal structure underlyin
 So we end up with a three-way scorecard:
 
 **Chomsky:** "There's a universal deep structure underlying all languages."
-→ *Right intuition, wrong floor. He looked for it in syntax. It lives in semantics. And it's not innate, it's emergent.*
+→ *Right intuition, wrong floor — at least for LLMs. He looked for it in syntax. In LLMs, it lives in semantics. And in LLMs, it isn't innate; it's emergent from gradient descent on multilingual data. Whether any of this generalises to human cognition is a separate question, and one I'm not qualified to answer.*
 
 **Sapir-Whorf:** "Language shapes (or determines) thought."
 → *In these models, the strong form does not fare well. These models structurally separate language from reasoning — an anti-Whorfian bottleneck baked into the architecture by gradient descent. Language is the I/O layer, not the reasoning layer.*
@@ -356,6 +358,8 @@ So we end up with a three-way scorecard:
 ## Caveats and What This Isn't
 
 **This is not a new empirical discovery.** Wu et al. (2024), Dumas et al. (2024), Wendler et al. (2024), and others established that the shared semantic space exists. What I add here is the link to RYS, the three-phase quantification on frontier-scale models, and the extension to code and LaTeX. The Sapir-Whorf framing is mine; the underlying finding isn't. If I'd read those papers before writing Part II, I'd have said so from the start.
+
+**"Isn't this just a predictable consequence of information-bottleneck theory?"** A fair point raised by several commenters, and yes, mostly. Any architecture that has to pass many input distributions through a shared parameter budget is under pressure to compress towards a common latent space; classical encoder-decoders were *designed* to exhibit exactly this behaviour, and decoder-only transformers inherit the same pressure implicitly. So the existence of a shared mid-stack space is not a surprise to anyone who has thought about bottlenecks. What the Wu / Dumas / Wendler line of work contributed empirically was showing it cleanly in modern LLMs; what I contribute on top is the link between the compressed region and RYS, plus the layer-count scaling. The qualitative phenomenon was predictable; the quantitative geometry of *where* the bottleneck sits in a 92-layer stack wasn't, and that is the part that matters for layer duplication.
 
 **LLMs aren't human brains.** Sapir-Whorf is a hypothesis about human cognition, thought up nearly a century before LLMs. I'm not claiming that because GPT-scale transformers have language-independent reasoning, therefore human cognition is language-independent. That would be dumb, right?
 
@@ -494,7 +498,7 @@ If you take this result at face value (*five models, two experiments, the same c
 
 The more aggressive reading is that this separation reflects something about the structure of meaning itself. That there exists a space of semantic relationships, that photosynthesis is closer to respiration than to contract law, regardless of whether you express it in Mandarin or in LaTeX, and that gradient descent on enough data will reliably find it. Not totally unexpected given precedents like word2vec, but it's fascinating that it's structurally separate, and that *duplicating parts of this structure materially improves multiple benchmarks*. 
 
-At least in these systems, Sapir and Whorf seem to have it backwards. Language doesn't shape thought. The model appears to compress away much of the language-specific structure before reintroducing it during decoding. And Chomsky was half right: there is a universal structure underneath. But it's not grammar; it seems to be geometry.
+At least in these systems, Sapir and Whorf seem to have it backwards. Language doesn't shape thought. The model appears to compress away much of the language-specific structure before reintroducing it during decoding. And Chomsky was half right: there is a universal structure underneath. But it's not grammar; it's learned vector geometry — a continuous space of distances and directions between concepts, not a rulebook of syntactic primitives.
 
 ---
 
