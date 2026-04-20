@@ -19,9 +19,9 @@ After digging into the topic, I found that the debate maps surprisingly well ont
 
  - Linguistic Relativity (*Weak Version*): The widely accepted view that language structures influence speaker perception, shaping cognitive patterns without strictly limiting them.
 
-I have new empirical evidence that, in transformer-based large language models, the usual entanglement between language and meaning is dramatically reduced in the middle of the network. In these layers, semantic content becomes the dominant organising principle, while language identity contributes little to average representational similarity.
+Recent interpretability work ([Wendler et al. 2024](https://arxiv.org/abs/2402.10588); [Wu et al. 2024](https://arxiv.org/abs/2411.04986); [Dumas et al. 2024](https://arxiv.org/abs/2411.08745)) has established that transformer LMs build a shared, largely language-agnostic semantic space in their middle layers. What I do in this post is replicate that finding on five frontier-scale models, three of them MoEs, extend it to code and LaTeX with single-letter variables, and connect it to the part I think hasn't been made explicit before: [RYS layer duplication](/posts/rys/). The layers you can profitably duplicate without retraining are *exactly* the layers where the shared semantic space lives. The brain scan predicts the surgery map.
 
-The same result replicates across five architecturally distinct models from five major AI labs.
+The same three-phase anatomy replicates cleanly across all five models.
 
 ---
 
@@ -35,7 +35,31 @@ That observation led to a hypothesis: transformer models have a three-phase func
 2. **Reasoning** (middle layers): process meaning in a format-agnostic space.
 3. **Encoding** (late layers): convert the internal representation back into surface-form tokens.
 
-In [Part II](https://dnhkng.github.io/posts/rys-ii/), I confirmed that RYS generalises across models and model sizes, and I showed new evidence (building on work by [Evan Maunder](https://www.linkedin.com/in/evan-maunder/)), that the middle layers really do operate in a language-independent space. This post takes that evidence further and asks what it means.
+In [Part II](https://dnhkng.github.io/posts/rys-ii/), I confirmed that RYS generalises across models and model sizes, and I ran a small experiment (building on work by [Evan Maunder](https://www.linkedin.com/in/evan-maunder/)) suggesting that the middle layers really do operate in a language-independent space. This post scales that experiment up, puts it in the context of the existing literature, and asks what the result means.
+
+---
+
+## Related Work
+
+The core empirical observation, that multilingual transformers develop a shared semantic representation in their middle layers, is not new, and I should have said so up front in Part II. There is a well-cited body of prior work that I hadn't read when I wrote that post, and any serious treatment of this topic owes a clear acknowledgment. Commenters on r/LocalLLaMA (correctly) pointed this out; this section is the corrected version of a framing I should have had from the start.
+
+[Wendler, Veselovsky, Monea, and West (2024)](https://arxiv.org/abs/2402.10588), "Do Llamas Work in English?", is the foundational piece. Using the logit lens on Llama 2, they showed that intermediate hidden states for non-English prompts project closer to English unembeddings than to the input language's own unembeddings. That observation seeded the subfield.
+
+[Wu, Yu, Yogatama, Lu, and Kim (2024)](https://arxiv.org/abs/2411.04986), "The Semantic Hub Hypothesis" (ICLR 2025), is the closest prior art to what I do here. They extend the shared-representation claim across languages *and* modalities (arithmetic, code, vision, audio), add causal evidence via logit lens and activation steering, and draw an explicit analogy to the hub-and-spoke model from cognitive neuroscience (Patterson et al. 2007). If you read one paper on this topic, read theirs.
+
+[Dumas, Wendler, Veselovsky, Monea, and West (2024/25)](https://arxiv.org/abs/2411.08745), "Separating Tongue from Thought", runs activation-patching experiments on Llama 2 7B and shows that you can swap a *concept* while holding language fixed, and vice versa. Strikingly, mean-across-language concept vectors actually *improve* translation.
+
+[Fierro, Foroutan, Elliott, and Søgaard (2025)](https://aclanthology.org/2025.findings-acl.827), "How Do Multilingual Language Models Remember Facts?" (ACL Findings 2025), decomposes factual recall into a language-independent subject-enrichment stage and a language-specific object-extraction stage. That functional factorisation lines up cleanly with the encode/reason/decode picture from [RYS Part I](/posts/rys/).
+
+So what does this post add on top?
+
+1. **The RYS link.** None of the above work connects the language-agnostic middle to a concrete intervention that measurably improves benchmarks. If the middle layers are the format-agnostic reasoning zone, those are exactly the layers where you can run the computation twice without breaking the model, and that is exactly where RYS layer duplication produces its gains. I think this is the real contribution here, and I'll spend a whole section on it.
+2. **Three-phase quantification at frontier scale.** The encode and decode blocks look roughly constant at around 15 layers each; the reasoning block absorbs the remaining depth. This predicts, with no hand-waving, why RYS fails on small models: not enough stack to form a distinct middle region.
+3. **Replication on recent, architecturally diverse systems, including 100B+ MoEs** (Qwen3.5-27B, MiniMax M2.5, GLM-4.7, Gemma-4 31B, GPT-OSS-120B). The existing literature is mostly Llama-2/3 8B, GPT-2-XL, XGLM, and mT5.
+4. **Code and LaTeX with single-letter variables.** Wu et al. cover arithmetic and vision/audio; this adds programming and mathematical notation with effectively zero lexical overlap with the English prose.
+5. **An interactive PCA widget** so you can see the transition directly rather than taking my word for the cosine curves.
+
+The Sapir-Whorf and Chomsky framing in the rest of the post is mine, and I think it's a useful angle on an otherwise well-studied phenomenon. But the underlying empirical pattern was on the record before I started typing.
 
 ---
 
@@ -251,7 +275,26 @@ The interactive analysis makes the transition unusually vivid. In the early laye
 
 Here's the critical point: this isn't a Qwen-specific artifact. MiniMax M2.5 is a 256-expert mixture-of-experts model, a fundamentally different architecture. GLM-4.7 is yet another design. GPT-OSS-120B shows the same broad anatomy as well. All five show the same three-phase structure, with the same dominance of content over language in the reasoning layers.
 
-If five architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation, *language-agnostic reasoning flanked by language-specific encoding and decoding*, then we're not looking at a training artifact. We're looking at a convergent solution. Maybe it's the structure of language itself or of the transformer architecture that drives this outcome. Either way, for LLM linguistics, it's a fascinating finding.
+If five architecturally distinct models, trained by different organisations on different data mixes, all converge on the same internal organisation (language-agnostic reasoning flanked by language-specific encoding and decoding), then we're not looking at a training artifact. We're looking at a convergent solution. That's consistent with what Wu et al. (2024) reported on smaller models; the contribution here is that the pattern holds up cleanly on 100B+ MoEs from five different labs.
+
+---
+
+## Why RYS Works: The Anatomy Predicts the Surgery
+
+This is the part I care about most, and the part I haven't seen made explicitly anywhere else: the language-agnostic middle is the same middle where RYS layer duplication works.
+
+The setup, in one sentence: take a block of middle layers in a big model, run it twice at inference (no retraining, no weight changes, just loop the forward pass), and you get measurable benchmark gains. Details and benchmarks are in [Part I](/posts/rys/) and [Part II](/posts/rys-ii/). Duplicating layers *outside* the middle breaks things in unpleasant ways. That asymmetry was the puzzle: why is the middle so privileged?
+
+The cosine curves above give a mechanistic answer.
+
+- **In the middle region, the representation is format-agnostic.** Each middle layer's input and output live in the same kind of space: a shared semantic manifold where topic dominates and language identity has largely been stripped out. Feeding the output of a middle layer back into another middle layer is a soft in-distribution operation. The model can "think again" through the same circuit.
+- **Outside the middle, layers do format-specific work.** Early layers are normalising eight scripts into one shared representation; late layers are committing back to a specific surface form. Looping a late layer back into itself means feeding it a decoded, language-specific representation when it was trained to consume a more abstract one. The distributions don't match. The model snaps.
+
+What makes this satisfying, rather than just a plausible story, is the size-scaling data. Across the five models in this post, the encoding and decoding blocks each look roughly *constant* at around 15 layers. The reasoning block absorbs whatever extra depth the architecture gives it. GPT-OSS-120B (36 layers) has only a handful of layers in a clean reasoning region; GLM-4.7 (92 layers) has a forty-layer plateau. This predicts, without hand-waving, why RYS works on big models and barely at all on small ones: small models don't have enough stack to form a distinct format-agnostic middle, so anything you duplicate is partly doing encode/decode work and you're feeding it the wrong distribution.
+
+Read the other way: if you want to predict whether a new model will take well to RYS, you don't need the full benchmark sweep. Run the 64-sentence cosine scan first. Clean three-phase structure with a sizeable middle plateau → there is room to cut. Smeared three phases → don't bother.
+
+The brain scan predicts the surgery map.
 
 ---
 
@@ -261,7 +304,7 @@ The Sapir-Whorf hypothesis exists in two forms.
 
 **The strong version** (*linguistic determinism*) says the language you speak *determines* what thoughts you can have. This is already unfashionable in linguistics, and from what I read, most linguists favour the weak version. But it's never been empirically refuted in a controlled system where you can actually poke around the internal representations.
 
-LLMs are that controlled system, and note that *I'm not claiming humans operate at all in the same way*. The striking result is that the model's internal representations, in the layers where reasoning happens, are *not* organised by language. The cosine similarity between different samples in the same language drops to approximately zero in the middle layers. In these layers, language identity is no longer the main geometric organiser of the representation; semantic content is.
+LLMs are that controlled system, and note that *I'm not claiming humans operate at all in the same way*. The empirical observation (again, not original to me; see the Related Work section) is that the model's internal representations, in the layers where reasoning happens, are *not* organised by language. The cosine similarity between different samples in the same language drops to approximately zero in the middle layers. In these layers, language identity is no longer the main geometric organiser of the representation; semantic content is.
 
 Now, careful reader, you have probably already guessed what this experiment does and doesn't show. It shows that the model *categorises* meaning universally, the same topic maps to the same region of the internal space regardless of language. It doesn't directly show that the model *reasons identically* in all languages. Sapir-Whorf, in its most interesting form, isn't about whether you can express the same ideas in different languages (everyone agrees you can). It's about whether the structural quirks of a language, like mandatory tense marking, grammatical gender, and evidentiality systems, are all subtly shaping how you process information.
 
@@ -291,7 +334,7 @@ Look at the three-phase anatomy again:
 
 This flow occurs over and over, for each processed token.
 
-The encoding and decoding phases are doing something *analogous* to what Chomsky's framework describes: translating between diverse surface structures and a universal deep structure. Syntactic structure must still be handled somewhere — presumably in the initial decoding layers — but the deep structure the model actually converges on isn't a tree of syntactic rules. The interesting finding is in the middle layers, and the continuous geometric manifold of meaning. Every language gets its own encoder and decoder, but the middle is shared, and what's shared is semantics, not syntax.
+The encoding and decoding phases are doing something *analogous* to what Chomsky's framework describes: translating between diverse surface structures and a universal deep structure. Syntactic structure must still be handled somewhere — presumably in the initial decoding layers — but the deep structure the model actually converges on isn't a tree of syntactic rules. What lives in the middle layers is different: a continuous geometric manifold of meaning. Every language gets its own encoder and decoder, but the middle is shared, and what's shared is semantics, not syntax.
 
 Chomsky famously demonstrated that syntax and semantics are independent systems with the phrase "***Colorless green ideas sleep furiously***", which is grammatically impeccable and semantically absurd. His argument was that syntax must therefore be the foundational, primitive system: an innate rulebook that operates prior to and independently of meaning. What the transformers show is the opposite priority. It seems that gradient descent can build universal linguistic structure *entirely* out of semantics, with no foundational syntactic rulebook at all. Syntax, in this picture, is downstream: a surface regularisation that emerges from the need to serialise meaning into a linear token stream, not the bedrock on which meaning rests.
 
@@ -310,18 +353,9 @@ So we end up with a three-way scorecard:
 
 ---
 
-## The Anatomy Predicts the Function
-
-This result connects directly to the [RYS work](https://dnhkng.github.io/posts/rys-ii/). The layers that can be profitably duplicated (*the layers where running the computation twice makes the model measurably smarter*) are ***exactly*** the layers where the language-agnostic reasoning space exists.  A reasonable hypothesis is:
-
-- If a layer operates in format-agnostic space, its input and output distributions are similar enough that you can loop back without catastrophic distribution mismatch. The model can "think again" through the same circuit.
-- If a layer is doing format-specific work (encoding or decoding), looping back means feeding decoded representations into a layer that expects abstract ones, or vice versa. The distributions don't match. The model breaks.
-
-The brain scan predicts the surgery map. The three-phase anatomy isn't just a nice observation, it tells you *why and where you can intervene and where you can't*.
-
----
-
 ## Caveats and What This Isn't
+
+**This is not a new empirical discovery.** Wu et al. (2024), Dumas et al. (2024), Wendler et al. (2024), and others established that the shared semantic space exists. What I add here is the link to RYS, the three-phase quantification on frontier-scale models, and the extension to code and LaTeX. The Sapir-Whorf framing is mine; the underlying finding isn't. If I'd read those papers before writing Part II, I'd have said so from the start.
 
 **LLMs aren't human brains.** Sapir-Whorf is a hypothesis about human cognition, thought up nearly a century before LLMs. I'm not claiming that because GPT-scale transformers have language-independent reasoning, therefore human cognition is language-independent. That would be dumb, right?
 
@@ -337,7 +371,7 @@ But LLMs are an unprecedented empirical tool for this question. They are the fir
 
 ## Beyond Language: Code and Math as a Test Case
 
-The natural language results are striking, but they invite an obvious question: is the universal space specific to *human languages*, or does it extend to formal systems too?
+The natural-language results are clean, but they invite an obvious question: is the universal space specific to *human languages*, or does it extend to formal systems too?
 
 Natural languages, for all their diversity, share a common evolutionary purpose: humans communicating with other humans about a shared physical world. You could argue that convergence across Chinese and French is unsurprising, as they're all trying to do the same thing. Code and mathematical notation are a different beast entirely. They weren't shaped by evolution or culture. They express computation and formal relationships using systems that share essentially zero surface structure with any natural language.
 
