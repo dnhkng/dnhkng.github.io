@@ -41,7 +41,7 @@ In [Part II](https://dnhkng.github.io/posts/rys-ii/), I confirmed that RYS gener
 
 ## Related Work
 
-The core empirical observation, that multilingual transformers develop a shared semantic representation in their middle layers, is not new, and I should have said so up front in Part II. There is a well-cited body of prior work that I hadn't read when I wrote that post, and any serious treatment of this topic owes a clear acknowledgment. Commenters on r/LocalLLaMA (correctly) pointed this out; this section is the corrected version of a framing I should have had from the start.
+The core empirical observation — that multilingual transformers develop a shared semantic representation in their middle layers — is not new. There is a well-cited body of prior work worth grounding this post in before I get to the parts I think are new. (Thanks to commenters on r/LocalLLaMA who pointed out the relevant references after Part II went up.)
 
 [Wendler, Veselovsky, Monea, and West (2024)](https://arxiv.org/abs/2402.10588), "Do Llamas Work in English?", is the foundational piece. Using the logit lens on Llama 2, they showed that intermediate hidden states for non-English prompts project closer to English unembeddings than to the input language's own unembeddings. That observation seeded the subfield.
 
@@ -61,7 +61,7 @@ So what does this post add on top?
 4. **Code and LaTeX with single-letter variables.** Wu et al. cover arithmetic and vision/audio; this adds programming and mathematical notation with effectively zero lexical overlap with the English prose.
 5. **An interactive PCA widget** so you can see the transition directly rather than taking my word for the cosine curves.
 
-The Sapir-Whorf and Chomsky framing in the rest of the post is mine, and I think it's a useful angle on an otherwise well-studied phenomenon. But the underlying empirical pattern was on the record before I started typing.
+The Sapir-Whorf and Chomsky framing in the rest of the post is mine; I think it's a useful angle on an otherwise well-studied phenomenon.
 
 ---
 
@@ -207,7 +207,7 @@ I ran this experiment on five models, from five different companies:
 - **Gemma-4 31B** (Google, dense transformer, 60 layers)
 - **GPT-OSS-120B** (OpenAI, 128-expert MoE, 36 layers)
 
-***All five show the same pattern!***
+The three-phase anatomy replicates across all five.
 
 ### Cosine Similarity Across Layers
 
@@ -244,7 +244,7 @@ In the central layers, the model's representations are organised more by meaning
 ![GPT-OSS-120B centered cosine similarity](/assets/img/universal/oss120_nl_category_curves_centered_rgb.png)
 *Same colour coding. Even with only 36 layers, GPT-OSS-120B compresses the same three phases into a shorter stack.*
 
-What is extremely interesting is the number of layers each model spends in the 'reasoning' zone. Empirically, the various models all seem to require about 15 layers to 'encode' reasoning back to text. This gives larger models with deeper transformer stacks like M2.5 and GLM-4.7 more time to *stay in the zone* during thinking. This coincides nicely with my original experiments from 2024: ***Small models don't improve much with RYS***.  *This is probably because the models just don't have enough transformer layers to generate separate decoding, thinking and encoding layers.* Duplicating layers in such a tight, optimised system breaks stuff!  Once a model is big enough that pre-training allows for the formation of a distinct 'thinking' region, we can finally use the RYS method to find repeatable blocks that improve performance.
+The interesting variable is the number of layers each model spends in the 'reasoning' zone. Empirically, the various models all seem to require about 15 layers to 'encode' reasoning back to text. This gives larger models with deeper transformer stacks like M2.5 and GLM-4.7 more time to *stay in the zone* during thinking. This coincides nicely with my original experiments from 2024: ***Small models don't improve much with RYS***.  *This is probably because the models just don't have enough transformer layers to generate separate decoding, thinking and encoding layers.* Duplicating layers in such a tight, optimised system breaks stuff!  Once a model is big enough that pre-training allows for the formation of a distinct 'thinking' region, we can finally use the RYS method to find repeatable blocks that improve performance.
 
 ### The PCA Visualisation
 
@@ -358,7 +358,7 @@ So we end up with a three-way scorecard:
 
 ## Caveats and What This Isn't
 
-**This is not a new empirical discovery.** Wu et al. (2024), Dumas et al. (2024), Wendler et al. (2024), and others established that the shared semantic space exists. What I add here is the link to RYS, the three-phase quantification on frontier-scale models, and the extension to code and LaTeX. The Sapir-Whorf framing is mine; the underlying finding isn't. If I'd read those papers before writing Part II, I'd have said so from the start.
+**The shared semantic space itself is not a new finding.** Wu et al. (2024), Dumas et al. (2024), Wendler et al. (2024), and others established it on smaller models. What I add here is the link to RYS, the three-phase quantification on frontier-scale models, and the extension to code and LaTeX.
 
 **"Isn't this just a predictable consequence of information-bottleneck theory?"** A fair point raised by several commenters, and yes, mostly. Any architecture that has to pass many input distributions through a shared parameter budget is under pressure to compress towards a common latent space; classical encoder-decoders were *designed* to exhibit exactly this behaviour, and decoder-only transformers inherit the same pressure implicitly. So the existence of a shared mid-stack space is not a surprise to anyone who has thought about bottlenecks. What the Wu / Dumas / Wendler line of work contributed empirically was showing it cleanly in modern LLMs; what I contribute on top is the link between the compressed region and RYS, plus the layer-count scaling. The qualitative phenomenon was predictable; the quantitative geometry of *where* the bottleneck sits in a 92-layer stack wasn't, and that is the part that matters for layer duplication.
 
