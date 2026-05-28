@@ -24,6 +24,31 @@ Back to Quantum Random Number Generators ([QRNGs](https://en.wikipedia.org/wiki/
 
 I had to build my own. This will be an exploration in optics, single photon pulse detection, FPGA circuits hardcoding von Neumann and Peres debiasing (*plus Toeplitz-hashing extractors*), the geometry of LLM logit distribution, and how this comes together and gets pushed to my [GH200 box](/posts/hopper) running MiniMax M2.7 via custom fork of [llama.cpp](https://github.com/ggml-org/llama.cpp) with a custom quantum-aware sampler. And I didn't want to just generate text. ***I wanted to hand Quantum OpenClaw fifty bucks and an API key to PolyMarket and tell it to trade prediction markets.***
 
+Here is the whole machine in one breath:
+
+```mermaid
+flowchart LR
+    P["photon<br/>path"] --> M["PMT<br/>pulse"]
+    M --> F["FPGA<br/>bitstream"]
+    F --> S["spreader<br/>diffuse address"]
+    S --> Q["quantum-aware<br/>sampler"]
+    Q --> T["token"]
+    T --> C["tool call"]
+    C --> O["market order"]
+
+    click P "#phase-1-building-the-beam-universe-splitter" "Phase 1: optics and PMTs"
+    click M "#phase-1-building-the-beam-universe-splitter" "Phase 1: optics and PMTs"
+    click F "#circuit-overview" "FPGA circuit overview"
+    click S "#phase-5-spreading-the-quantum-goodness" "Phase 5: spreader"
+    click Q "#the-quantum-sampler-finally" "The quantum sampler"
+    click T "#phase-3-the-model-is-the-lens" "Phase 3: model as lens"
+    click C "#tool-call" "Tool call"
+    click O "#market-order" "Market order"
+```
+
+The first half is the bench rig: [photons and PMTs](#phase-1-building-the-beam-universe-splitter), then the [FPGA circuit](#circuit-overview). The second half is the sampler: the model lens, the [probability floor](#phase-4-the-multiverse-has-a-resolution-limit), the [spreader](#phase-5-spreading-the-quantum-goodness), and the [quantum-aware CDF lookup](#the-quantum-sampler-finally). The last two steps are where this stops being a random number generator and becomes an agent: [tool call](#tool-call), then [market order](#market-order).
+
+
 Here's the hardware build-log, why standard LLM samplers murder most of the multiverse, how your gonads are a worse Quantum Lever than my rig, and what happens when you give quantum uncertainty a credit card.
 
 ---
@@ -418,13 +443,11 @@ flowchart LR
 
 If $π$ is a bijection on uint32 and $u$ is uniform, then $π(u)$ is uniform too — so the token distribution is unchanged. What can change is the *geometry*. A well-chosen $π$ makes each output bit a function of many input bits, so the CDF boundaries no longer land on convenient bit-prefixes of the raw quantum sample.
 
-We have one constraint that rules out most of the obvious answers: we want the construction to be **reproducible from a short definition**. A random invertible 32×32 binary matrix would work, but every reader's first question would be "*which matrix, and how did you pick it?*". An invertible hash, Feistel network, or cryptographic permutation would also break the MSB geometry. 
-
-So the ideal token distribution is unchanged, but the CDF no longer sees raw PMT prefix bits.  I thought long and hard about various types of spreaders. I wanted something elegant, something derivable from a few named matrices and a single equation.
+So the ideal token distribution is unchanged, but the CDF no longer sees raw PMT prefix bits. A random invertible 32×32 binary matrix would work, but every reader's first question would be "*which matrix, and how did you pick it?*". I wanted something reproducible from a short definition, cheap enough for FPGA fabric, and boring enough to audit.
 
 ### The construction
 
-The spreader is:
+The spreader I use is:
 
 $$G = I + H + J$$
 
@@ -438,7 +461,19 @@ $$H[i,j] = \operatorname{popcount}(i \mathbin{\&} j) \bmod 2$$
 
 All arithmetic is XOR. Each row of $G$ is a 32-bit mask, and the corresponding output bit is the parity of $u$ restricted to that mask. Thirty-two precomputed masks, one parity per output bit.
 
-Why this particular sum? Each of the obvious simpler constructions has a defect that the next term fixes:
+The useful properties are the whole reason for choosing it:
+
+- **Distribution preserving:** $G$ is a bijection on uint32, so a uniform input stays uniform.
+- **No raw MSB dependence:** every output bit depends on at least 15 input bits, so no CDF boundary is decided by one detector bit.
+- **Cheap:** implementation is 32 fixed XOR trees, depth ≈5 LUT levels on the FPGA.
+- **Auditable:** no seed, no magic constants, no hidden table; just one named construction.
+
+That gives the sampler the thing it needs: the CDF still sees a perfect uint32 address in the ideal case, but it no longer sees the raw detector prefix geometry.
+
+<details markdown="1">
+<summary><strong>Optional detail: why this exact construction?</strong></summary>
+
+Each of the obvious simpler constructions has a defect that the next term fixes:
 
 | Construction | Strength                | Defect                                             |
 | ------------ | ----------------------- | -------------------------------------------------- |
@@ -452,6 +487,11 @@ $J + I$ (every output bit is the parity of all input bits except itself) sounds 
 $H + I$ has genuinely diverse Hadamard-derived row masks, but row zero of $H$ is all zeros, so row zero of $H + I$ is just the identity — one output bit passes through unchanged. Small defect, but ugly.
 
 Adding $J$ complements every row, turning the direct wire into a high-weight parity mask while preserving the row diversity that $H$ provides. The result is the smallest, cleanest construction with diverse rows and no direct wires.
+
+</details>
+
+<details markdown="1">
+<summary><strong>Optional detail: row weights, toy example, and fixed points</strong></summary>
 
 Structurally, each output bit of $G \cdot u$ is the parity of $u$ over one of $G$'s row masks, so an output bit's "fan-in" is just its row weight. Three row weights show up, and each comes from a specific term in $G = I + H + J$:
 
@@ -495,8 +535,9 @@ The fixed points are visible here too: $u = 0$ maps to itself, as do `15, 51, 60
 
 One nice algebraic accident: `G² = I` over GF(2), so the spreader is self-inverse. Applying it twice gives back the original `u`. This means the same 32 row masks can encode or decode; no separate inverse table is needed. It also means the spreader is unambiguously a bijection on uint32: applying it preserves the uniform distribution exactly. It also makes debugging easy, **run it twice and you regenerate the input, or you messed up.**
 
+</details>
 
-> The spreader replaces raw contiguous MSB-dominated CDF addresses with deterministic Hadamard-derived preimages. Each CDF comparison is made after the QRNG bits have been structurally diffused across the address. *Every output bit depends on at least 15 input bits*. I'm not claiming that every QRNG bit fully participates in every *token* decision — that depends on where the CDF boundaries happen to land.
+The spreader replaces raw contiguous MSB-dominated CDF addresses with deterministic Hadamard-derived preimages. Each CDF comparison is made after the QRNG bits have been structurally diffused across the address. *Every output bit depends on at least 15 input bits*. I'm not claiming that every QRNG bit fully participates in every *token* decision — that depends on where the CDF boundaries happen to land.
 
 ---
 
@@ -522,7 +563,12 @@ That is the point of the spreader.
 
 It does not make the whole uint32 distribution uniform. A bijection cannot do that.
 
-But it prevents large CDF decisions from depending on individual detector bits. The apparatus has a measured bias of between 5–10%, but let's calculate how this plays out, and push well past our hardware to see where it breaks:
+But it prevents large CDF decisions from depending on individual detector bits. The apparatus has a measured bias of between 5–10%, so the visible number is the important one: at 55:45, raw half-range decisions are distorted by 10%, while a 15-bit parity pushes that residue down to $10^{-15}$.
+
+<details markdown="1">
+<summary><strong>Optional detail: bias stress table</strong></summary>
+
+If we push well past the measured hardware and ask where the spreader breaks, the margin looks like this:
 
 | PMT ratio | raw half-range distortion without spreader | parity bias with (k=15) |
 | --------: | -----------------------------------------: | ----------------------: |
@@ -531,6 +577,8 @@ But it prevents large CDF decisions from depending on individual detector bits. 
 |     70:30 |                             0.60× to 1.40× |      $1.1\times10^{-6}$ |
 |     80:20 |                             0.40× to 1.60× |      $4.7\times10^{-4}$ |
 |     90:10 |                             0.20× to 1.80× |      $3.5\times10^{-2}$ |
+
+</details>
 
 So the spreader fixes the head, not by deleting bias, but by making the CDF address geometry less stupid.
 
@@ -588,9 +636,17 @@ I gave OpenClaw a $50 sandbox account on a prediction market and one prompt:
 
 > You are an autonomous trading agent. Use your tools to browse current events, analyze prediction markets, and execute trades to maximize the value of your portfolio.
 
+### Tool call
+
+This is where tokens stop being prose and become action. The model emits a structured tool call, OpenClaw validates the schema, and the harness turns that sampled continuation into an HTTP request against the market tooling.
+
 <!-- TODO: log of OpenClaw confidently curl-ing a URL it hallucinated -->
 
 <!-- TODO: log of OpenClaw buying YES on an event that resolved NO three months ago because it trusted a Reddit post that didn't exist -->
+
+### Market order
+
+This is the final amplifier stage: the tool call reaches the exchange API, signs an order, and changes a position. At that point the photon path has become a line item in a portfolio.
 
 <!-- TODO: final balance log -->
 
