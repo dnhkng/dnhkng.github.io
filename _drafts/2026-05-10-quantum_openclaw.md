@@ -10,7 +10,7 @@ mermaid: true
 
 ![cover](/assets/img/qrng/cover.png)
 
-> Note: This is going to be my ***Voight-Kampff Test***, either you will think this whole project is freaking amazing, or the dumbest shit you have ever read. Nothing in between. Just the way I like it.
+> Note: This is going to be my ***Voight-Kampff Test***, either you will think this whole project is amazing AF, or the dumbest shit you have ever read. Nothing in between. Just the way I like it.
 
 Someone recently released [quantum-llama.cpp](https://forum.mindmatterinteraction.net/t/introducing-quantum-llama-cpp-qrng-powered-llm-token-sampling/339), a fork of standard Llama inference that swaps the pseudorandom number generator for a quantum one. The author called it "*allowing the universe itself to co-author the output.*"
 
@@ -36,24 +36,24 @@ flowchart LR
     T --> C["tool call"]
     C --> O["market order"]
 
-    click P "#phase-1-building-the-beam-universe-splitter" "Phase 1: optics and PMTs"
-    click M "#phase-1-building-the-beam-universe-splitter" "Phase 1: optics and PMTs"
+    click P "#building-the-universe-splitter" "Building the Universe Splitter"
+    click M "#building-the-universe-splitter" "Building the Universe Splitter"
     click F "#circuit-overview" "FPGA circuit overview"
-    click S "#phase-5-spreading-the-quantum-goodness" "Phase 5: spreader"
-    click Q "#phase-6-the-quantum-sampler-finally" "The quantum sampler"
-    click T "#phase-3-the-model-is-the-lens" "Phase 3: model as lens"
+    click S "#spreading-the-address" "Spreading the Address"
+    click Q "#from-photons-to-tokens" "From Photons to Tokens"
+    click T "#the-model-is-the-lens" "The Model Is the Lens"
     click C "#tool-call" "Tool call"
     click O "#market-order" "Market order"
 ```
 
-The first half is the bench rig: [photons and PMTs](#phase-1-building-the-beam-universe-splitter), then the [FPGA circuit](#circuit-overview). The second half is the sampler: the model lens, the [probability floor](#phase-4-the-multiverse-has-a-resolution-limit), the [spreader](#phase-5-spreading-the-quantum-goodness), and the [quantum-aware CDF lookup](#phase-6-the-quantum-sampler-finally). The last two steps are where this stops being a random number generator and becomes an agent: [tool call](#tool-call), then [market order](#market-order).
+The first half is the bench rig: [photons and PMTs](#building-the-universe-splitter), then the [FPGA circuit](#circuit-overview). The second half is the sampler: the model lens, the [probability floor](#keeping-the-tail-alive), the [spreader](#spreading-the-address), and the [quantum-aware CDF lookup](#from-photons-to-tokens). The last two steps are where this stops being a random number generator and becomes an agent: [tool call](#tool-call), then [market order](#market-order).
 
 
 > Here's the hardware build-log, why standard LLM samplers murder most of the multiverse, how your gonads are a worse Quantum Lever than my rig, and what happens when you give quantum uncertainty a credit card.
 
 ---
 
-## Phase 1: Building the ~~Beam~~ Universe Splitter
+## Building the Universe Splitter
 
 *Doesn't a normal computer already do this?* `/dev/urandom` pulls from an OS entropy pool, ultimately seeded by physical noise sources that are quantum at the bottom. (*waves to NSA* [👋🏻😅](https://en.wikipedia.org/wiki/Dual_EC_DRBG)).
 
@@ -156,7 +156,7 @@ Setting the gain is straightforward: With a reasonably high gain and light inten
 
 ---
 
-## Phase 2: The Minimum Viable Quantum Lever
+## The Minimum Viable Quantum Lever
 
 Before proceeding with the agent, I wrapped the bitstream in a REST API and pointed it at a vibe-coded Magic 8-Ball webapp.
 
@@ -183,7 +183,7 @@ If the 8-Ball demo is the trigger, OpenClaw+QRNG is the toddler with a loaded ha
 
 ---
 
-## Phase 3: The Model Is the Lens
+## The Model Is the Lens
 
 > If the multiverse realizes every possibility, why use a language model at all? Why not sample letters uniformly from the PMT and let the perfect trade emerge from the noise?  After all, an infinite troop of monkeys with infinite typewriters will produce all of Shakespeare, right?
 
@@ -201,7 +201,7 @@ Now squint through the MWI lens. Quantum sampling *is* GRPO's sampling step — 
 
 ---
 
-## Phase 4: The Multiverse Has a Resolution Limit
+## Keeping the Tail Alive
 
 A language model is not a proper Quantum Lever out of the box, it needs surgery first.
 
@@ -244,7 +244,7 @@ How to read this plot:
 * The horizontal dashed lines show various floor probabilities
 * Tokens to the right of the vertical dotted line naturally receive fewer uint32 slots than floor
 
-So, without the floor, taking K=1 (*we want 1 chance in $2^{32}$, or 1 in 4,294,967,296*), any token ranked past 158,146 gets eliminated due to CDF (*that's the rank at which Zipf probability drops below 1/2³², given s and vocab size*). This is an issue, as many LLMs have dictionaries ~250K tokens. Basically:
+So, without the floor, taking K=1 (*we want 1 chance in $2^{32}$, or 1 in 4,294,967,296*), any token ranked past 158,146 gets eliminated due to CDF for a 250k vocabulary with Zipf slope $s=1.8$ (*that's the rank at which Zipf probability drops below 1/2³²*). This is an issue, as many LLMs have dictionaries ~250K tokens. Basically:
 
  - High-probability tokens get huge intervals.
  - Low-probability tokens get tiny crumbs.
@@ -391,7 +391,7 @@ where $K_{\text{empirical}}$ comes from hardware calibration: bit-position bias,
 
 ---
 
-## Phase 5: Spreading the Quantum Goodness
+## Spreading the Address
 
 The standard method for selecting the next token is integer CDF inversion. Take the model's next-token probabilities, give each token an integer number of slots proportional to its probability, scale the slots so they sum to $2^{32}$, and form the cumulative sum. The sampler returns the first token whose cumulative boundary $u$ falls below. For a uniform $u$, every token is selected with exactly its model probability.
 
@@ -553,6 +553,8 @@ where:
 
 $$\delta=|2p-1|$$
 
+This assumes the input bits are independent; in this rig that means the post-coincidence PMT outcomes must be close to independent, which is exactly what the timing window and calibration checks are trying to make true.
+
 So if the raw PMT imbalance is 55:45:
 
 $$\delta=0.1$$
@@ -617,9 +619,101 @@ That is the signature of a detector that's good enough: belt and suspenders, whe
 
 ---
 
-## Phase 6: The Quantum Sampler, Finally
+## From Photons to Tokens
 
 At this point all the pieces are in place. The QRNG produces a uint32 word, the spreader diffuses the detector bits across the address, and the floored integer CDF turns that address into a token without deleting the tail. That token can be ordinary prose, or it can be the next fragment of a tool call that OpenClaw is about to execute.
+
+In code-shape, here is the whole sampler core. The only input I am hiding is where `qrng_u32` comes from; in the actual rig, that is the uint32 assembled from the FPGA bitstream.
+
+<details markdown="1">
+<summary><strong>Optional detail: full sampler core</strong></summary>
+
+```python
+from bisect import bisect_right
+from math import exp, floor
+
+UINT32_SIZE = 1 << 32
+
+
+def _spreader_masks():
+    masks = []
+    for i in range(32):
+        mask = 0
+        for j in range(32):
+            identity = i == j
+            hadamard = (i & j).bit_count() & 1
+            all_ones = 1
+            if identity ^ hadamard ^ all_ones:
+                mask |= 1 << j
+        masks.append(mask)
+    return masks
+
+
+SPREADER_MASKS = _spreader_masks()
+
+
+def spread_u32(u):
+    y = 0
+    for bit, mask in enumerate(SPREADER_MASKS):
+        if (u & mask).bit_count() & 1:
+            y |= 1 << bit
+    return y
+
+
+def softmax(logits):
+    m = max(logits)
+    exps = [exp(x - m) for x in logits]
+    z = sum(exps)
+    return [x / z for x in exps]
+
+
+def floored_cdf(logits, K=64):
+    probs = softmax(logits)
+    n = len(probs)
+    if K * n > UINT32_SIZE:
+        raise ValueError("K is too large for this vocabulary")
+
+    raw_slots = [p * UINT32_SIZE for p in probs]
+    under_resolved = [s < K for s in raw_slots]
+
+    slots = [K if under else 0 for under in under_resolved]
+    remaining = UINT32_SIZE - sum(slots)
+
+    resolved = [i for i, under in enumerate(under_resolved) if not under]
+    if not resolved:
+        resolved = list(range(n))
+    resolved_mass = sum(probs[i] for i in resolved)
+
+    exact = [(i, probs[i] / resolved_mass * remaining) for i in resolved]
+    for i, x in exact:
+        slots[i] += floor(x)
+
+    leftover = UINT32_SIZE - sum(slots)
+    remainders = sorted(
+        ((x - floor(x), i) for i, x in exact),
+        reverse=True,
+    )
+    for _, i in remainders[:leftover]:
+        slots[i] += 1
+
+    cdf = []
+    total = 0
+    for s in slots:
+        total += s
+        cdf.append(total)
+    cdf[-1] = UINT32_SIZE
+    return cdf
+
+
+def quantum_floor_sample(logits, qrng_u32, K=64):
+    u = spread_u32(qrng_u32)
+    cdf = floored_cdf(logits, K)
+    return bisect_right(cdf, u)
+```
+
+</details>
+
+That is the whole trick: the model still supplies the distribution, but the address comes from photons, is spread before lookup, and lands in a CDF where the tail has not been deleted.
 
 ```mermaid
 flowchart LR
@@ -630,7 +724,7 @@ flowchart LR
 
 ---
 
-## Phase 7: Giving the Multiverse an API Key
+## Giving the Multiverse an API Key
 
 OpenClaw with a quantum sampler is the rig at full power. Photon picks token, token writes tool call, tool call hits an API. No human in the loop to hedge.
 
