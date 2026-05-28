@@ -30,7 +30,8 @@ Here is the whole machine in one breath:
 flowchart LR
     P["photon<br/>path"] --> M["PMT<br/>pulse"]
     M --> F["FPGA<br/>bitstream"]
-    F --> S["spreader<br/>diffuse address"]
+    F --> L["qrngd<br/>Lever TCP :5003"]
+    L --> S["spreader<br/>diffuse address"]
     S --> Q["quantum-aware<br/>sampler"]
     Q --> T["token"]
     T --> C["tool call"]
@@ -39,6 +40,7 @@ flowchart LR
     click P "#building-the-universe-splitter" "Building the Universe Splitter"
     click M "#building-the-universe-splitter" "Building the Universe Splitter"
     click F "#circuit-overview" "FPGA circuit overview"
+    click L "#wiring-the-lever-into-llamacpp" "Wiring the Lever Into llama.cpp"
     click S "#spreading-the-address" "Spreading the Address"
     click Q "#from-photons-to-tokens" "From Photons to Tokens"
     click T "#the-model-is-the-lens" "The Model Is the Lens"
@@ -46,14 +48,14 @@ flowchart LR
     click O "#market-order" "Market order"
 ```
 
-The first half is the bench rig: [photons and PMTs](#building-the-universe-splitter), then the [FPGA circuit](#circuit-overview). The second half is the sampler: the model lens, the [probability floor](#keeping-the-tail-alive), the [spreader](#spreading-the-address), and the [quantum-aware CDF lookup](#from-photons-to-tokens). The last two steps are where this stops being a random number generator and becomes an agent: [tool call](#tool-call), then [market order](#market-order).
+The first half is the bench rig: [photons and PMTs](#building-the-beam-universe-splitter), then the [FPGA circuit](#circuit-overview). The second half is the sampler: the model lens, the [probability floor](#keeping-the-tail-alive), the [spreader](#spreading-the-address), the [quantum-aware CDF lookup](#from-photons-to-tokens), and the [Lever socket that feeds llama.cpp](#wiring-the-lever-into-llamacpp). The last two steps are where this stops being a random number generator and becomes an agent: [tool call](#tool-call), then [market order](#market-order).
 
 
-> Here's the hardware build-log, why standard LLM samplers murder most of the multiverse, how your gonads are a worse Quantum Lever than my rig, and what happens when you give quantum uncertainty a credit card.
+Here's the hardware build-log, why standard LLM samplers murder most of the multiverse, how your gonads are a worse Quantum Lever than my rig, and what happens when you give quantum uncertainty a credit card.
 
 ---
 
-## Building the Universe Splitter
+## Building the ~~Beam~~ Universe Splitter
 
 *Doesn't a normal computer already do this?* `/dev/urandom` pulls from an OS entropy pool, ultimately seeded by physical noise sources that are quantum at the bottom. (*waves to NSA* [👋🏻😅](https://en.wikipedia.org/wiki/Dual_EC_DRBG)).
 
@@ -160,7 +162,7 @@ We also need to watch the PMTs carefully!  When a photon hits a PMT, there can b
 ![alt text](/assets/img/qrng/100M_probs.jpeg)
 *the results of 100 million photons, calculating the conditional probability at various time offsets.*
 
-We gather lots of data, 100 million photon detections, and plotting it out its clear that a dead time of ~24 $us$ removes this autocorrelation artifact.  You probably noticed the graph does not line up at 0.5; this is bias issue that comes from slightly different PMT characteristics.  It's only fixable mechanically, by blocking some of the light going to the PMT that registers more photon impacts.
+We gather lots of data, 100 million photon detections, and plotting it out its clear that a dead time of ~24 μs removes this autocorrelation artifact.  You probably noticed the graph does not line up at 0.5; this is bias issue that comes from slightly different PMT characteristics.  It's only fixable mechanically, by blocking some of the light going to the PMT that registers more photon impacts.
 
 ---
 
@@ -547,7 +549,7 @@ One nice algebraic accident: `G² = I` over GF(2), so the spreader is self-inver
 
 </details>
 
-The spreader replaces raw contiguous MSB-dominated CDF addresses with deterministic Hadamard-derived preimages. Each CDF comparison is made after the QRNG bits have been structurally diffused across the address. *Every output bit depends on at least 15 input bits*. I'm not claiming that every QRNG bit fully participates in every *token* decision — that depends on where the CDF boundaries happen to land.
+The spreader replaces raw contiguous MSB-dominated CDF addresses with deterministic Hadamard-derived preimages. Each CDF comparison is made after the Lever bits have been structurally diffused across the address. *Every output bit depends on at least 15 input bits*. I'm not claiming that every detector bit fully participates in every *token* decision — that depends on where the CDF boundaries happen to land.
 
 ---
 
@@ -611,7 +613,7 @@ On the Red Pitaya's Zynq FPGA fabric it is essentially free — 32 fixed XOR tre
 
 It's worth being explicit about how the spreader and the $K$ floor relate, because they sit at different stages:
 
-The **spreader runs first**, on the raw QRNG word. It attacks the *head geometry*: no CDF boundary, however high in the distribution, should be decided by a single detector bit. Every output bit is a parity of at least 15 input bits, so a raw per-bit imbalance $\delta$ reaches token boundaries suppressed to $\delta^{15}$. At the measured 5–10% imbalance, that is effectively gone.
+The **spreader runs first**, on the raw Lever word. It attacks the *head geometry*: no CDF boundary, however high in the distribution, should be decided by a single detector bit. Every output bit is a parity of at least 15 input bits, so a raw per-bit imbalance $\delta$ reaches token boundaries suppressed to $\delta^{15}$. At the measured 5–10% imbalance, that is effectively gone.
 
 The **$K$ floor is built into the CDF table**, downstream. It attacks the *tail*: every token gets at least $K$ slots, so nothing in the deep vocabulary is unreachable.
 
@@ -629,9 +631,9 @@ That is the signature of a detector that's good enough: belt and suspenders, whe
 
 ## From Photons to Tokens
 
-At this point all the pieces are in place. The QRNG produces a uint32 word, the spreader diffuses the detector bits across the address, and the floored integer CDF turns that address into a token without deleting the tail. That token can be ordinary prose, or it can be the next fragment of a tool call that OpenClaw is about to execute.
+At this point all the pieces are in place. The Lever stream provides raw which-path bytes, the sampler groups four of them into a little-endian `uint32`, the spreader diffuses those detector bits across the address, and the floored integer CDF turns that address into a token without deleting the tail. That token can be ordinary prose, or it can be the next fragment of a tool call that OpenClaw is about to execute.
 
-In code-shape, here is the whole sampler core. The only input I am hiding is where `qrng_u32` comes from; in the actual rig, that is the uint32 assembled from the FPGA bitstream.
+In code-shape, here is the whole sampler core. The only input I am hiding is where `lever_u32` comes from; in the actual rig, that is the uint32 assembled from raw FPGA which-path bytes.
 
 <details markdown="1">
 <summary><strong>Optional detail: full sampler core</strong></summary>
@@ -713,8 +715,8 @@ def floored_cdf(logits, K=64):
     return cdf
 
 
-def quantum_floor_sample(logits, qrng_u32, K=64):
-    u = spread_u32(qrng_u32)
+def quantum_floor_sample(logits, lever_u32, K=64):
+    u = spread_u32(lever_u32)
     cdf = floored_cdf(logits, K)
     return bisect_right(cdf, u)
 ```
@@ -725,10 +727,65 @@ That is the whole trick: the model still supplies the distribution, but the addr
 
 ```mermaid
 flowchart LR
-    A["QRNG<br/>uint32 u"] --> B["spread<br/>G·u over GF(2)"]
+    A["Lever stream<br/>uint32 u"] --> B["spread<br/>G·u over GF(2)"]
     B --> C["integer CDF<br/>searchsorted, K=64"]
     C --> D["token"]
 ```
+
+---
+
+## Wiring the Lever Into llama.cpp
+
+The FPGA actually exposes two streams, and this distinction matters.
+
+The first stream is the conventional **QRNG** output on TCP port `5000`: extracted random words, suitable for the boring job of being a random number generator. The second stream is the **Lever** output on TCP port `5003`: raw which-path bytes, newest-first, with no debiasing, no Toeplitz compression, and no whitening. For this experiment, llama.cpp uses the Lever stream.
+
+That is the philosophical point of the whole contraption. If I wanted clean random numbers, I would use the extracted QRNG stream. I want the photon path to remain visibly upstream of the token, so the sampler consumes the raw Lever stream instead.
+
+The board-side daemon, `qrngd`, sits between the Red Pitaya FPGA and the GH200 box. llama.cpp does a best-effort HTTP health probe, opens the Lever TCP socket, reads four bytes at a time, interprets them as a little-endian `uint32`, and gives that word to the spreader. One word is consumed per accepted token.
+
+There is no pseudorandom fallback. If the Lever socket stalls, times out, or closes, generation fails. In ordinary software, this is annoying. In a Quantum Lever, it is the contract: no photon, no token.
+
+Because the whole point is to keep every token reachable, the sampler also refuses the usual branch-deleting conveniences: top-k, top-p, min-p, grammar masks, JSON schema masks, speculative decoding, and backend sampling. Those are useful in ordinary inference, but here they delete branches before the photons get a vote.
+
+<details markdown="1">
+<summary><strong>Optional detail: the actual connection contract</strong></summary>
+
+The board exposes four services:
+
+|   Port | Protocol | Used here     | Purpose                                  |
+| -----: | -------- | ------------- | ---------------------------------------- |
+| `5000` | TCP      | no            | Extracted QRNG words                     |
+| `5001` | HTTP     | startup probe | Health, configuration, controls, profile |
+| `5002` | TCP      | no            | Debug event stream                       |
+| `5003` | TCP      | yes           | Raw Lever byte stream                    |
+
+The sampler's startup sequence is:
+
+1. Probe `http://<qrng-host>:5001/health`, but do not treat failure as fatal.
+2. Connect to `tcp://<qrng-host>:5003`.
+3. Read exactly four bytes for the first token sample.
+4. Assemble them as a little-endian `uint32`.
+5. After each accepted token, start one asynchronous prefetch for the next word.
+
+The stream is unframed. Bytes are just bytes. The FPGA and daemon preserve the raw Lever path; the llama.cpp side is where the four-byte grouping happens.
+
+Resetting the sampler discards any prefetched word, so entropy consumption stays tied to the accepted generation history. Timeouts and socket closures are fatal to the current generation. There is deliberately no fallback to the default llama.cpp PRNG once quantum sampling has been enabled.
+
+The normal command line looks like this:
+
+```bash
+./llama-cli \
+  -m model.gguf \
+  -p "Explain the experiment in one paragraph." \
+  --temp 0.8 \
+  --samplers "penalties;temperature" \
+  --quantum-qrng-host <qrng-host> \
+  --quantum-qrng-port 5003 \
+  --quantum-k 64
+```
+
+</details>
 
 ---
 
