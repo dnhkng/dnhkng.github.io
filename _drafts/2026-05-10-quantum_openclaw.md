@@ -14,7 +14,7 @@ mermaid: true
 
 Someone recently released [quantum-llama.cpp](https://forum.mindmatterinteraction.net/t/introducing-quantum-llama-cpp-qrng-powered-llm-token-sampling/339), a fork of standard Llama inference that swaps the pseudorandom number generator for a quantum one. The author called it "*allowing the universe itself to co-author the output.*"
 
-Your regular, garden-variety nerd might have happened to stumble on this 'quantum woo' article, and think "That doesn't make too much sense, but isn't quantum randomness just fancy random numbers generator?". I read it and thought about OpenClaw, photomultiplier tubes and FPGAs.
+Your regular, garden-variety nerd might have happened to stumble on this 'quantum woo' article, and think "That doesn't make too much sense, but isn’t quantum randomness just a fancy random-number generator?". I read it and thought about OpenClaw, photomultiplier tubes and FPGAs.
 
 OpenClaw is an agent harness. ReAct loop, tool calls, the usual. You give it a goal and it reasons, acts, observes, and reasons again until something stops it or it *runs out of money*. The interesting thing about an agent harness is that the same probability distribution that picks the next word also picks the next tool call to use. Reasoning and action come out of the same sampler. **WTF is a sampler?** Well, at every step, your LLM doesn't generate the next word. It actually generates a list of probabilities *for all possible* next words. Then, we pick the next word using those probabilities (*don't worry, we will go over the math in too much detail later!*).
 
@@ -22,7 +22,7 @@ Back to Quantum Random Number Generators ([QRNGs](https://en.wikipedia.org/wiki/
 
 > And before you draft an email about the measure problem: pause. The measure problem is metaphysical and the rig is engineering. The photons hit the detectors, and steer OpenClaw: Whether you choose to interpret that via Many-Worlds, Copenhagen, or consistent histories is up to you. *I choose interesting*.
 
-I had to build my own. This will be an exploration in optics, single photon pulse detection, FPGA circuits hardcoding von Neumann and Peres debiasing (*plus Toeplitz-hashing extractors*), the geometry of LLM logit distribution, and how this comes together and it pushed to my [GH200 box](/posts/hopper) running MiniMax M2.7 via custom fork of [llama.cpp](https://github.com/ggml-org/llama.cpp) with a custom quantum-aware sampler. And I didn't want to just generate text. ***I wanted to hand Quantum OpenClaw fifty bucks and an API key to PolyMarket and tell it to trade prediction markets.***
+I had to build my own. This will be an exploration in optics, single photon pulse detection, FPGA circuits hardcoding von Neumann and Peres debiasing (*plus Toeplitz-hashing extractors*), the geometry of LLM logit distribution, and how this comes together and gets pushed to my [GH200 box](/posts/hopper) running MiniMax M2.7 via custom fork of [llama.cpp](https://github.com/ggml-org/llama.cpp) with a custom quantum-aware sampler. And I didn't want to just generate text. ***I wanted to hand Quantum OpenClaw fifty bucks and an API key to PolyMarket and tell it to trade prediction markets.***
 
 Here's the hardware build-log, why standard LLM samplers murder most of the multiverse, how your gonads are a worse Quantum Lever than my rig, and what happens when you give quantum uncertainty a credit card.
 
@@ -59,12 +59,12 @@ What was missing was inorganic, raised free-range photons. The final rig uses th
    
 If PMT A fires, it's a 0. If PMT B fires, it's a 1.  We see which universe we reside in by measuring which path they 'chose'. Simple and elegant.  Except it needs a *lot* of engineering (*but that's why you're here, right?*).
 
-A friend gave me pair of Hamamatsu photomultiplier tubes (PMTs).  These came from the core of a nano differential scanning fluorimetry, and was used to analyse protein structure via tryptophan fluorescence, which absorbs light at 280 nm. Like most fluorophores, its emission properties change depending on its chemical environment. When the proteins are all nicely folded up, and the tryptophans are nestled and cosy inside the protein, they're protected from aqueous solution and have a fluorescence emission peak at 330 nm. But when the proteins denature, and their structures scramble, the tryptophan is exposed to water, and the fluorescence is red-shifted to a maximum at 350 nm.
+A friend gave me a pair of Hamamatsu photomultiplier tubes (PMTs).  These came from the core of a nano differential scanning fluorimetry, and were used to analyse protein structure via tryptophan fluorescence, which absorbs light at 280 nm. Like most fluorophores, its emission properties change depending on its chemical environment. When the proteins are all nicely folded up, and the tryptophans are nestled and cosy inside the protein, they're protected from aqueous solution and have a fluorescence emission peak at 330 nm. But when the proteins denature, and their structures scramble, the tryptophan is exposed to water, and the fluorescence is red-shifted to a maximum at 350 nm.
 
 ![optics circuit](/assets/img/qrng/optics.png)
-*The optical pathway, and swapping the dichroic for a Ultraviolet 50:50 mirror*
+*The optical pathway, and swapping the dichroic for an ultraviolet 50:50 mirror*
 
-Obviously, I had to take the entire thing apart, poke around, and rip out the dichroic beam splitter. That's the bit that directs light >340 nm down one path and <340 nm down the other, into each of the awaiting PMTs.  I replaced this with a 50:50 half-mirror that works in the UV range. Same basic hardware, completely different physics. Now the photons would each reach the mirror, and *the detection — not the photon — is what forks the world*. We only ever see one of the paths taken, and wonder whether the other path even exists like a damn Copenhagian...
+Obviously, I had to take the entire thing apart, poke around, and rip out the dichroic beam splitter. That's the bit that directs light >340 nm down one path and <340 nm down the other, into each of the awaiting PMTs.  I replaced this with a 50:50 half-mirror that works in the UV range. Same basic hardware, completely different physics. Now the photons would each reach the mirror, and *the detection — not the photon — is what forks the world*. We only ever see one of the paths taken, and wonder whether the other path even exists like a damn Copenhagenist...
 
 The optics module expects a protein sample in a quartz glass capillary tube to absorb 280 nm light, and emit ~340 nm light, but I didn't have that stuff handy, and protein samples would break down (*I don't want to grow bacteria in the setup*). So, I tried random stuff like paper and plastics, and it turns out that 3D printed filament is a great material for this project: I can print a lens cover that both blocks ambient light AND is faintly fluorescent at the right wavelength!  The faintness is a bonus, as we are trying to get to the single photon range, and a lit room does about  $10^{13}$ and $10^{15}\text{ photons/cm}^2$. But the beam splitter optical setup was just the photogenic part. Then came the actual engineering: coincidence rejection, dead-time handling, dark-count filtering, and handling PMT pair biases...
 
@@ -80,17 +80,17 @@ With the Red Pitaya in Oscilloscope mode, I added in 10 Ohm potentiometers for t
 
 With the hardware proof-of-concept sorted, it was time to plan out the architecture. The idea was simple:
 
-The FPGA system monitors the BNC-connected PMTs, and register a bit whenever exactly one detector fires within the coincidence window. It does this by measuring the fast voltage spikes produced by a transimpedance amplifier (TIA), which converts the PMT dynode current across a resistor into a voltage signal.  These are converted to digital values by the DACs, and the FPGA does the necessary thresholding and
+The FPGA system monitors the BNC-connected PMTs, and registers a bit whenever exactly one detector fires within the coincidence window. It does this by measuring the fast voltage spikes produced by a transimpedance amplifier (TIA), which converts the PMT dynode current across a resistor into a voltage signal.  These are converted to digital values by the ADCs, and the FPGA does the necessary thresholding and
 timing processing.
 
 My manual circuit control wasn't going to cut it for this project. There are lots of parameters to sweep, and the 10 Ohm pots make this extremely fiddly and boring. *Why spend 2 hours tuning a circuit by hand, when you can spend 10 hours building an automated tuning system?* The Red Pitaya has 4 Digital-to-analog converters
- (DACs), and a bunch of digital IO's and well as 3.3 V and 5 V power sources. Perfect for controlling the system via scripts to manage light intensity and PMT gain programmatically.
+ (DACs), and a bunch of digital I/O, as well as 3.3 V and 5 V power sources. Perfect for controlling the system via scripts to manage light intensity and PMT gain programmatically.
 
 ![control circuit](/assets/img/qrng/circuit.jpg)
 ![circuit construction](/assets/img/qrng/building.png)
 *Protip: Ask Codex to set pins high or low, and you can focus on getting the probes in the right place while it operates the Red Pitaya GPIOs*
 
-The circuit is split into three main sections: the LED current controller, the reed-relay LED gate, and the relay coil driver. The PMT gain control is handled separately with simple resistor dividers. The power supply is trivial, two Traco Power 5 V DC/DC devices, the TEN 20-2411W1 and the smaller TEN 8-2411W1 at 4 A and 1.6 A respectively. These are isolated, so are joined together for the necessary -5 V, 0 V and +5 V rails needed for the PMT. These are massively over powered, but were found in the "*random gear box*".
+The circuit is split into three main sections: the LED current controller, the reed-relay LED gate, and the relay coil driver. The PMT gain control is handled separately with simple resistor dividers. The power supply is trivial, two Traco Power 5 V DC/DC devices, the TEN 20-2411W1 and the smaller TEN 8-2411W1 at 4 A and 1.6 A respectively. These are isolated, so are joined together for the necessary -5 V, 0 V and +5 V rails needed for the PMT. These are massively overpowered, but were found in the "*random gear box*".
 
 #### LED current controller
 
@@ -107,7 +107,7 @@ The unused half of the MCP602 is tied off as a unity-gain buffer at ground: the 
 
 #### Reed relay LED gate
 
-The LED is switched with an HE721C reed relay. The relay contacts are used as an SPDT selector rather than simply breaking the LED path.  Why did I use a relay instead of a mosfet? Well, firstly, it's what I had it my 'box-of-unsorted-ICs', and secondly, a closed relay isn't a potential source of noise and has no issues at very low currents.
+The LED is switched with an HE721C reed relay. The relay contacts are used as an SPDT selector rather than simply breaking the LED path.  Why did I use a relay instead of a mosfet? Well, firstly, it’s what I had in my 'box-of-unsorted-ICs', and secondly, a closed relay isn't a potential source of noise and has no issues at very low currents.
 
 When the relay is off, the current sink is connected directly to +5 V through the NC contact. This keeps the op-amp loop settled, but the LED is disconnected. When the relay is on, the COM contact moves to NO, and the current sink pulls current through the LED. This gives a physical LED disconnect in the default state while avoiding the op-amp railing when the LED is off.
   
@@ -120,9 +120,9 @@ The H10722 PMT modules have a gain-control input, Vcont, with a recommended rang
 ![final construction](/assets/img/qrng/final.jpeg)
 *the assembled Quantum photonic 'coin flip' device*
 
-With everything set up, it was time to tune the device. That involved first finding the threshold for a photon detection, then tuning the gain on each PMT, and finally find a good LED light intensity that maximised the number of 'coin flips' per second, without causing too many collisions (*two photons arriving at the nearly the same time to one or both PMTs*).
+With everything set up, it was time to tune the device. That involved first finding the threshold for a photon detection, then tuning the gain on each PMT, and finally finding a good LED intensity that maximised the number of 'coin flips' per second, without causing too many collisions (*two photons arriving at the nearly the same time to one or both PMTs*).
 
-Setting the gain is straightforward: With a reasonable high gain and light intensity, we can do a ROC curve, and count photons on each PMT. Due to the optical path and mirror reflectance etc etc, we will have a different count for each PMT. Then, we just keep lowering the gain, and doing the ROC analysis, until our photon count dips. We back up a bit, and we have our gain.
+Setting the gain is straightforward: With a reasonably high gain and light intensity, we can do a ROC curve, and count photons on each PMT. Due to the optical path and mirror reflectance etc etc, we will have a different count for each PMT. Then, we just keep lowering the gain, and doing the ROC analysis, until our photon count dips. We back up a bit, and we have our gain.
 
 ![pmt thresholds](/assets/img/qrng/pmt_thresholds.jpeg)
 *Finding the threshold for each PMT. We look for the point at which we are no longer sampling the PMT noise. This was done at high gain, 240, or ~0.85 V.*
@@ -183,7 +183,7 @@ Now squint through the MWI lens. Quantum sampling *is* GRPO's sampling step — 
 
 A language model is not a proper Quantum Lever out of the box, it needs surgery first.
 
-A 250k-token vocabulary has a deep, deep tail. The bottom 100k tokens have probabilities like $10^{-25}$. These aren't real probabilities; they're numerical sludge at the bottom of the network's final layer.  LLMs are trained using cross-entropy loss on *real examples*. What happens to the other possible tokens is simply not important to the final loss, and this is reflected the noisy distribution they exhibit. For any 'next token' that was trained on, *there were probably only a dozen or two valid examples*. The other ~250K in the dictionary would make no sense to select, and are given some arbitrary low probability.
+A 250k-token vocabulary has a deep, deep tail. The bottom 100k tokens have probabilities like $10^{-25}$. These aren't real probabilities; they're numerical sludge at the bottom of the network's final layer.  LLMs are trained using cross-entropy loss on *real examples*. What happens to the other possible tokens is simply not important to the final loss, and this is reflected in the noisy distribution they exhibit. For any 'next token' that was trained on, *there were probably only a dozen or two valid examples*. The other ~250K in the dictionary would make no sense to select, and are given some arbitrary low probability.
 
 Standard samplers do violent things to the model’s output distribution, for good reason: 
 Top-k keeps the top *k* tokens and deletes the rest. Top-p keeps a nucleus (*the top chunk of the probability*) and deletes the tail. Standard min-p deletes anything below a threshold probability.  All fine and good to prevent generation *from getting too weird*. But if the perfect token for some weird-but-real branch was at rank 151, top-k at 150 just murdered that perfect branch. The photons got a vote, but the samplers rigged the election.
@@ -266,7 +266,7 @@ So the three numbers are:
 | $$F_K$$      | how often the floored sampler samples that region                    |
 | $$\Delta_K$$ | how much probability mass we actually moved                          |
 
-This is the number that matters, not “how big is the floor?”. Its *How much did we actually mess with the softmax*?
+This is the number that matters, not “how big is the floor?”. It’s: *How much did we actually mess with the softmax*?
 
 ---
 
@@ -366,7 +366,7 @@ first. We will return to what that does to the margin once we have built it.
 
 ## Phase 5: Spreading the Quantum goodness
 
-The standard method in selecting the next token is integer CDF inversion. Take the model's next-token probabilities, give each token an integer number of slots proportional to its probability, scale the slots so they sum to $2^{32}$, and form the cumulative sum. The sampler returns the first token whose cumulative boundary $u$ falls below. For a uniform $u$, every token is selected with exactly its model probability.
+The standard method for selecting the next token is integer CDF inversion. Take the model's next-token probabilities, give each token an integer number of slots proportional to its probability, scale the slots so they sum to $2^{32}$, and form the cumulative sum. The sampler returns the first token whose cumulative boundary $u$ falls below. For a uniform $u$, every token is selected with exactly its model probability.
 
 We just fixed the "*tail problem*", where tiny probability tokens get one-slot or zero slots in the CDF.  But we still have the "*head problem*":
 
@@ -374,7 +374,7 @@ We just fixed the "*tail problem*", where tiny probability tokens get one-slot o
 
 This is not a distributional defect. The output probabilities are exact. It is a *geometric* defect: the relationship between bits of `u` and the resulting token is structurally lopsided. High-probability tokens are decided by high-order bits.
 
-For a quantum sampler this matters more than it would for a pseudorandom one. Every bit of $u$ was earned the hard way — a photon, a beam splitter, a PMT pulse, a gated detection window. Wasting 31 of them on a single decision is offensive on aesthetic grounds. More concretely: any residual defect in the high-order bits of $u$ (afterpulse residue, ADC quirks, debiasing imperfections) lands disproportionately on the tokens where the model is most confident. We already know we will always have a PMT imbalance issue; its impossible to completely tune a system that drifts.  We could use Von Neumann debiasing, or Peres debiasing (*and I have implemented that*), but we really want the purest route from photons to tokens.
+For a quantum sampler this matters more than it would for a pseudorandom one. Every bit of $u$ was earned the hard way — a photon, a beam splitter, a PMT pulse, a gated detection window. Wasting 31 of them on a single decision is offensive on aesthetic grounds. More concretely: any residual defect in the high-order bits of $u$ (afterpulse residue, ADC quirks, debiasing imperfections) lands disproportionately on the tokens where the model is most confident. We already know we will always have a PMT imbalance issue; its impossible to completely tune a system that drifts.  We could use Von Neumann debiasing, or Peres debiasing (*and I have implemented that*), but we really want a purer route from photons to tokens.
 
 ---
 
@@ -394,7 +394,7 @@ and our model says the probabilities of the top 5 tokens are:
 | frozen |       6.25% | [3758096384, 4026531840) | 1110XX...      |
 | cold   |      3.125% | [4026531840, 4160749568) | 11110X...      |
 
-The decision “did we sample `hot`?” is just: *is the MSB zero?* The same goes for the next few words down the list. The overwhelming importance is on the first few bits.  I don't like that at all, *I want lot of bits to pick the next token*. For me, this is simply a geometry bug that needs squashing.
+The decision “did we sample `hot`?” is just: *is the MSB zero?* The same goes for the next few words down the list. The overwhelming importance is on the first few bits.  I don't like that at all, *I want lots of bits to pick the next token*. For me, this is simply a geometry bug that needs squashing.
 
 ```mermaid
 flowchart TD
@@ -409,7 +409,7 @@ flowchart TD
 
 ### Spreading the CDF address
 
-This time the repair does not to change the probabilities, but changes the geometry. We can do this by adding a bijection `π : uint32 → uint32` inserted before the CDF lookup:
+This time the repair does not change the probabilities, but changes the geometry. We can do this by adding a bijection `π : uint32 → uint32` inserted before the CDF lookup:
 
 ```mermaid
 flowchart LR
@@ -624,6 +624,6 @@ Per event, my hundred-photons-per-second rig is a bigger Quantum Lever than your
 
 The hardware is still on my desk. PMTs biased, LED attenuated, FPGA waiting.
 
-I didn't build a superintelligence. I didn't beat a market. I built an over-engineered random number generator and let  an LLM flawlessly execute terrible financial decisions. Evolution took four billion years of wet chemistry to figure out how to amplify quantum events into macroscopic outcomes, and then spent most of that time learning how to suppress them again. I wired up fundamental quantum uncertainty to my credit card.
+I didn't build a superintelligence. I didn't beat a market. I built an over-engineered random number generator and let an LLM flawlessly execute terrible financial decisions. Evolution took four billion years of wet chemistry to figure out how to amplify quantum events into macroscopic outcomes, and then spent most of that time learning how to suppress them again. I wired up fundamental quantum uncertainty to my credit card.
 
 The trading bot is offline. The 8-Ball is still up. For a certain interpretation of somewhere, it will give you the answer you need.
