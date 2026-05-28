@@ -146,13 +146,21 @@ The H10722 PMT modules have a gain-control input, Vcont, with a recommended rang
 
 With everything set up, it was time to tune the device. That involved first finding the threshold for a photon detection, then tuning the gain on each PMT, and finally finding a good LED intensity that maximised the number of 'coin flips' per second, without causing too many collisions (*two photons arriving at nearly the same time to one or both PMTs*).
 
+How do we actually detect the photons *really really fast?* We code all the processing stuff in VHDL (*VHSIC Hardware Description Language*). This 'code' is a description of the circuit we build in the field programmable gate array (**FPGA**). For example, this the is code for the edge detector to find photons from the ADC voltage pulses:
+
+![FPGA circuit](/assets/img/qrng/edge_detector.jpeg)
+
 Setting the gain is straightforward: With a reasonably high gain and light intensity, we can do a ROC curve, and count photons on each PMT. Due to the optical path and mirror reflectance etc etc, we will have a different count for each PMT. Then, we just keep lowering the gain, and doing the ROC analysis, until our photon count dips. We back up a bit, and we have our gain.
 
 ![pmt thresholds](/assets/img/qrng/pmt_thresholds.jpeg)
 *Finding the threshold for each PMT. We look for the point at which we are no longer sampling the PMT noise. This was done at high gain, 240, or ~0.85 V.*
 
-![gain scan](/assets/img/qrng/gain_scan.jpeg)
-*The process was repeated at various gains. At gain 176, we count ~5000 photons, but at gain 160, only about 1000, showing that the pulses are too low to reliably distinguish.*
+We also need to watch the PMTs carefully!  When a photon hits a PMT, there can be 'after pulses'. We really don't want to count a photon and its 3 after-pulses as 4 photons in a row. We can fix this by adding a 'dead time', where we ignore the input on either PMT for a certain period (*why both? Because if we only ignored photons detected on one PMT, we can only ever have hits on the other!*).
+
+![alt text](/assets/img/qrng/100M_probs.jpeg)
+*the results of 100 million photons, calculating the conditional probability at various time offsets.*
+
+We gather lots of data, 100 million photon detections, and plotting it out its clear that a dead time of ~24 $us$ removes this autocorrelation artifact.  You probably noticed the graph does not line up at 0.5; this is bias issue that comes from slightly different PMT characteristics.  It's only fixable mechanically, by blocking some of the light going to the PMT that registers more photon impacts.
 
 ---
 
