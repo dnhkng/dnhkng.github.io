@@ -22,7 +22,7 @@ Back to Quantum Random Number Generators ([QRNGs](https://en.wikipedia.org/wiki/
 
 > And before you draft an email about the measure problem: pause. The measure problem is metaphysical and the rig is engineering. The photons hit the detectors, and steer OpenClaw: Whether you choose to interpret that via Many-Worlds, Copenhagen, or consistent histories is up to you. *I choose interesting*.
 
-I had to build my own. This will be an exploration in optics, single photon pulse detection, FPGA circuits hardcoding von Neumann and Peres debiasing (*plus Toeplitz-hashing extractors*), the geometry of LLM logit distribution, and how this comes together and gets pushed to my [GH200 box](/posts/hopper) running MiniMax M2.7 via custom fork of [llama.cpp](https://github.com/ggml-org/llama.cpp) with a custom quantum-aware sampler. And I didn't want to just generate text. ***I wanted to hand Quantum OpenClaw fifty bucks and an API key to PolyMarket and tell it to trade prediction markets.***
+I had to build my own. This will be an exploration in optics, single photon pulse detection, FPGA circuits hardcoding von Neumann and Peres debiasing (*plus Toeplitz-hashing extractors*), the geometry of LLM logit distribution, and how this comes together and gets pushed to my [GH200 box](/posts/hopper) running MiniMax M2.7 via custom fork of [llama.cpp](https://github.com/ggml-org/llama.cpp) with a custom quantum-aware sampler. And I didn't want to just generate text. ***I wanted to hand Quantum OpenClaw fifty bucks and an API key to Polymarket and tell it to trade prediction markets.***
 
 Here is the whole machine in one breath:
 
@@ -81,7 +81,7 @@ What was missing was inorganic, raised free-range photons. The final rig uses th
 1. Attenuate a light source until photons arrive one-at-a-time.
 2. Send them at a 50:50 beam splitter.
 3. Photons 'choose' to go *through* the mirror and hit PMT A; or *bounce off* the mirror and hit PMT B.
-   
+
 If PMT A fires, it's a 0. If PMT B fires, it's a 1.  We see which universe we reside in by measuring which path they 'chose'. Simple and elegant.  Except it needs a *lot* of engineering (*but that's why you're here, right?*).
 
 A friend gave me a pair of Hamamatsu photomultiplier tubes (PMTs).  These came from the core of a nano differential scanning fluorimetry, and were used to analyse protein structure via tryptophan fluorescence, which absorbs light at 280 nm. Like most fluorophores, its emission properties change depending on its chemical environment. When the proteins are all nicely folded up, and the tryptophans are nestled and cosy inside the protein, they're protected from aqueous solution and have a fluorescence emission peak at 330 nm. But when the proteins denature, and their structures scramble, the tryptophan is exposed to water, and the fluorescence is red-shifted to a maximum at 350 nm.
@@ -91,7 +91,7 @@ A friend gave me a pair of Hamamatsu photomultiplier tubes (PMTs).  These came f
 
 Obviously, I had to take the entire thing apart, poke around, and rip out the dichroic beam splitter. That's the bit that directs light >340 nm down one path and <340 nm down the other, into each of the awaiting PMTs.  I replaced this with a 50:50 half-mirror that works in the UV range. Same basic hardware, completely different physics. Now the photons would each reach the mirror, and *the detection — not the photon — is what forks the world*. We only ever see one of the paths taken, and wonder whether the other path even exists like a damn Copenhagenist...
 
-The optics module expects a protein sample in a quartz glass capillary tube to absorb 280 nm light, and emit ~340 nm light, but I didn't have that stuff handy, and protein samples would break down (*I don't want to grow bacteria in the setup*). So, I tried random stuff like paper and plastics, and it turns out that 3D printed filament is a great material for this project: I can print a lens cover that both blocks ambient light AND is faintly fluorescent at the right wavelength!  The faintness is a bonus, as we are trying to get to the single photon range, and a lit room does about  $10^{13}$ and $10^{15}\text{ photons/cm}^2$. But the beam splitter optical setup was just the photogenic part. Then came the actual engineering: coincidence rejection, dead-time handling, dark-count filtering, and handling PMT pair biases...
+The optics module expects a protein sample in a quartz glass capillary tube to absorb 280 nm light, and emit ~340 nm light, but I didn't have that stuff handy, and protein samples would break down (*I don't want to grow bacteria in the setup*). So, I tried random stuff like paper and plastics, and it turns out that 3D printed filament is a great material for this project: I can print a lens cover that both blocks ambient light AND is faintly fluorescent at the right wavelength!  The faintness is a bonus, as we are trying to get to the single photon range, and a lit room does between $10^{13}$ and $10^{15}\text{ photons/cm}^2$. But the beam splitter optical setup was just the photogenic part. Then came the actual engineering: coincidence rejection, dead-time handling, dark-count filtering, and handling PMT pair biases...
 
 From my random gear box, I dusted off an old [Red Pitaya](https://redpitaya.com/), which is more-or-less the 'guts' of an oscilloscope (*fast, high-res ADCs*) together with an FPGA (*field programmable gate array*), and a few ARM cores for good measure.
 
@@ -108,12 +108,11 @@ With the hardware proof-of-concept sorted, it was time to plan out the architect
 The FPGA system monitors the BNC-connected PMTs, and registers a bit whenever exactly one detector fires within the coincidence window. It does this by measuring the fast voltage spikes produced by a transimpedance amplifier (TIA), which converts the PMT dynode current across a resistor into a voltage signal.  These are converted to digital values by the ADCs, and the FPGA does the necessary thresholding and
 timing processing.
 
-My manual circuit control wasn't going to cut it for this project. There are lots of parameters to sweep, and the 10 Ohm pots make this extremely fiddly and boring. *Why spend 2 hours tuning a circuit by hand, when you can spend 10 hours building an automated tuning system?* The Red Pitaya has 4 digital-to-analog converters
- (DACs), and a bunch of digital I/O, as well as 3.3 V and 5 V power sources. Perfect for controlling the system via scripts to manage light intensity and PMT gain programmatically.
+My manual circuit control wasn't going to cut it for this project. There are lots of parameters to sweep, and the 10 Ohm pots make this extremely fiddly and boring. *Why spend 2 hours tuning a circuit by hand, when you can spend 10 hours building an automated tuning system?* The Red Pitaya has 4 digital-to-analog converters (DACs), and a bunch of digital I/O, as well as 3.3 V and 5 V power sources. Perfect for controlling the system via scripts to manage light intensity and PMT gain programmatically.
 
 ![control circuit](/assets/img/qrng/circuit.jpg)
 ![circuit construction](/assets/img/qrng/building.png)
-*Protip: Ask Codex to set pins high or low, and you can focus on getting the probes in the right place while it operates the Red Pitaya GPIOs*
+*Pro tip: Ask Codex to set pins high or low, and you can focus on getting the probes in the right place while it operates the Red Pitaya GPIOs*
 
 The circuit is split into three main sections: the LED current controller, the reed-relay LED gate, and the relay coil driver. The PMT gain control is handled separately with simple resistor dividers. The power supply is trivial, two Traco Power 5 V DC/DC devices, the TEN 20-2411W1 and the smaller TEN 8-2411W1 at 4 A and 1.6 A respectively. These are isolated, so are joined together for the necessary -5 V, 0 V and +5 V rails needed for the PMT. These are massively overpowered, but were found in the "*random gear box*".
 
@@ -132,10 +131,10 @@ The unused half of the MCP602 is tied off as a unity-gain buffer at ground: the 
 
 #### Reed relay LED gate
 
-The LED is switched with an HE721C reed relay. The relay contacts are used as an SPDT selector rather than simply breaking the LED path.  Why did I use a relay instead of a mosfet? Well, firstly, it’s what I had in my 'box-of-unsorted-ICs', and secondly, a closed relay isn't a potential source of noise and has no issues at very low currents.
+The LED is switched with an HE721C reed relay. The relay contacts are used as an SPDT selector rather than simply breaking the LED path.  Why did I use a relay instead of a MOSFET? Well, firstly, it’s what I had in my 'box-of-unsorted-ICs', and secondly, a closed relay isn't a potential source of noise and has no issues at very low currents.
 
 When the relay is off, the current sink is connected directly to +5 V through the NC contact. This keeps the op-amp loop settled, but the LED is disconnected. When the relay is on, the COM contact moves to NO, and the current sink pulls current through the LED. This gives a physical LED disconnect in the default state while avoiding the op-amp railing when the LED is off.
-  
+
 The HE721C0500 5 V relay coil is driven by a 2N2222 NPN transistor. A Red Pitaya GPIO pin drives the base through a 1 kΩ resistor, and a 100 kΩ pulldown keeps the relay off while the GPIO is high-impedance or booting. A 1N4148 diode is placed across the coil as a flyback diode.
 
 #### PMT gain control
@@ -145,7 +144,7 @@ The H10722 PMT modules have a gain-control input, Vcont, with a recommended rang
 ![final construction](/assets/img/qrng/final.jpeg)
 *the assembled Quantum photonic 'coin flip' device*
 
-With everything set up, it was time to tune the device. That involved first finding the threshold for a photon detection, then tuning the gain on each PMT, and finally finding a good LED intensity that maximised the number of 'coin flips' per second, without causing too many collisions (*two photons arriving at the nearly the same time to one or both PMTs*).
+With everything set up, it was time to tune the device. That involved first finding the threshold for a photon detection, then tuning the gain on each PMT, and finally finding a good LED intensity that maximised the number of 'coin flips' per second, without causing too many collisions (*two photons arriving at nearly the same time to one or both PMTs*).
 
 Setting the gain is straightforward: With a reasonably high gain and light intensity, we can do a ROC curve, and count photons on each PMT. Due to the optical path and mirror reflectance etc etc, we will have a different count for each PMT. Then, we just keep lowering the gain, and doing the ROC analysis, until our photon count dips. We back up a bit, and we have our gain.
 
@@ -168,7 +167,7 @@ Wait, isn't 5 bits 32 possible outcomes? I thought too long and hard about this,
  - 10 affirmatives, 1 slot each (1/32 ≈ 3.1%)
  - 5 negatives, 2 slots each (2/32 = 6.25%)
  - 4 non-committals (Mattel's options, minus "*Concentrate and ask again*"), 3 slots each (3/32 ≈ 9.4%)
-  
+
 Tier totals: 31.25% yes, 31.25% no, 37.5% maybe. But I opted for boring: we grab 5 bits, and if the number is 20 or above, we just resample.
 
 
@@ -247,7 +246,7 @@ How to read this plot:
 * The horizontal dashed lines show various floor probabilities
 * Tokens to the right of the vertical dotted line naturally receive fewer uint32 slots than floor
 
-So, without the floor, taking k=1 (*we want 1 chance in $2^{32}$, or 1 in 4,294,967,296*), any token ranked past 158,146 gets eliminated due to CDF (*that's the rank at which Zipf probability drops below 1/2³², given s and vocab size*). This is an issue, as many LLMs have dictionaries ~250K tokens. Basically:
+So, without the floor, taking K=1 (*we want 1 chance in $2^{32}$, or 1 in 4,294,967,296*), any token ranked past 158,146 gets eliminated due to CDF (*that's the rank at which Zipf probability drops below 1/2³², given s and vocab size*). This is an issue, as many LLMs have dictionaries ~250K tokens. Basically:
 
  - High-probability tokens get huge intervals.
  - Low-probability tokens get tiny crumbs.
@@ -355,7 +354,7 @@ $$V(\delta) = (1 + \delta^2)^{32} - 1$$
 
 The exponent is just the uint32 address width — nothing more exotic than that.
 
-**From one address to one token.** A token allocated $K$ slots is the sum of $K$ roughly-independent address-probabilities, so averaging pulls the standard deviation down by the usual $\sqrt{K}$:
+**From one address to one token.** A token allocated $K$ slots is the sum of $K$ roughly independent address-probabilities, so averaging pulls the standard deviation down by the usual $\sqrt{K}$:
 
 $$\sigma_K \approx \sqrt{\frac{V(\delta)}{K}}$$
 
