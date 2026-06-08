@@ -11,7 +11,9 @@ A while back I did some optimisation on my [Hopper system](/posts/vllm-optimizat
 
 This is that follow-up (*massively delayed by a much cooler project*). The workload here is ***DeepSeek V4 Flash in vLLM*** on a dual GH200 workstation. The short version is that the hardware behaves exactly like the memory benchmarks predicted. Tensor parallelism can work, but it needs care. The official checkpoint is slower than I expected. A quantized checkpoint from [Canada-Quant](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP) turned out to be much faster. There was some wrangling to get multi-token prediction working, but once the checkpoint and vLLM path were made to agree with each other, I got a very large single-stream speed-up (*for my Chonky local Hermes Agent, bwHaHahahaaa...*).
 
-The best single-request result I measured was about 193 output tokens per second with MTP3 on the Canada-Quant model checkpoint, compared with about 106 tokens per second without MTP. TL;DR: If you want to run DSv4Flash on Hopper, use Canada-Quants and my PR at the end of the blog post.
+The best single-request result I measured was about 193 output tokens per second with MTP3 on the Canada-Quant model checkpoint, compared with about 106 tokens per second without MTP. 
+
+***TL;DR: If you want to run DSv4Flash on Hopper, use Canada-Quants and my PR at the end of the blog post.***
 
 ## The System Reminder
 
