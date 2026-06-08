@@ -103,7 +103,7 @@ The official model is not "bad". It is just a less forgiving artifact for this e
 
 There is one caveat: this is a throughput result, not a quality result. I would expect the Canada checkpoint to perform slightly worse than the official checkpoint in some cases, because the routed expert weights are quantized more aggressively. But the checkpoint is not a blunt whole-model 4-bit conversion. Attention projections remain FP8, many sensitive tensors are left BF16 or FP32, and the official baseline is already a compressed FP8 artifact. My expectation is that any quality difference is probably mild, and possibly difficult to detect outside targeted evals. *I have not measured that yet here.*
 
-## The MTP Problem
+## MTP was busted
 
 Multi-token prediction should help single-stream generation because it lets the model propose more than one token per target-model step. In practice, I initially hit a checkpoint/software mismatch.
 
@@ -128,7 +128,7 @@ There is one extra wrinkle: after sharing these results, the Canada-Quant mainta
 
 Those are three separate failure points. Missing any one of them breaks the run at a different stage: main-model load, MTP draft construction, or MTP draft execution.
 
-## The vLLM Runtime Fix
+## The vLLM Runtime Fix (yay!)
 
 The patch shape is narrow. In `vllm/models/deepseek_v4/nvidia/ops/o_proj.py`, vLLM can check whether `wo_a` has FP8 scale metadata:
 
@@ -167,9 +167,9 @@ I added focused tests for the config propagation and the O-projection fallback. 
 
 This is not a performance optimization, it's a compatibility fix that unlocks the MTP weights already present in the Canada checkpoint.
 
-## MTP Results
+## MTP Results - it makes inference faster 🤯
 
-Once that path worked, the Canada checkpoint scaled well with MTP.
+Once that path worked, the Canada checkpoint scaled well with MTP:
 
 | Model            | MTP level | Output throughput | Mean TPOT | Acceptance |
 | ---------------- | --------: | ----------------: | --------: | ---------: |
@@ -179,11 +179,11 @@ Once that path worked, the Canada checkpoint scaled well with MTP.
 | Canada W4A16/FP8 |      MTP3 |       193.0 tok/s |   4.82 ms |      71.1% |
 | Canada W4A16/FP8 |      MTP4 |       162.1 tok/s |   5.81 ms |      47.9% |
 
-MTP3 was the best point in this run. MTP4 was worse because the extra draft depth did not pay for itself. Acceptance dropped to about 48 percent, and the additional draft work outweighed the benefit.
+MTP3 was the best point in this run. MTP4 was worse because the extra draft depth did not pay for itself. Acceptance dropped to about 48 percent, and the additional draft work outweighed the benefit, like eating those last fries when you are already full.
 
-This is the practical lesson: MTP level is a tuning parameter, not a monotonic speed knob. More draft tokens can help, but only while the acceptance rate and draft overhead stay in the right range.
+This is the practical lesson: MTP level is a tuning parameter, not a monotonic speed knob. More draft tokens != Faster.
 
-After I posted these numbers, yangsiqt2 pointed out another important caveat: MTP acceptance is workload sensitive. Their end-to-end vLLM benchmark used short mixed technical/code/reasoning prompts, 64 sequential requests, and 256 generated tokens. In that setup they saw lower acceptance than this long-prompt, long-output benchmark: about 81 percent for MTP1 and 63 percent for MTP2. That still produced a large speed-up, but not the same acceptance profile. Do your own profiling!
+After I posted these numbers, [yangsiqt2](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8/discussions/8#6a266e2e43643d62dc5c270e) pointed out another important caveat: MTP acceptance is workload sensitive. Their end-to-end vLLM benchmark used short mixed technical/code/reasoning prompts, 64 sequential requests, and 256 generated tokens. In that setup they saw lower acceptance than this long-prompt, long-output benchmark: about 81 percent for MTP1 and 63 percent for MTP2. That still produced a large speed-up, but not the same acceptance profile. Do your own profiling!
 
 
 ## Official Checkpoint Comparison
@@ -210,11 +210,9 @@ A two-GPU tensor-parallel decode workload is only attractive if the engine keeps
 
 The Canada quantized checkpoint helps by reducing the bytes moved through the model path. MTP helps by amortizing target-model steps across multiple accepted tokens. Together, they make the workload a better match for this topology. I can't just go treating my "2x GH200" as a single large GPU. It is two very capable GPU+CPU modules with a much weaker path between them. *Really makes me wish I could jerry-rig an proper NVLink though*, as then I could.  But that bit of hardware would cost 5-figures, even if it wasn't Unobtanium.
 
-## Takeaways
+## Obvious Takeaways
 
-The memory measurements from Part 1 were predictive.
-
-On this dual GH200 system, the deployment rules are:
+I hope you didn't read this whole blog article, it's really boring. You could have skipped to here, to read that on this dual GH200 system, the deployment rules are:
 
 1. Keep active decode work in HBM as much as possible.
 2. Avoid unnecessary GPU-to-GPU traffic.
@@ -222,7 +220,7 @@ On this dual GH200 system, the deployment rules are:
 4. Treat MTP level as a benchmarked parameter.
 5. Do not assume the deepest MTP setting is best.
 
-For DeepSeek V4 Flash in vLLM, the best tested configuration was the Canada W4A16/FP8 checkpoint with MTP3:
+Look, all this is pretty obvious, right? The interesting bit was the journey, and having me waste about 2 days so you can find out that you get great perf from the Canada W4A16/FP8 checkpoint with MTP3 of DeepSeek V4 Flash in vLLM. The best tested configuration was :
 
 ```text
 105.9 tok/s  without MTP
