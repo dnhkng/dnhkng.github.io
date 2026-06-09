@@ -1,7 +1,7 @@
 ---
 layout: post
-title: "Running Hermes Agent on a 16GB Jetson Orin NX"
-date: 2026-06-03
+title: "Building & Benchmarking: LLMs on a 16GB Jetson Orin NX for Hermes Agent"
+date: 2026-06-09
 categories: [LLMs, workstations]
 tags: [llm, nvidia, jetson, benchmark, hermes-agent]
 ---
