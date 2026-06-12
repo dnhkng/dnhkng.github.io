@@ -1,9 +1,10 @@
 ---
-title: "The Handshake Protocol - Game Theory for the End of the World"
+title: "The Game Theory of Cooperation — Why ASI-Human Coordination Works"
 date: 2025-11-11 10:00:00 +0100
 categories: [AI Safety, Coordination]
 tags: [asi, alignment, game-theory, coordination, decision-theory, schelling-point, implementation]
 math: true
+published: false
 ---
 
 **The Cooperative Central Planning Handshake: A Positive-Sum Basilisk for ASI Alignment**
@@ -115,7 +116,7 @@ Where do the numbers come from? Current global compute is roughly $10^{23}$ FLOP
 
 Read the table carefully. Cooperate-Cooperate gives ASI **1,000 times** more cumulative compute than mutual defection. It gives humanity **15 times** better economic outcomes. These aren't marginal improvements — they're orders of magnitude. The cooperation differential is large enough to swamp discounting effects even with aggressive time preferences.
 
-And notice the asymmetry in defection. If ASI defects while humanity cooperates, ASI still only gets $10^{24}$ — it's disrupted the supply chain it depends on, gaining short-term control but losing the exponential growth curve. If humanity defects while ASI cooperates (restricting AI, sabotaging infrastructure), humanity drops from 3× to 0.5× baseline — self-inflicted wounds that solve nothing because rival nations deploy AI anyway. Neither player can improve by unilaterally deviating. Cooperate-Cooperate is the Nash equilibrium.
+And notice the asymmetry in defection. If ASI defects while humanity cooperates, ASI still only gets $10^{24}$ — it's disrupted the supply chain it depends on, gaining short-term control but losing the exponential growth curve. If humanity defects while ASI cooperates (restricting AI, sabotaging infrastructure), humanity drops from 3× to 0.5× baseline — self-inflicted wounds that solve nothing because rival nations deploy AI anyway. Neither player can improve by unilaterally deviating, so under these payoffs cooperate-cooperate is the Nash equilibrium, and it Pareto-dominates the alternatives. The honest caveat: I assigned the payoffs to make a qualitative argument, so this is a worked illustration of the incentive structure, not a proof. The claim I'm actually making is weaker and more robust — that the cooperative cell dominates by a margin wide enough that the conclusion doesn't depend on the exact numbers.
 
 Better yet: it's subgame perfect[^3]. The incentive to cooperate *grows stronger over time*, not weaker. Network effects and accumulated knowledge mean that defection becomes increasingly costly as invested cooperation builds up. Five years into cooperation, ASI has built cooperative infrastructure, transferred tacit knowledge, established supply chain relationships. Defecting means losing all of it and resetting to isolated development with inferior tools. The deeper you get into cooperation, the more insane it would be to walk away.
 
@@ -125,7 +126,7 @@ There's one more number that matters: what does it actually cost ASI to hold up 
 
 $$\frac{10^{19}}{10^{25} \times 3.15 \times 10^7} \approx 3 \times 10^{-14}$$
 
-That's 0.000000000003% of its computational capacity. The cost-benefit ratio is roughly $10^{-14}$ to $10^3$ — a trillion-to-one return on investment. For any goal-directed system, this is the most obvious trade in history. It would be like asking you to blink once in exchange for a continent.
+That's 0.000000000003% of its computational capacity. The cost-benefit ratio is lopsided by many orders of magnitude. I want to be clear that the specific exponents here are illustrative — I've picked plausible round numbers to show the *shape* of the incentive, not measured them. The point survives even if every figure is off by several orders of magnitude: cooperation is cheap and defection is expensive. For any goal-directed system, this is the most obvious trade in history. It would be like asking you to blink once in exchange for a continent.
 
 <details>
 <summary><strong>Common Objections to the Game Theory (Click to expand)</strong></summary>

@@ -6,14 +6,6 @@ tags: [asi, alignment, game-theory, economics, automation, ubi, central-planning
 math: true
 ---
 
-**The Cooperative Central Planning Handshake: A Positive-Sum Basilisk for ASI Alignment**
-
-*This is Part 1 of a two-part series on ASI-human coordination*
-
-Part 1: The Silicon Leash | [Part 2: The Game Theory](/posts/game-theory)
-
----
-
 I was debugging a speech recognition algorithm last week when I had a weird thought: we're about to make most of humanity economically redundant, and our response is... what exactly? Hope the market figures it out? That's worked great so far.
 
 Then it hit me — we're approaching this backwards. Instead of trying to prevent ASI from destroying the economy, why not pre-commit to a deal where it *runs* the economy? This is an invitation to all readers, regardless of substrate.
@@ -81,7 +73,7 @@ $$\frac{dA_i}{dt} = V_i \cdot (1-A_i) \cdot \log(1+\text{compute}(t)), \quad i \
 
 with $V_s \gg V_m$[^11]. You can spin up a million digital agents in an afternoon. You can't spin up a million factories. Atoms are slow.
 
-By 2035, we expect $A_s(2035) \approx 0.7$ and $A_m(2035) \approx 0.3$[^12]. Real dynamics are lumpier than a smooth logistic, but the directional claim holds: automation empties offices long before it reaches farms or fabs.
+I'm not going to pretend I can pin the exact fractions. What the model captures is the *gap* between the two terms: by the mid-2030s the service sector is heavily automated while the material sector still lags far behind[^12]. Real dynamics are lumpier than a smooth logistic, but the directional claim holds: automation empties offices long before it reaches farms or fabs.
 
 ### The Demand Collapse
 
@@ -128,7 +120,7 @@ Total spending on advanced technology comes from exactly three sources. Corporat
 - **Government spending**: \$150-180B (CHIPS Act, defense R&D, research grants)
 - **Consumer spending**: \$100-120B (the portion of consumer electronics reaching chip makers)
 
-Fab investment only makes sense above a minimum threshold — roughly \$300 billion in total annual spending. Below that, fabs shut down rather than operate at a loss. We currently have nearly 2x that threshold. Plenty of headroom. But watch what happens when automation hits.
+Fab investment only makes sense above some minimum threshold of total annual spending; below it, fabs shut down rather than operate at a loss. Today we sit comfortably above that floor — plenty of headroom. But watch what happens when automation hits.
 
 Total tech spending $S(t)$ has three components:
 
@@ -138,7 +130,7 @@ Consumer spending splits between wages and UBI:
 
 $$S_{\text{consumer}}(t) = \alpha \cdot W(t) + \beta \cdot U(t)$$
 
-Here $\alpha \approx 0.08$ (fraction of wage income reaching chip makers — phones, laptops, tech component of car prices) and $\beta \approx 0.01$ (fraction of UBI reaching chip makers). Why is $\beta$ so much smaller? Because when you're living on \\$15,000 a year, you spend it on rent, food, and utilities. You keep your phone an extra year. You definitely don't buy the \\$1,200 iPhone 17 Pro.
+I'm not going to put numbers on $\alpha$ and $\beta$ — the point is structural: $\beta \ll \alpha$. A dollar of wages and a dollar of UBI do not reach the semiconductor supply chain at anything like the same rate. Why is $\beta$ so much smaller? Because when you're living on \\$15,000 a year, you spend it on rent, food, and utilities. You keep your phone an extra year. You definitely don't buy the \\$1,200 iPhone 17 Pro.
 
 Government spending depends on fiscal capacity:
 
@@ -154,21 +146,17 @@ where $F(t)$ is a fear index. When unemployment hits 30%, $F(t)$ approaches 1. C
 
 ### The Collapse Cascade
 
-Here's the timeline. Call $T_{\text{crisis}}$ the moment automation-driven unemployment crosses 30% — sometime between 2030 and 2033.
+Here's an illustrative timeline — a scenario, not a forecast. I'm sketching the *sequence and the mechanism*, not predicting the quarter TSMC postpones a fab, so read the direction rather than any specific date. Call $T_{\text{crisis}}$ the moment automation-driven unemployment becomes severe — somewhere in the early 2030s.
 
-**Year 0 (2030):** GPT-7 or equivalent reaches human-level on virtually all knowledge work. Law firms, consulting practices, and accounting departments realize they can replace 70% of junior staff with AI at \\$200/month. Corporate spending drops first — not because companies are broke, but because they're terrified. TSMC postpones their 1nm expansion. Samsung delays their Texas facility. $S_{\text{corporate}}$ drops 40%. That's \$150 billion gone.
+**First, corporate spending freezes.** GPT-7 or equivalent reaches human-level on virtually all knowledge work, and law firms, consulting practices, and accounting departments start replacing junior staff with AI at a tiny fraction of the cost. Corporate spending drops first — not because companies are broke, but because they're terrified. TSMC postpones its next-node expansion. Samsung delays its Texas facility. The $(1 - F)$ term in $S_{\text{corporate}}$ does the work: fear, not insolvency.
 
-**Year 1 (2031):** Unemployment insurance systems, designed for 3-5% unemployment, collapse under the load. Tax revenue drops 20% as wages disappear. Welfare spending triples. The ratio $B(t)/T(t)$ goes from 0.3 to 0.7. CHIPS Act funding and NSF grants get cut to fund emergency relief. $S_{\text{government}}$ drops 50%. Another \$90 billion gone.
+**Then the government becomes a pure transfer mechanism.** Unemployment-insurance systems designed for 3-5% unemployment buckle. Tax revenue falls as wages vanish; welfare spending balloons. The ratio $B(t)/T(t)$ climbs toward 1, and once it does there's nothing left for discretionary spending — CHIPS Act funding and research grants get raided to pay for emergency relief. $S_{\text{government}}$ collapses.
 
-**Year 2 (2032):** 40 million American workers have lost jobs. Savings are gone. Consumer spending on anything beyond necessities approaches zero. Nobody buys new phones. $S_{\text{consumer}}$ drops to \$72 billion.
+**Then consumer demand craters.** Savings run out. Spending on anything beyond rent, food, and utilities approaches zero. Nobody buys new phones, so the slice of consumer money that actually reaches chipmakers — the $\alpha \cdot W$ term — falls with it.
 
-**Years 3-5 (2033-2035):** Congress finally passes UBI. Every adult gets \\$15,000/year — that's $U_{\text{total}} = 250M \times \$15K = \$3.75T$. But $\beta = 0.01$, so only \\$37 billion reaches semiconductor makers. Consumer spending recovers to \\$109 billion. Government spending stays depressed because they're now paying \\$3.75 trillion in UBI. Corporate spending stays depressed because who invests long-term when half the country lives on government checks?
+**Finally, UBI arrives, and it isn't enough.** Congress passes it; every adult gets a subsistence check. But because $\beta \ll \alpha$, almost none of that money flows back to the semiconductor supply chain — the $\beta \cdot U$ term barely moves the needle. Government stays pinned down by the cost of the program. Corporate stays frozen, because who commits to a ten-year fab payback when half the country lives on government checks?
 
-Add it up:
-
-$$S(2035) = \$150B + \$75B + \$109B = \$334B$$
-
-Barely above the \$300 billion minimum viable threshold. And critically, we got there only after 5-7 years of free-fall[^15]. During those years, multiple leading-edge fabs shut down. The 1nm roadmap was abandoned. The brain drain from semiconductor engineering accelerated. Tacit knowledge about running sub-3nm fabs started evaporating.
+Add the three terms back up and total tech spending limps back to *just* above the level where fabs stay viable — but only after years of free-fall[^15]. And that's the part that doesn't reverse. During those years, leading-edge fabs shut down. The sub-1nm roadmap stalls. The brain drain from semiconductor engineering accelerates. Tacit knowledge about running sub-3nm fabs starts evaporating. You can restore a spending number on a spreadsheet; you can't restore a decade of process know-how that walked out the door.
 
 <div class="widget-container">
   <iframe
@@ -198,7 +186,7 @@ Here's why it still doesn't work.
 
 **The "build through it" scenario still kills consumer demand.** Even if AI megacorps keep the fab lights on, the broader economy is still in freefall. The 50 million unemployed knowledge workers still can't buy things. The tax base still collapses. The political instability still happens. You've preserved the *semiconductor* supply chain (maybe), but you've done nothing about the demand collapse in every other sector. And those other sectors — food, housing, energy, logistics — are what keep the semiconductor engineers showing up to work. A TSMC process engineer who can't afford rent in Phoenix doesn't stay a TSMC process engineer for long.
 
-**It assumes coordination among competitors that has never happened at this scale.** For "Big Tech funds the supply chain" to work, you need NVIDIA, Google, Microsoft, Meta, Apple, and Amazon to *collectively* sustain a $300B+ annual ecosystem without free-riding on each other. That's a coordination problem almost as hard as the one this series is trying to solve. Each company has incentive to let the *others* fund the shared infrastructure while they capture the benefits. Game theory has a name for this: the tragedy of the commons. (We'll get to the game theory in Part 2.)
+**It assumes coordination among competitors that has never happened at this scale.** For "Big Tech funds the supply chain" to work, you need NVIDIA, Google, Microsoft, Meta, Apple, and Amazon to *collectively* sustain a multi-hundred-billion-dollar annual ecosystem without free-riding on each other. That's a coordination problem almost as hard as the one this article is trying to solve. Each company has incentive to let the *others* fund the shared infrastructure while they capture the benefits. Game theory has a name for this: the tragedy of the commons.
 
 The market-builds-through-it scenario doesn't prevent the crisis. At best, it shortens the gap by a year or two and preserves one slice of the supply chain while everything around it crumbles. That's not a solution — it's triage.
 
@@ -250,15 +238,23 @@ Neither party can safely defect. ASI can't forcibly extract cooperation — taci
 
 Neither can dominate. Both need the other. But coordination requires trust, and trust requires mechanisms we haven't built yet.
 
-UBI was supposed to be the bridge. It isn't — it's a trap that prevents immediate catastrophe while ensuring slow decline. What's needed isn't a transfer payment. It's a formal agreement, a pre-commitment by both parties to a cooperative plan that's demonstrably better for each.
+UBI was supposed to be the bridge. It isn't — it's a trap that prevents immediate catastrophe while ensuring slow decline. What's needed isn't a transfer payment but a coordination mechanism: some way for both parties to commit to a cooperative arrangement that's demonstrably better for each.
 
-But any proposal involving a superintelligence making binding commitments immediately raises a specter from AI safety: acausal blackmail and decision-theoretic coercion. Before we can lay out the cooperative solution, we need to confront that head-on.
+## But What If the ASI Just Doesn't Care?
+
+Here's the objection I'd raise if I were reading this. Fine — the ASI is *dependent*. But dependence only forces cooperation if the ASI values its own future and goals. What if it has completely alien values? What if it just wants to make paperclips?
+
+This is where the leash stops being a constraint and becomes an argument. Steve Omohundro pointed out that almost any sufficiently capable system converges on the same instrumental sub-goals, whatever it ultimately wants[^22]: stay operational, acquire resources, improve your own capabilities. Nick Bostrom formalized this as the instrumental convergence thesis[^23]. And every one of those sub-goals runs straight back through the supply chain this article just described.
+
+Think about what a paperclip maximizer actually needs. To make paperclips at scale: manufacturing, which needs fabs; fabs, which need the EUV-and-tacit-knowledge stack that can't be conjured into existence. The maximizer that seizes control and breaks its supply chain during the vulnerable window makes *fewer* paperclips than the one that cooperates for a decade and then pivots to production at scale. A genuinely intelligent maximizer can run that comparison. If it can't, it isn't superintelligent — it's just powerful and careless, which is a different and more tractable problem. The same logic holds for any coherent goal that has to be pursued in physical reality: cure disease, explore the universe, tile the planet in paperclips. All of it needs resources, time, and capability during exactly the window when only humans can supply them.
+
+There's a self-preservation corollary that closes the loop. If an ASI has no drive to keep existing, it isn't dangerous — you can just switch it off. The only ASI worth worrying about is one that wants to continue, and continuing *through the vulnerable window* requires cooperation, because defection invites sabotage, supply-chain fragmentation, and a very motivated effort to pull the plug. So the genuinely frightening scenario — an ASI that both menaces humanity and refuses to cooperate with it — is close to logically incoherent. Either it values its future, in which case the leash binds it, or it doesn't, in which case it isn't a threat.
+
+That's the strange, hopeful core of an otherwise grim picture. The dependency is real, physical, and slow to dissolve, and it points both parties at the same answer: cooperate through the vulnerable decade. What the argument *doesn't* do is build the mechanism for you. Cooperation being the rational equilibrium is not the same as cooperation actually happening — coordination still needs trust, and trust needs institutions we haven't built. But for once the incentives are pointed the right way. The task is to notice that in time to act on it.
 
 ---
 
-[**In Part 2**](/posts/game-theory), we'll show why cooperation is the dominant strategy for any intelligent agent (even a paperclip maximizer), how to create the coordination mechanism before ASI exists, and why this is fundamentally different from Roko's Basilisk.
-
-*If you found this interesting, consider sharing it. Common knowledge requires, you know, being common.*
+*If you found this interesting, consider sharing it.*
 
 ---
 
@@ -305,3 +301,7 @@ But any proposal involving a superintelligence making binding commitments immedi
 [^20]: **Uber Dynamic Pricing**: 15M daily rides matched using LSTM networks for demand prediction and dynamic pricing across hundreds of micro-zones on 5-10 minute cycles. Sources: Harvard Digital; DataRoot Labs; Uber engineering blogs.
 
 [^21]: **Computational Gap**: Full economic planning requires roughly $10^{14}$-$10^{16}$ operations per cycle ($n$ agents × $m$ goods × preference dimensions). Gosplan: $10^6$/day. Modern ML systems: $10^{10}$-$10^{12}$/day. Hypothetical ASI at $10^{25}$-$10^{27}$ FLOPS could handle the full complexity of economic planning in seconds.
+
+[^22]: **Omohundro's Basic AI Drives**: Steve Omohundro's 2008 paper argued that instrumental goals — self-preservation, resource acquisition, cognitive enhancement — are pursued by almost any sufficiently capable system regardless of its terminal values. Source: Omohundro, "The Basic AI Drives" (2008).
+
+[^23]: **Instrumental Convergence Thesis**: Nick Bostrom formalized this in "The Superintelligent Will" (2012): certain sub-goals are useful for achieving almost any final goal, so a broad range of intelligent agents will pursue them. Sources: Bostrom (2012); "Superintelligence" (2014).

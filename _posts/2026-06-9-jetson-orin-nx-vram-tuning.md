@@ -12,21 +12,21 @@ Small AI computers are usually sold with large dreams and shitty memory buses.
 
 ![Finished](assets/img/jetson/jetson_finished_2.png)
 
-I have a [ridiculous server](/posts/hopper/) that pulls a few kilowatts, but I wanted a local Hermes Agent box that could sit on a shelf, stay near silent, draw laptop-class power, and still run a serious model with enough context for real agent work: always available and cheap enough that leaving it on does not feel generate anxiety.
+I have a [ridiculous server](/posts/hopper/) that pulls a few kilowatts, but I wanted a local Hermes Agent box that could sit on a shelf, stay near silent, draw laptop-class power, and still run a serious model with enough context for real agent work: always available, and cheap enough that leaving it on doesn’t generate anxiety.
 
-The 16GB Jetson Orin NX is an awkward but interesting fit for that job. I have a spare one from back-in-the-day for a robotics project now gathering dust. It has CUDA, a real NVIDIA GPU, unified memory, low power draw, and enough IO to be useful as an edge computer rather than a toy (SPI, GPIO etc). It also has just little enough RAM that it took about 2 days grinding benchmarks to get the damn thing wrangled.
+The 16GB Jetson Orin NX is an awkward but interesting fit for that job. I have a spare one from back-in-the-day for a robotics project now gathering dust. It has CUDA, a real NVIDIA GPU, unified memory, low power draw, and enough IO to be useful as an edge computer rather than a toy (SPI, GPIO etc). It also has just little enough RAM that it took about two days of grinding benchmarks to get the damn thing wrangled.
 
 This post is a build and tuning guide for turning that board into a silent, low-energy Hermes Agent system. The hardware build gets the board into a sustainable 40W thermal envelope with super low fan noise (*12 V fan at 5 V*).
 
 If you are trying to run Hermes Agent on a 16GB Jetson, the key lesson is simple:
 
-> The agent is not just the model. The context, KV cache, tool behaviour, prompt cache, CUDA workspace, and operating system all have to fit too.  And which model? I tried em' all for ya! Gemma-4-12B, Gemma -4-26A4, Qwen3.6-36B and Qwen3.6-27B!
+> The agent is not just the model. The context, KV cache, tool behaviour, prompt cache, CUDA workspace, and operating system all have to fit too.  And which model? I tried ’em all for ya! Gemma-4-12B, Gemma-4-26B-A4B, Qwen3.6-35B and Qwen3.6-27B!
 
 That changes the benchmark question a bit. I do not only care which GGUF gives the highest tokens per second, but rather which model and which configurations give the best balance of context depth, tool-calling reliability, and enough decode speed that the agent remains tolerable to use (*Hermes Agent needs > 64K tokens*).
 
 ## The Build: Silent 40W Edge AI
 
-I have a [Seed Studio Jetson J4012 module](https://www.seeedstudio.com/reComputer-J4012-p-5586.html). The thing runs as 25 watts... until the new patch was released from Nvidia, unlocking MAXN SUPER mode at 40 W! Checking the [Seeed Studio Wiki](https://wiki.seeedstudio.com/reComputer_J4012_Flash_Jetpack/), I found this:
+I have a [Seed Studio Jetson J4012 module](https://www.seeedstudio.com/reComputer-J4012-p-5586.html). The thing runs at 25 watts... until Nvidia released a new patch unlocking MAXN SUPER mode at 40 W! Checking the [Seeed Studio Wiki](https://wiki.seeedstudio.com/reComputer_J4012_Flash_Jetpack/), I found this:
 
 
 ![Warning](assets/img/jetson/warning.png)
@@ -40,9 +40,9 @@ I found this CPU cooler on the 'bay: [ThermalTake WAir CPU Cooler](https://www.t
 ![Heatsink](../assets/img/jetson/heatsink.png)
 *The Jetson compute module, the original small heat sink, what was left after the hacksaw, and the polished spacer material.*
 
-I hacked the heat sink in half, snipped of the remaining stumpy bits of heat-sink fin, and sanded the remaining chuck on aluminium down over a cold beer. I found a flat-enough marble tile, and went through a few grades of sand paper until I got bored.
+I hacked the heatsink in half, snipped off the remaining stumpy fins, and sanded the leftover chunk of aluminium down over a cold beer. I found a flat-enough marble tile, and went through a few grades of sand paper until I got bored.
 
-The next bit was breaking out the calipers, measuring everything to death, and designing a new case that fit with the comically large cooler. This took too many iterations, but PLA filament is cheap. Remember the rule of design on the 3D printing era: ***Measure Twice, Print 5 Times***
+The next bit was breaking out the calipers, measuring everything to death, and designing a new case that fit with the comically large cooler. This took too many iterations, but PLA filament is cheap. Remember the rule of design in the 3D printing era: ***Measure Twice, Print 5 Times***
 
 ![Design](../assets/img/jetson/designing.png)
 *Measuring the cooler dimensions, designing the new case lid in Fusion 360, and the final 3D print from the Bambu Lab X1 Carbon.*
@@ -387,17 +387,38 @@ Then choose one of:
 -ctk q8_0 -ctv q8_0 -b 1024 -ub 512 --fit on -fitt 768 -ngl auto
 ```
 
-### MTP Attempt
+### MTP is a huge boost
 
-I also tried the TurboQuant fork’s `draft-mtp` path against the same 27B Qwen file. The server got through prompt processing, but the request did not complete generation cleanly on this board, so I am marking that row as failed instead of fabricating a speed number.
+For Qwen3.6 27B, I also tried the TurboQuant fork’s `draft-mtp` path against the same 27B Qwen file. The server got through prompt processing, but the request did not complete generation cleanly on this board, so I am marking that row as failed instead of fabricating a speed number.
 
 | Model               | Context | Result | Note                                                                                                                                 |
 | ------------------- | ------: | ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | Qwen 3.6 27B IQ3_XS |    8192 | failed | `--spec-type draft-mtp` with `q8_0/q8_0`; prompt processing reached 4093 tokens, then the server exited before generation completed. |
 
-For Gemma 4 26B A4B, the new MTP code [was recently merged](https://github.com/ggml-org/llama.cpp/pull/23398), so I did some quick tests to see is the small GGUF (~300 MB) might help performance.
+For Gemma 4 26B A4B, the new MTP code [was recently merged](https://github.com/ggml-org/llama.cpp/pull/23398), so I did some quick tests to see is the small GGUF (~300 MB) might help performance. It turns out this makes all the difference!
 
-Long story short: I didn't see much improvement. This might be because the Q2_K_XL quants are already far enough from the original weights distributions that the acceptance rate is now to give a real speed boost. I have so far only tested one MTP versions, so I won't make any definitive statements just yet.
+
+
+
+
+
+
+ | Model                  | KV cache  | depth | short TG | long TG @ 64K | PP @ 64K | Notes                                       |
+ | ---------------------- | --------- | ----: | -------: | ------------: | -------: | ------------------------------------------- |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 |  base |    19.29 |         10.67 |    296.6 | Baseline — fastest weights, lowest quality  |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 |     1 |    21.36 |         13.96 |    294.0 |                                             |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 |     2 |    21.90 |         16.48 |    294.7 |                                             |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 | **3** |    23.18 |         17.85 |    294.2 | Sweet spot for short/mixed context (+20%)   |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 |     4 |    21.23 |         18.70 |    294.1 |                                             |
+ | Gemma 4 26B UD Q2_K_XL | q8_0/q4_0 | **5** |    20.19 |     **19.34** |    294.8 | Best long-context for Hermes (+81%)         |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 |  base |    16.81 |          9.03 |    288.1 | Baseline — better quality, slower weights   |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 | **1** |    24.04 |         13.01 |    287.7 | Best short TG of all configs (+43%)         |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 |     2 |    22.74 |         14.31 |    285.8 |                                             |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 |     3 |    23.62 |         15.59 |    285.1 |                                             |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 |     4 |    19.35 |         15.93 |    284.1 | Acceptance rate collapses                   |
+ | Gemma 4 26B UD IQ3_S   | q4_0/q4_0 | **5** |    22.42 |     **17.84** |    287.4 | Best long-context for Hermes (+98% vs base) |
+
+
 
 ## Conclusion
 
