@@ -133,7 +133,7 @@ Two independent anchors. Different sensory modalities. Different multiplier prof
 | Visual anchor   | 13B | 41B     | 131B |
 | Auditory anchor | 15B | 48B     | 144B |
 
-The ranges overlap almost entirely, and the central estimates differ by less than 20%. I’ll be honest about what this does and doesn’t show: I chose the multipliers, and I chose plausible central values, so some of the agreement is baked in rather than discovered. What I can defend is the weaker claim — that no reasonable choice of multipliers from either anchor pushes the answer into trillion-parameter territory. The convergence is reassuring, but don’t read it as two fully independent measurements landing on the same number.
+The ranges overlap almost entirely, and the central estimates differ by less than 20%. Now, I chose the multipliers, and I chose plausible central values, so some of that agreement is baked in rather than discovered. But the load-bearing point stands: no reasonable choice of multipliers from either anchor pushes the answer into trillion-parameter territory.
 
 **Combined range: ~13B to ~144B, with both central estimates landing in the 40–50B neighbourhood.**
 
