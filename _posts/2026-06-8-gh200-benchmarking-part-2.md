@@ -1,5 +1,5 @@
 ---
-title: "2x GH200 for LLM inference, Part 2: vLLM, DeepSeek V4 Flash, and MTP"
+title: "2x GH200 for LLM inference, Part 2: vLLM, DeepSeek V4 Flash/Pro, and MTP"
 date: 2026-06-08
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, gh200, vllm, benchmark]
@@ -202,6 +202,75 @@ The shape is similar: MTP helps, then too much MTP starts to hurt. But the Canad
 
 > The best official result here was about 149.5 tok/s. The best Canada result was about 193.0 tok/s.
 
+## Follow-Up: DeepSeek V4 Pro
+
+After the Flash work, I tested the larger DeepSeek model: DeepSeek-V4-Pro. Operationally, this was a much harder serving target on this dual GH200 box. The checkpoint is much larger, and the working vLLM path needed CPU expert offload to fit.
+
+The best working Pro launch shape I found used:
+
+```bash
+--distributed-executor-backend mp
+--tensor-parallel-size 2
+--pipeline-parallel-size 1
+--max-model-len 32768
+--max-num-batched-tokens 8192
+--max-num-seqs 1
+--block-size 256
+--gpu-memory-utilization 0.70
+--kv-cache-dtype fp8
+--generation-config vllm
+--moe-backend auto
+--offload-backend uva
+--cpu-offload-gb 380
+--cpu-offload-params experts
+--disable-custom-all-reduce
+--spec-method mtp
+--spec-tokens 2
+```
+
+The environment was also explicit about the topology:
+
+```bash
+CUDA_VISIBLE_DEVICES=0,1
+NCCL_P2P_DISABLE=1
+VLLM_ALLREDUCE_USE_SYMM_MEM=0
+VLLM_USE_FLASHINFER_SAMPLER=0
+VLLM_WEIGHT_OFFLOADING_DISABLE_PIN_MEMORY=1
+PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+```
+
+The Pro benchmark was not exactly the same shape as the Flash benchmark. I used the same prompt length and concurrency, but generated 512 tokens rather than 1024:
+
+| Setting            | Flash benchmark |    Pro benchmark |
+| ------------------ | --------------: | ---------------: |
+| Prompt length      |            8192 |             8192 |
+| Output length      |            1024 |              512 |
+| Number of prompts  |               5 |                3 |
+| Max concurrency    |               1 |                1 |
+| Tensor parallelism |               2 |                2 |
+| `max_model_len`    |           32768 | 32768 for MTP0-2 |
+
+That means the absolute Flash/Pro comparison is not perfectly apples-to-apples. But the difference is large enough that the conclusion is not subtle.
+
+| Model           | MTP level | Output throughput | Mean TTFT | Mean TPOT | Acceptance |
+| --------------- | --------: | ----------------: | --------: | --------: | ---------: |
+| DeepSeek V4 Pro |      MTP0 |        13.0 tok/s |   7515 ms |  62.61 ms |        n/a |
+| DeepSeek V4 Pro |      MTP1 |        17.8 tok/s |   3882 ms |  48.71 ms |      97.8% |
+| DeepSeek V4 Pro |      MTP2 |        21.2 tok/s |   2504 ms |  42.28 ms |      85.4% |
+| DeepSeek V4 Pro |      MTP3 |        18.9 tok/s |   2937 ms |  47.23 ms |      85.4% |
+
+The MTP3 row needs a footnote. Full-context MTP3 at `max_model_len=32768` failed KV allocation on this setup. I could start MTP3 only by reducing `max_model_len` to 12288 and increasing expert offload to 400 GB. That reduced-context MTP3 run was still slower than full-context MTP2.
+
+So for V4 Pro, the sweet spot I measured was MTP2, not MTP3.
+
+```text
+13.0 tok/s  without MTP
+21.2 tok/s  with MTP2
+```
+
+That is about a 64 percent improvement in output throughput for this single-request benchmark. But going deeper did not help. At MTP3, the extra draft work and memory pressure outweighed the longer accepted bursts.
+
+
 ## GH200 Memory Measurements Revisited
 
 Part 1 measured local HBM at about 3.7 TB/s and the staged GPU-to-GPU path at only about 58 GB/s. That huge ratio is what we are trying to tune the inference system to avoid.
@@ -220,11 +289,14 @@ I hope you didn't read this whole blog article, it's really boring. You could ha
 4. Treat MTP level as a benchmarked parameter.
 5. Do not assume the deepest MTP setting is best.
 
-Look, all this is pretty obvious, right? The interesting bit was the journey, and having me waste about 2 days so you can find out that you get great perf from the Canada W4A16/FP8 checkpoint with MTP3 of DeepSeek V4 Flash in vLLM. The best tested configuration was :
+Look, all this is pretty obvious, right? The interesting bit was the journey, and having me waste about 2 days so you can find out that you get great perf from the Canada W4A16/FP8 checkpoint with MTP3 of DeepSeek V4 Flash in vLLM. The best tested configurations were :
 
-```text
-105.9 tok/s  without MTP
-193.0 tok/s  with MTP3
-```
 
-Getting MTP working gave me an 82 percent improvement for the single-stream benchmark, and I opened this as a narrow upstream vLLM PR: [vllm-project/vllm#44847](https://github.com/vllm-project/vllm/pull/44847).
+| Model                           | Best measured MTP | Best output throughput |
+| ------------------------------- | ----------------: | ---------------------: |
+| DeepSeek V4 Flash, Canada quant |              MTP3 |            193.0 tok/s |
+| DeepSeek V4 Flash, official     |          MTP3-ish |      149.5-152.6 tok/s |
+| DeepSeek V4 Pro                 |              MTP2 |             21.2 tok/s |
+
+
+Getting MTP working gave me an >60 percent improvements for the single-stream benchmark, and I opened this as a narrow upstream vLLM PR: [vllm-project/vllm#44847](https://github.com/vllm-project/vllm/pull/44847).
