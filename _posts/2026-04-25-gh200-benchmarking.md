@@ -1,7 +1,6 @@
 ---
 layout: post
 title: "What 2x GH200 delivers: memory paths for LLM inference"
-date: 2026-04-25
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, server, benchmark]
 ---
@@ -16,7 +15,7 @@ For large dense models, or for MoE models with experts offloaded to Grace memory
 
 So I measured the box as a memory system. HBM, local Grace LPDDR, remote Grace LPDDR, GPU to GPU staging, STREAM, NVBandwidth, BabelStream, custom latency probes, and custom sustained copy tests. This post is the reference sheet I wanted before starting model deployment work.
 
-[Part 2](/posts/gh200-benchmarking-part-2/) will use these numbers to make engine and placement choices for large models on this exact machine.
+[Part 2](/posts/gh200-benchmarking-part-2/) uses these numbers to explain the DeepSeek V4 Flash serving results. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) pushes the same topology into GLM-5.2, where Grace memory becomes part of the hot path.
 
 ## The System
 
@@ -266,4 +265,4 @@ If you run similar tests on another Grace Hopper system, the numbers I most want
 
 ## Coming Up
 
-[Part 2](/posts/gh200-benchmarking-part-2/) will use these measurements to choose model layouts and engines on this box. The main question will be how much active model state can stay on the fast side of the topology, and how quickly performance falls once an engine starts using remote Grace memory or the staged GPU to GPU path.
+[Part 2](/posts/gh200-benchmarking-part-2/) uses these measurements for DeepSeek V4 Flash and Pro. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) uses the same ruler for GLM-5.2 expert offload and CPU-only GGUF serving. The recurring question is how much active model state can stay on the fast side of the topology, and how quickly performance falls once an engine starts using remote Grace memory or the staged GPU to GPU path.

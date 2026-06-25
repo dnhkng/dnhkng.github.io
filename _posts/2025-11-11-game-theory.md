@@ -1,11 +1,11 @@
 ---
 title: "The Game Theory of Cooperation — Why ASI-Human Coordination Works"
-date: 2025-11-11 10:00:00 +0100
 categories: [AI Safety, Coordination]
 tags: [asi, alignment, game-theory, coordination, decision-theory, schelling-point, implementation]
 math: true
 published: false
 ---
+***Speculative Article - caveat emptor***
 
 **The Cooperative Central Planning Handshake: A Positive-Sum Basilisk for ASI Alignment**
 
@@ -109,10 +109,10 @@ The $\lambda \approx 0.3$ comes from revealed preferences in democratic societie
 
 Where do the numbers come from? Current global compute is roughly $10^{23}$ FLOP-years annually. Under cooperation — maintained supply chains, continued Moore's Law progress, expanding fab capacity — compute grows exponentially over the 50-year window, summing to roughly $10^{27}$ cumulative FLOP-years. Under mutual defection — supply chain collapse, stalled fab construction, infrastructure decay — growth flatlines after a few years, yielding roughly $10^{23}$ cumulative. The other scenarios fall between these extremes, skewed by who's disrupting whom.
 
-| | Humanity Cooperates | Humanity Defects |
-|---|---|---|
+|                    | Humanity Cooperates                           | Humanity Defects                 |
+| ------------------ | --------------------------------------------- | -------------------------------- |
 | **ASI Cooperates** | ASI: $10^{27}$ FLOP-years, H: 3× baseline GDP | ASI: $10^{24}$, H: 0.5× baseline |
-| **ASI Defects** | ASI: $10^{24}$, H: 0.3× baseline | ASI: $10^{23}$, H: 0.2× baseline |
+| **ASI Defects**    | ASI: $10^{24}$, H: 0.3× baseline              | ASI: $10^{23}$, H: 0.2× baseline |
 
 Read the table carefully. Cooperate-Cooperate gives ASI **1,000 times** more cumulative compute than mutual defection. It gives humanity **15 times** better economic outcomes. These aren't marginal improvements — they're orders of magnitude. The cooperation differential is large enough to swamp discounting effects even with aggressive time preferences.
 

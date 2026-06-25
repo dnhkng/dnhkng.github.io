@@ -1,12 +1,13 @@
 ---
 title: "The Cortical Ratio: A Thought Experiment on the 'Final' Size of AGI"
-date: 2025-11-21 10:00:00 +0100
 categories: [LLMs, Neurobiology]
 tags: [LLMs, Neurobiology, Qwen, Phi, Distillation, LocalLLaMA]
 math: true
 ---
 
 ![Brain Atlas](/assets/img/brain_atlas.png)
+
+***Speculative Article - caveat emptor***
 
 No one knows how big AGI needs to be. The current consensus among the scaling-pilled crowd is "trillions of parameters and a nuclear power plant." Maybe they're right. But I spent years dissecting rat brains for my PhD, and the one thing neuroscience taught me is that biology is *embarrassingly good at compression*. What happens when we figure it out too?
 
@@ -42,7 +43,7 @@ Again, not the *full* visual cortex. No mental rotation, no visual imagination, 
 
 ### Are These Anchors Any Good?
 
-Honestly? They're rough. Mapping "human sensory cortex" to "neural network that does a similar task" is full of holes. The architectures are completely different. The representations are definitely different. We're comparing a spiking recurrent biological circuit running on 20 watts to a feed-forward transformer running on 300W.
+Honestly? They're a rough guestimate. Mapping "human sensory cortex" to "neural network that does a similar task" is full of holes. The architectures are completely different. The representations are definitely different. We're comparing a spiking recurrent biological circuit running on 20 watts to a feed-forward transformer running on 300W.
 
 But for a Fermi estimate, we don't need the mapping to be exact. We need it to be in the right *neighbourhood*. And "sensory processing saturates in the low single-digit billions" seems defensible enough to build on. As a sanity check, we'll run the calculation from *both* anchors independently and see whether they converge.
 
@@ -50,7 +51,7 @@ But for a Fermi estimate, we don't need the mapping to be exact. We need it to b
 
 ## Scaling to the Reasoning Core
 
-Here's where it gets properly speculative. But that's the point of a Fermi estimate: you make your best guesses, write them down, and see what falls out.
+Here's where it gets ***properly speculative***. But that's the point of a Fermi estimate: you make your best guesses, write them down, and see what falls out.
 
 General intelligence doesn't live in the motor cortex or the brainstem. The best neuroscience model we have for the "reasoning hardware" is the **Parieto-Frontal Integration Theory (P-FIT)**, proposed by Jung & Haier (2007). P-FIT identifies a distributed network across the dorsolateral prefrontal cortex, anterior cingulate, and parietal association areas as the structural basis for general intelligence. It's the hardware that does planning, abstraction, logical inference, and working memory.
 

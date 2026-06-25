@@ -1,6 +1,5 @@
 ---
 title: "Optimising a 2× GH200 system for Claude Code"
-date: 2026-1-11 10:00:00 +0100
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, server]
 math: true

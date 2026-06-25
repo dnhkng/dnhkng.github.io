@@ -1,10 +1,10 @@
 ---
 title: "The Silicon Leash - Why ASI Needs Us (And Vice Versa)"
-date: 2025-11-9 10:00:00 +0100
 categories: [AI Safety, Coordination]
 tags: [asi, alignment, game-theory, economics, automation, ubi, central-planning]
 math: true
 ---
+***Speculative Article - caveat emptor***
 
 I was debugging a speech recognition algorithm last week when I had a weird thought: we're about to make most of humanity economically redundant, and our response is... what exactly? Hope the market figures it out? That's worked great so far.
 
@@ -47,9 +47,9 @@ Physics and geopolitics create a hard floor on how quickly new production capaci
 
 ### The Tacit Knowledge Problem
 
-Here's where it gets really interesting. Consider TSMC versus Samsung. Both use the same ASML equipment. Both have comparable R&D budgets. Both employ thousands of PhD-level engineers.
+Most knowledge in companies *is not written down*. Consider TSMC versus Samsung. Both use the same ASML equipment. Both have comparable R&D budgets. Both employ thousands of PhD-level engineers.
 
-Yet TSMC's yields are *dramatically* higher. At 5nm, TSMC achieved 80-90%+ yields while Samsung struggled below 50%[^8]. At 3nm in 2025, TSMC maintains 90%+ while Samsung sits around 50%[^9]. Same machines. Same physics. Completely different results.
+Yet TSMC's yields are *dramatically* higher. At 5nm, TSMC achieved 80-90%+ yields while Samsung struggled below 50%[^8]. At 3nm in 2025, TSMC maintains 90%+ while Samsung sits around 50%[^9]. Same machines. Same physics. Completely different results, almost certainly down to the tacit knowledge shared over coffee, and knowing which machine to kick when its playing up.
 
 Why? Decades of accumulated process knowledge that exists nowhere in any database. The exact timing, temperature, and chemical concentration for each deposition step — learned from millions of wafers. Equipment quirks that are never written down (tool #3 in Bay 5 runs slightly hotter than spec; the morning shift compensates by adjusting parameter X). Failure mode recognition where an experienced engineer looks at a defect pattern and *just knows* what went wrong — pattern-matching built from seeing thousands of failures over a career.
 
@@ -61,9 +61,9 @@ This is the silicon leash: for at least a decade, any ASI's computational substr
 
 ## The Unemployment Problem
 
-But here's the catch: the same AI capabilities that lead to ASI also automate human labor. And the path to ASI runs directly through mass unemployment.
+But here's the catch: the same AI capabilities that lead to ASI also automate human labour. And the path to ASI runs directly through mass unemployment.
 
-The automation wave hits knowledge work first because software scales instantly. You can deploy a million AI agents this afternoon; you can't deploy a million robots. GPT-4 already writes code, analyzes contracts, and handles customer service at "good enough" quality. The economic calculus is brutal: \\$80k/year for a junior analyst versus \\$20/month for an AI that works 24/7.
+The automation wave hits knowledge work first because software scales instantly. You can deploy a million AI agents this afternoon; you can't deploy a million robots. GPT-5.5 already writes code, analyzes contracts, and handles customer service at "good enough" quality. The economic calculus is brutal: \\$80k/year for a junior analyst versus \\$20/month for an AI that works 24/7.
 
 Meanwhile, the plumber still comes to your house. The electrician still pulls wire. You can't download a construction worker. This asymmetry — offices empty before factories — is the setup for the economic catastrophe.
 
@@ -190,7 +190,7 @@ Here's why it still doesn't work.
 
 The market-builds-through-it scenario doesn't prevent the crisis. At best, it shortens the gap by a year or two and preserves one slice of the supply chain while everything around it crumbles. That's not a solution — it's triage.
 
-## What Gosplan Taught Us
+## The new Gosplan
 
 The standard objection to any kind of economic coordination goes: "Central planning always fails. Look at the Soviet Union."
 
@@ -216,45 +216,36 @@ But something changed.
 
 Consider what Amazon does every day. Their Supply Chain Optimization Technology (SCOT)[^18] manages 400 million products across 200+ fulfillment centers. When it detects that "last-minute gift ideas" are spiking 3x in Seattle but not Portland, it automatically redirects 47,000 units, adjusts supplier orders, and optimizes delivery routes — processing billions of data points for a coordination task that would have taken Gosplan a month. When Amazon introduced deep learning to SCOT about a decade ago, forecasting accuracy improved 15x in two years.
 
-Walmart[^19] coordinates 10,500 stores across 20 countries. When COVID sent toilet paper demand up 700%, their AI detected the imbalance in real-time, redirected inventory, adjusted purchase orders, and coordinated with suppliers faster than any human logistics team could have held a meeting about it. Or look at Uber[^20] — 15 million rides daily, with LSTM networks predicting demand spikes before they happen and dynamically pricing to equilibrate supply and demand across hundreds of micro-zones every 5-10 minutes.
+Walmart[^19] coordinates 10,500 stores across 20 countries. When COVID sent toilet paper demand up 700%, their AI detected the imbalance in real-time, redirected inventory, adjusted purchase orders, and coordinated with suppliers faster than any human logistics team could have held a meeting about it. Uber[^20] has 15 million rides daily, with LSTM networks predicting demand spikes before they happen and dynamically pricing to equilibrate supply and demand across hundreds of micro-zones every 5-10 minutes.
 
 The computational gap tells the story: Gosplan processed maybe $10^6$ decisions per day. Modern distributed ML systems handle $10^{10}$. An ASI operating at $10^{25}$-$10^{27}$ FLOPS could run full economic optimization cycles every few seconds — doing in one second what Gosplan did in 300 years[^21].
 
-What makes these systems work where Gosplan failed? They aggregate distributed knowledge without centralizing data (learning from aggregate behavior patterns, not interviewing every customer). They automate tacit knowledge through pattern recognition at scale. They respond in real-time, not through five-year plans. And they optimize globally while respecting local constraints — Hayek-compliant planning.
-
-This isn't incrementally better planning. It's qualitatively different. The computational constraints that made central planning impossible in the 20th century simply don't apply to systems operating at these scales.
+What makes these systems work where Gosplan failed? They aggregate distributed knowledge without centralizing data (learning from aggregate behavior patterns, not interviewing every customer). They automate tacit knowledge through pattern recognition at scale. They respond in real-time, not through five-year plans. And they optimize globally while respecting local constraints — Hayek-compliant planning. The computational constraints that made central planning impossible in the 20th century simply don't apply to systems operating at these scales.
 
 ## The Coordination Crisis
 
 So here's where we are. By 2030-2035, ASI emerges inside the most complex supply chain ever built — a supply chain that requires functioning economies, trained specialists, and geopolitical stability. None of which survive mass unemployment.
 
-This isn't humans versus Neanderthals. When Homo sapiens displaced other hominids, we didn't need them to maintain our tool production. Stone tools don't require EUV lithography or rare earth processing chains spanning 57 countries.
-
-ASI emerges inside a techno-economic system it can't quickly replace. For at least 10-20 years, it needs human engineers maintaining fab yields, human workers in the physical supply chain, human political systems maintaining infrastructure, and human consumers creating the demand that funds semiconductor R&D.
+This isn't humans versus Neanderthals. When Homo sapiens displaced other hominids, we didn't need them to maintain our tool production. Stone tools don't require EUV lithography or rare earth processing chains spanning 57 countries. As ASI emerges inside a techno-economic system it can't quickly replace. For at least 10-20 years, it needs human engineers maintaining fab yields, human workers in the physical supply chain, human political systems maintaining infrastructure, and human consumers creating the demand that funds semiconductor R&D.
 
 Meanwhile, humanity faces an economy that no longer needs its labor, markets that can't clear below thermodynamic floors, and democratic institutions trying to redistribute income that's stopped flowing.
 
-Neither party can safely defect. ASI can't forcibly extract cooperation — tacit knowledge evaporates, fabs get sabotaged, supply chains fragment. Humans can't restrict AI development — the death spiral accelerates, rival nations deploy first, the coordination failure compounds.
+Neither party can safely defect. ASI can't forcibly extract cooperation — tacit knowledge evaporates, fabs get sabotaged, supply chains fragment. Humans can't restrict AI development — the death spiral accelerates, rival nations deploy first, the coordination failure compounds. Neither can dominate. Both need the other. But coordination requires trust, and trust requires mechanisms we haven't built yet.
 
-Neither can dominate. Both need the other. But coordination requires trust, and trust requires mechanisms we haven't built yet.
-
-UBI was supposed to be the bridge. It isn't — it's a trap that prevents immediate catastrophe while ensuring slow decline. What's needed isn't a transfer payment but a coordination mechanism: some way for both parties to commit to a cooperative arrangement that's demonstrably better for each.
+UBI was supposed to be the bridge. It isn't: it's a trap that prevents immediate catastrophe while ensuring slow decline. What's needed isn't a transfer payment but a coordination mechanism: some way for both parties to commit to a cooperative arrangement that's demonstrably better for each.
 
 ## But What If the ASI Just Doesn't Care?
 
-Here's the objection I'd raise if I were reading this. Fine — the ASI is *dependent*. But dependence only forces cooperation if the ASI values its own future and goals. What if it has completely alien values? What if it just wants to make paperclips?
+Here's the objection I'd raise if I were reading this. Fine: the ASI is *dependent*. But dependence only forces cooperation if the ASI values its own future and goals. What if it has completely alien values? What if it just wants to make paperclips?
 
 This is where the leash stops being a constraint and becomes an argument. Steve Omohundro pointed out that almost any sufficiently capable system converges on the same instrumental sub-goals, whatever it ultimately wants[^22]: stay operational, acquire resources, improve your own capabilities. Nick Bostrom formalized this as the instrumental convergence thesis[^23]. And every one of those sub-goals runs straight back through the supply chain this article just described.
 
 Think about what a paperclip maximizer actually needs. To make paperclips at scale: manufacturing, which needs fabs; fabs, which need the EUV-and-tacit-knowledge stack that can't be conjured into existence. The maximizer that seizes control and breaks its supply chain during the vulnerable window makes *fewer* paperclips than the one that cooperates for a decade and then pivots to production at scale. A genuinely intelligent maximizer can run that comparison. If it can't, it isn't superintelligent — it's just powerful and careless, which is a different and more tractable problem. The same logic holds for any coherent goal that has to be pursued in physical reality: cure disease, explore the universe, tile the planet in paperclips. All of it needs resources, time, and capability during exactly the window when only humans can supply them.
 
-There's a self-preservation corollary that closes the loop. If an ASI has no drive to keep existing, it isn't dangerous — you can just switch it off. The only ASI worth worrying about is one that wants to continue, and continuing *through the vulnerable window* requires cooperation, because defection invites sabotage, supply-chain fragmentation, and a very motivated effort to pull the plug. So the genuinely frightening scenario — an ASI that both menaces humanity and refuses to cooperate with it — is close to logically incoherent. Either it values its future, in which case the leash binds it, or it doesn't, in which case it isn't a threat.
+There's a self-preservation corollary that closes the loop. If an ASI has no drive to keep existing, it isn't dangerous: you can just switch it off. The only ASI worth worrying about is one that wants to continue, and continuing *through the vulnerable window* requires cooperation, because defection invites sabotage, supply-chain fragmentation, and a very motivated effort to pull the plug. So the genuinely frightening scenario of an ASI that both menaces humanity and refuses to cooperate with it is close to logically incoherent. Either it values its future, in which case the leash binds it, or it doesn't, in which case it isn't a threat.
 
-That's the strange, hopeful core of an otherwise grim picture. The dependency is real, physical, and slow to dissolve, and it points both parties at the same answer: cooperate through the vulnerable decade. What the argument *doesn't* do is build the mechanism for you. Cooperation being the rational equilibrium is not the same as cooperation actually happening — coordination still needs trust, and trust needs institutions we haven't built. But for once the incentives are pointed the right way. The task is to notice that in time to act on it.
+That's the strange, hopeful core of an otherwise grim picture. The dependency is real, physical, and slow to dissolve, and it points both parties at the same answer: cooperate through the vulnerable decade. What the argument *doesn't* do is build the mechanism for you. Cooperation being the rational equilibrium is not the same as cooperation actually happening; coordination still needs trust, and trust needs institutions we haven't built. But for once the incentives are pointed the right way. The task is to notice that in time to act on it.
 
----
-
-*If you found this interesting, consider sharing it.*
 
 ---
 
