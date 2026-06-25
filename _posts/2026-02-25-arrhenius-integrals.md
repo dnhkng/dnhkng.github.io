@@ -1,6 +1,5 @@
 ---
 title: "Arrhenius Integrals, IR Lasers, and Cooking Proteins"
-date: 2026-02-25 10:00:00 +0100
 categories: [protein engineering, biophysics]
 tags: [laser, proteins]
 math: true

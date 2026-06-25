@@ -1,6 +1,5 @@
 ---
 title: "2x GH200 for LLM inference, Part 2: vLLM, DeepSeek V4 Flash/Pro, and MTP"
-date: 2026-06-08
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, gh200, vllm, benchmark]
 ---
@@ -9,11 +8,15 @@ tags: [llm, nvidia, hopper, gh200, vllm, benchmark]
 
 A while back I did some optimisation on my [Hopper system](/posts/vllm-optimization-gh200/) for MiniMax M2.1, and this was followed by some deeper [GH200 benchmarking](/posts/gh200-benchmarking/), where I measured the machine as a memory-shuffling system. The result was a simple topology map: each Hopper has fast local HBM, each Hopper has a fast NVLink C2C path to its own Grace CPU, and the path between the two Hoppers is not a normal GPU peer link. Cross-GPU traffic on this workstation stages through the CPU side and is much slower than local HBM or local C2C.
 
-This is that follow-up (*massively delayed by a much cooler project*). The workload here is ***DeepSeek V4 Flash in vLLM*** on a dual GH200 workstation. The short version is that the hardware behaves exactly like the memory benchmarks predicted. Tensor parallelism can work, but it needs care. The official checkpoint is slower than I expected. A quantized checkpoint from [Canada-Quant](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP) turned out to be much faster. There was some wrangling to get multi-token prediction working, but once the checkpoint and vLLM path were made to agree with each other, I got a very large single-stream speed-up (*for my Chonky local Hermes Agent, bwHaHahahaaa...*).
+Series:
 
-The best single-request result I measured was about 193 output tokens per second with MTP3 on the Canada-Quant model checkpoint, compared with about 106 tokens per second without MTP. 
+1. [Memory paths for LLM inference](/posts/gh200-benchmarking/)
+2. vLLM, DeepSeek V4 Flash/Pro, and MTP
+3. [GLM-5.2, expert offload, and the CPU question](/posts/gh200-benchmarking-part-3-glm52/)
 
-***TL;DR: If you want to run DSv4Flash on Hopper, use Canada-Quants and my PR at the end of the blog post.***
+This is that follow-up (*massively delayed by a much cooler project*). The workload here is ***DeepSeek V4 Flash in vLLM*** on a dual GH200 workstation. The short version is that the hardware behaves exactly like the memory benchmarks predicted. Tensor parallelism can work, but it needs care. The official checkpoint is slower than I hoped, but I was saved by the quantized checkpoint from [Canada-Quant](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP), which turned out to be faster. There was some wrangling to get multi-token prediction working, but once the checkpoint and vLLM path were made to agree with each other, I got a very large single-stream speed-up (*for my Chonky local Hermes Agent, bwHaHahahaaa...*).
+
+***TL;DR: For DSv4Flash on this dual GH200 box, use the Canada-Quant checkpoint, enable MTP, benchmark the acceptance rate, and avoid launch paths that compile TileLang kernels while serving.***
 
 ## The System Reminder
 
@@ -29,7 +32,7 @@ The machine is a dual Grace Hopper workstation:
 | Driver           |                             580.105.08 |
 | OS               |                  Ubuntu 24.04, aarch64 |
 
-The important topology facts from Part 1 were:
+The important topology facts from [Part 1](/posts/gh200-benchmarking/) were:
 
 | Path                              | Measured bandwidth |
 | --------------------------------- | -----------------: |
@@ -38,7 +41,7 @@ The important topology facts from Part 1 were:
 | Remote Grace LPDDR to Hopper      |     about 133 GB/s |
 | Hopper to Hopper staged copy      |   about 57-58 GB/s |
 
-For LLM inference, those numbers give a useful mental model. If the hot decode path streams weights from local HBM, the machine is stupid fast. If it repeatedly crosses the inter-GH200 path, it's more like the cheese-grater onanism; you need to go slow, and most won't have the dedication to last. If an engine creates a lot of GPU-to-GPU traffic at batch 1, the topology will expose it.
+For LLM inference, those numbers give a useful mental model. If the hot decode path streams weights from local HBM, the machine is stupid fast. If it repeatedly crosses the inter-GH200 path, it's more like the cheese-grater onanism; you need to go slow, and most won't have the dedication to finish 'inferencing'. If an engine creates a lot of GPU-to-GPU traffic at batch 1, the topology will expose it.
 
 ## What I Tested
 
@@ -62,6 +65,20 @@ The benchmark shape was deliberately large enough to avoid measuring only startu
 | `max_num_batched_tokens` |          8192 |
 | `max_num_seqs`           |             1 |
 | Sampling                 | temperature 0 |
+
+### Serving Shape
+
+One serving problem showed up before the benchmark numbers were even interesting: TileLang kept compiling mHC kernels during startup, and sometimes again while requests were live. That is bad news for an interactive server. A benchmark summary can hid it, because I was using fixed size prompts, but when I went to use it, compiling was running all the time and blocking the server for about 8 seconds at a time!
+
+So the useful launch shape was the boring one: TP2, MTP3, the benchmark settings above, and the mHC TileLang branches that caused the most repeat compilation disabled. That does not make startup instant, but it avoids the worst runtime compilation behaviour.
+
+The numbers were:
+
+| Model    | Startup to health | TileLang compiles health/first/second |  First pass | Second pass |
+| -------- | ----------------: | ------------------------------------: | ----------: | ----------: |
+| Official |             408 s |                            10 / 0 / 1 | 128.2 tok/s | 111.3 tok/s |
+| Canada   |             236 s |                            10 / 0 / 1 | 137.0 tok/s | 124.8 tok/s |
+
 
 The main vLLM flags were:
 
@@ -122,7 +139,7 @@ The second option is a useful runtime fix. If the MTP block is BF16, run that sm
 
 There is one extra wrinkle: after sharing these results, the Canada-Quant maintainers pointed out that there are actually three adjacent fixes needed for completely stock end-to-end MTP on this artifact.
 
-1. The artifact metadata needs to match vLLM's runtime module names, not only the on-disk safetensors names. The MTP repo now has a metadata-only fix for this using regex-based ignore patterns.
+1. The artifact metadata needs to match vLLM's runtime module names, not only the on-disk SafeTensors names. The MTP repo now has a metadata-only fix for this using regex-based ignore patterns.
 2. vLLM needs to propagate `prefix=` when constructing the DeepSeek V4 MTP `e_proj` and `h_proj` modules. Without that, compressed-tensors sees an empty layer name and cannot match the module.
 3. Once loading and construction succeed, the NVIDIA O-projection execution path needs the BF16 fallback described below for unquantized MTP `wo_a`.
 
@@ -169,7 +186,7 @@ This is not a performance optimization, it's a compatibility fix that unlocks th
 
 ## MTP Results - it makes inference faster 🤯
 
-Once that path worked, the Canada checkpoint scaled well with MTP:
+Once that path worked, the Canada checkpoint scaled well with MTP. A high-acceptance sweep looked like this:
 
 | Model            | MTP level | Output throughput | Mean TPOT | Acceptance |
 | ---------------- | --------: | ----------------: | --------: | ---------: |
@@ -179,9 +196,13 @@ Once that path worked, the Canada checkpoint scaled well with MTP:
 | Canada W4A16/FP8 |      MTP3 |       193.0 tok/s |   4.82 ms |      71.1% |
 | Canada W4A16/FP8 |      MTP4 |       162.1 tok/s |   5.81 ms |      47.9% |
 
+### The MTP Acceptance Trap
+
+MTP is a bet that the target model will accept enough draft tokens to pay for the extra draft work. In the high-acceptance Canada run above, MTP3 acceptance was 71.1 percent and the system hit 193.0 tok/s. When MTP3 acceptance was closer to 53-55 percent, throughput landed around 137 tok/s instead.
+
 MTP3 was the best point in this run. MTP4 was worse because the extra draft depth did not pay for itself. Acceptance dropped to about 48 percent, and the additional draft work outweighed the benefit, like eating those last fries when you are already full.
 
-This is the practical lesson: MTP level is a tuning parameter, not a monotonic speed knob. More draft tokens != Faster.
+*More draft tokens != Faster.*
 
 After I posted these numbers, [yangsiqt2](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8/discussions/8#6a266e2e43643d62dc5c270e) pointed out another important caveat: MTP acceptance is workload sensitive. Their end-to-end vLLM benchmark used short mixed technical/code/reasoning prompts, 64 sequential requests, and 256 generated tokens. In that setup they saw lower acceptance than this long-prompt, long-output benchmark: about 81 percent for MTP1 and 63 percent for MTP2. That still produced a large speed-up, but not the same acceptance profile. Do your own profiling!
 
@@ -200,7 +221,9 @@ The official checkpoint also benefits from MTP, but the baseline is much lower.
 
 The shape is similar: MTP helps, then too much MTP starts to hurt. But the Canada quantized checkpoint remains faster at every comparable point I tested.
 
-> The best official result here was about 149.5 tok/s. The best Canada result was about 193.0 tok/s.
+The best official result I have seen was about 149.5 tok/s, with a nearby run around 152.6 tok/s. In the serving table above, official tops out at 128.2 tok/s. Canada still wins either way: 193.0 tok/s in the best high-acceptance run, 137.0 tok/s on the first serving pass, and 124.8 tok/s on the second.
+
+So the practical conclusion is not "Canada is always 193 tok/s". It is: Canada is the better artifact for this GH200 setup, but the exact number depends on MTP acceptance and kernel compile behavior.
 
 ## Follow-Up: DeepSeek V4 Pro
 
@@ -259,7 +282,7 @@ That means the absolute Flash/Pro comparison is not perfectly apples-to-apples. 
 | DeepSeek V4 Pro |      MTP2 |        21.2 tok/s |   2504 ms |  42.28 ms |      85.4% |
 | DeepSeek V4 Pro |      MTP3 |        18.9 tok/s |   2937 ms |  47.23 ms |      85.4% |
 
-The MTP3 row needs a footnote. Full-context MTP3 at `max_model_len=32768` failed KV allocation on this setup. I could start MTP3 only by reducing `max_model_len` to 12288 and increasing expert offload to 400 GB. That reduced-context MTP3 run was still slower than full-context MTP2.
+The full-context MTP3 at `max_model_len=32768` failed KV allocation on this setup. I could start MTP3 only by reducing `max_model_len` to 12288 and increasing expert offload to 400 GB. That reduced-context MTP3 run was still slower than full-context MTP2.
 
 So for V4 Pro, the sweet spot I measured was MTP2, not MTP3.
 
@@ -289,14 +312,16 @@ I hope you didn't read this whole blog article, it's really boring. You could ha
 4. Treat MTP level as a benchmarked parameter.
 5. Do not assume the deepest MTP setting is best.
 
-Look, all this is pretty obvious, right? The interesting bit was the journey, and having me waste about 2 days so you can find out that you get great perf from the Canada W4A16/FP8 checkpoint with MTP3 of DeepSeek V4 Flash in vLLM. The best tested configurations were :
+Look, all this is pretty obvious, right? The interesting bit was the journey, and having me waste about 2 days so you can skip straight to the useful configuration:
 
+| Model                           | Best MTP | Best number I saw | Number I would plan around | Notes                                                  |
+| ------------------------------- | -------: | ----------------: | -------------------------: | ------------------------------------------------------ |
+| DeepSeek V4 Flash, Canada quant |     MTP3 |       193.0 tok/s |          124.8-137.0 tok/s | Best artifact here; avoid runtime TileLang compilation |
+| DeepSeek V4 Flash, official     | MTP3-ish | 149.5-152.6 tok/s |          111.3-128.2 tok/s | Works, but slower on this topology                     |
+| DeepSeek V4 Pro                 |     MTP2 |        21.2 tok/s |                 21.2 tok/s | Needs CPU expert offload                               |
 
-| Model                           | Best measured MTP | Best output throughput |
-| ------------------------------- | ----------------: | ---------------------: |
-| DeepSeek V4 Flash, Canada quant |              MTP3 |            193.0 tok/s |
-| DeepSeek V4 Flash, official     |          MTP3-ish |      149.5-152.6 tok/s |
-| DeepSeek V4 Pro                 |              MTP2 |             21.2 tok/s |
+The next step was to ask what happens when the model is too large for this strategy. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) does that with GLM-5.2, expert offload, and CPU-only GGUF serving.
 
+The robust lessons are: avoid unnecessary cross-GH200 traffic, use the checkpoint whose active path best matches the hardware, treat MTP level as a benchmarked parameter, and watch both MTP acceptance and runtime kernel compilation.
 
-Getting MTP working gave me an >60 percent improvements for the single-stream benchmark, and I opened this as a narrow upstream vLLM PR: [vllm-project/vllm#44847](https://github.com/vllm-project/vllm/pull/44847).
+In the high-acceptance sweep, getting MTP working gave me a >60 percent improvement for the single-stream benchmark, and I opened this as a narrow upstream vLLM PR: [vllm-project/vllm#44847](https://github.com/vllm-project/vllm/pull/44847).
