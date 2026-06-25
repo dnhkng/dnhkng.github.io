@@ -7,7 +7,7 @@ math: true
 pin: true
 ---
 
-![cover](/assets/img/universal/universal.png)
+![cover](/assets/img/sapir-whorf/universal.png)
 
 If you haven't heard about the Sapir-Whorf hypothesis, don't worry, I hadn't either until I saw a [comment on Twitter](https://x.com/othermaciej/status/2036296850291171490) about my [RYS part II](https://dnhkng.github.io/posts/rys-ii/) article. [Maciej Stachowiak](https://x.com/othermaciej) dropped the comment regarding my small experiment comparing language vs topic in LLMs. The data suggested that the middle layers of Qwen3.5-27B were organised more by sentence topic than by language, with much less sensitivity to the language of the input.
 
@@ -215,7 +215,7 @@ Let's take a look again at Qwen3.5-27B from [Part 2](/posts/rys-ii/#seeing-the-a
 
 
 **Centered cosine similarity for Qwen3.5-27B**
-![Qwen3.5-27B centered cosine similarity](/assets/img/universal/q27b_nl_category_curves_centered_rgb.png)
+![Qwen3.5-27B centered cosine similarity](/assets/img/sapir-whorf/q27b_nl_category_curves_centered_rgb.png)
 *Red = different-language, same-content. Green = same-language, different-content. Blue = different-language, different-content. After per-layer centering, the organisation is stark.*
 
 And this is exactly what we see: three phases emerge.
@@ -229,19 +229,19 @@ And this is exactly what we see: three phases emerge.
 In the central layers, the model's representations are organised more by meaning than by language.  As we go on to examine the other models, we see *the exact same pattern* repeats across architectures:
 
 **Centered cosine similarity for MiniMax M2.5**
-![MiniMax M2.5 centered cosine similarity](/assets/img/universal/m25_nl_category_curves_centered_rgb.png)
+![MiniMax M2.5 centered cosine similarity](/assets/img/sapir-whorf/m25_nl_category_curves_centered_rgb.png)
 *Red = different-language, same-content. Green = same-language, different-content. Blue = different-language, different-content.*
 
 **Centered cosine similarity for GLM-4.7**
-![GLM-4.7 centered cosine similarity](/assets/img/universal/glm_47_nl_category_curves_centered_rgb.png)
+![GLM-4.7 centered cosine similarity](/assets/img/sapir-whorf/glm_47_nl_category_curves_centered_rgb.png)
 *Same colour coding. The three-phase pattern replicates cleanly despite GLM-4.7's 160-expert MoE architecture.*
 
 **Centered cosine similarity for Gemma-4 31B**
-![GPT-OSS-120B centered cosine similarity](/assets/img/universal/gemma-4_31b_nl_category_curves_centered_rgb.png)
+![GPT-OSS-120B centered cosine similarity](/assets/img/sapir-whorf/gemma-4_31b_nl_category_curves_centered_rgb.png)
 *Same colour coding. With 60 layers, the small Gemma-4 31B compresses the same three phases but with interesting middle section forms.*
 
 **Centered cosine similarity for GPT-OSS-120B**
-![GPT-OSS-120B centered cosine similarity](/assets/img/universal/oss120_nl_category_curves_centered_rgb.png)
+![GPT-OSS-120B centered cosine similarity](/assets/img/sapir-whorf/oss120_nl_category_curves_centered_rgb.png)
 *Same colour coding. Even with only 36 layers, GPT-OSS-120B compresses the same three phases into a shorter stack.*
 
 The interesting variable is the number of layers each model spends in the 'reasoning' zone. Empirically, the various models all seem to require about 15 layers to 'encode' reasoning back to text. This gives larger models with deeper transformer stacks like M2.5 and GLM-4.7 more time to *stay in the zone* during thinking. This coincides nicely with my original experiments from 2024: ***Small models don't improve much with RYS***.  *This is probably because the models just don't have enough transformer layers to generate separate decoding, thinking and encoding layers.* Duplicating layers in such a tight, optimised system breaks stuff!  Once a model is big enough that pre-training allows for the formation of a distinct 'thinking' region, we can finally use the RYS method to find repeatable blocks that improve performance.
@@ -471,11 +471,11 @@ def f(fv, r, t):
 </details>
 
 **Centered cosine similarity for MiniMax M2.5**
-![different modal cosine similarity](/assets/img/universal/m25_peer_system_category_curves_centered_rgb.png)
+![different modal cosine similarity](/assets/img/sapir-whorf/m25_peer_system_category_curves_centered_rgb.png)
 *Centered cosine similarity across English, Python, and LaTeX. Red = different system same-topic. Green = within-system different-topic. Blue = different system different-topic.*
 
 **Centered cosine similarity for MiniMax M2.5**
-![different modal cosine similarity](/assets/img/universal/m25_peer_system_category_bands_centered_mean_std_rgb.png)
+![different modal cosine similarity](/assets/img/sapir-whorf/m25_peer_system_category_bands_centered_mean_std_rgb.png)
 *Same data with ±1 standard deviation bands.*
 
 
