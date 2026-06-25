@@ -5,7 +5,7 @@ tags: [llm, nvidia, hopper, server]
 math: true
 ---
 
-![Grace Hopper Claude](/assets/img/claude.png)
+![Grace Hopper Claude](/assets/img/vllm-optimization-gh200/claude.png)
 
 ## Introduction
 
@@ -473,15 +473,15 @@ But for this type of work, the local setup is genuinely faster.
 
 Below is a representative excerpt from a real Claude Code session using the local vLLM backend (shortened and lightly redacted). Tool calling works well. I cloned my [GLaDOS repo](https://github.com/dnhkng/GlaDOS) and had claude-minimax review it:
 
-![Claude](/assets/img/tool_use.png)
+![Claude](/assets/img/vllm-optimization-gh200/tool_use.png)
 
 The model didn't hold back:
 
-![Claude](/assets/img/ouch.png)
+![Claude](/assets/img/vllm-optimization-gh200/ouch.png)
 
 And the cost summary:
 
-![Claude](/assets/img/costs.png)
+![Claude](/assets/img/vllm-optimization-gh200/costs.png)
 
 Hey, it looks like spending **€9,000** on this server saved me about **$1.27**.
 

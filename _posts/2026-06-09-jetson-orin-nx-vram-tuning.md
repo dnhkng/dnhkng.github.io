@@ -9,7 +9,7 @@ tags: [llm, nvidia, jetson, benchmark, hermes-agent]
 
 Small AI computers are usually sold with large dreams and shitty memory buses.
 
-![Finished](assets/img/jetson/jetson_finished_2.png)
+![Finished](/assets/img/jetson-orin-nx-vram-tuning/jetson_finished_2.png)
 
 I have a [ridiculous server](/posts/hopper/) that pulls a few kilowatts, but I wanted a local Hermes Agent box that could sit on a shelf, stay near silent, draw laptop-class power, and still run a serious model with enough context for real agent work: always available, and cheap enough that leaving it on doesn’t generate anxiety.
 
@@ -28,25 +28,25 @@ That changes the benchmark question a bit. I do not only care which GGUF gives t
 I have a [Seed Studio Jetson J4012 module](https://www.seeedstudio.com/reComputer-J4012-p-5586.html). The thing runs at 25 watts... until Nvidia released a new patch unlocking MAXN SUPER mode at 40 W! Checking the [Seeed Studio Wiki](https://wiki.seeedstudio.com/reComputer_J4012_Flash_Jetpack/), I found this:
 
 
-![Warning](assets/img/jetson/warning.png)
+![Warning](/assets/img/jetson-orin-nx-vram-tuning/warning.png)
 
 ... OK, now I *have to do it*.  
 
-![alt text](../assets/img/jetson/wair_cpu_cooler.jpg)
+![alt text](/assets/img/jetson-orin-nx-vram-tuning/wair_cpu_cooler.jpg)
 
 I found this CPU cooler on the 'bay: [ThermalTake WAir CPU Cooler](https://www.thermaltake.com/wair-cpu-cooler.html), and decided it was the perfect fit for the teeny-tiny compute module in the Seeed Studio case.
 
-![Heatsink](../assets/img/jetson/heatsink.png)
+![Heatsink](/assets/img/jetson-orin-nx-vram-tuning/heatsink.png)
 *The Jetson compute module, the original small heat sink, what was left after the hacksaw, and the polished spacer material.*
 
 I hacked the heatsink in half, snipped off the remaining stumpy fins, and sanded the leftover chunk of aluminium down over a cold beer. I found a flat-enough marble tile, and went through a few grades of sand paper until I got bored.
 
 The next bit was breaking out the calipers, measuring everything to death, and designing a new case that fit with the comically large cooler. This took too many iterations, but PLA filament is cheap. Remember the rule of design in the 3D printing era: ***Measure Twice, Print 5 Times***
 
-![Design](../assets/img/jetson/designing.png)
+![Design](/assets/img/jetson-orin-nx-vram-tuning/designing.png)
 *Measuring the cooler dimensions, designing the new case lid in Fusion 360, and the final 3D print from the Bambu Lab X1 Carbon.*
 
-![Finished](../assets/img/jetson/jetson_finished_3.jpeg)
+![Finished](/assets/img/jetson-orin-nx-vram-tuning/jetson_finished_3.jpeg)
 
 Pretty slick, right? It is a quiet thermal solution that lets the Jetson hold useful clocks during sustained llama.cpp generation. That matters more than peak benchmark numbers. A local agent box that is fast for thirty seconds and then thermally throttles is not a useful 'always-on' appliance.
 
