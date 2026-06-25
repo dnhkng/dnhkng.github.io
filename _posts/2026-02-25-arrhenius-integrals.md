@@ -52,7 +52,7 @@ Because tryptophan fluorescence changes with temperature even when the protein i
 
 I wrote a Python script using a Levenberg-Marquardt minimizer to fit this analytical abomination directly to the raw 350/330nm ratio. 
 
-![Figure 1:](assets/img/amylase.png)
+![Figure 1:](/assets/img/arrhenius-integrals/amylase.png)
 
 *Fitting the Arrhenius integral to an alpha-Amylase melt.*
 
@@ -82,7 +82,7 @@ This multi-ramp method is incredibly robust. The problem? It is slow and eats up
 
 But when I actually tested it across different heating rates (e.g., 1 K/min vs 5 K/min), I found a fascinating anomaly. The Activation Energy calculated from a single trace *changed* depending on how fast the machine was heating. 
 
-![Figure 2: The ramp rate anomaly. a) holo-Transferrin, b) alpha-Amylase. Upper diagrams show the "ground truth" Ea derivation using the multi-ramp Kissinger equation (243.0 kJ/mol and 318.1 kJ/mol, respectively). Lower diagrams show the calculated Ea from single traces at various temperatures. Interestingly, the single-trace predictions drift wildly at low ramp rates, only asymptoting to the 'true' multi-ramp values at high speeds.](assets/img/ea.png)
+![Figure 2: The ramp rate anomaly. a) holo-Transferrin, b) alpha-Amylase. Upper diagrams show the "ground truth" Ea derivation using the multi-ramp Kissinger equation (243.0 kJ/mol and 318.1 kJ/mol, respectively). Lower diagrams show the calculated Ea from single traces at various temperatures. Interestingly, the single-trace predictions drift wildly at low ramp rates, only asymptoting to the 'true' multi-ramp values at high speeds.](/assets/img/arrhenius-integrals/ea.png)
 
 If $E_a$ is an intrinsic thermodynamic barrier, it shouldn't care how fast the Prometheus is heating the sample. But it did. This wasn't a bug in the code; it was our 2-state model reaching the absolute edge of its biophysical validity. 
 
@@ -108,7 +108,7 @@ If the protein was reversible, we modeled the renaturation using the Van’t Hof
  
 $$ F(T) = \frac{F_N(T) + F_U(T) \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)}{1 + \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)} $$
 
-![Figure 3: ](assets/img/laser.png)
+![Figure 3: ](/assets/img/arrhenius-integrals/laser.png)
 
 *1480nm Laser pulsing. Each vertical blue line (yes, there are lots), is the sample being heated or cooled ridiculously fast. Why fast cooling? We are only heating a teeny tiny sample, at the focal point of the laser, and as soon as its turned off, the bulk solution around it cools and replaces the targetted zone. You can clearly see the reversible renaturation baseline (blue) pulling away from the forward melt curve (green) the moment irreversible aggregation kicks in.*
 

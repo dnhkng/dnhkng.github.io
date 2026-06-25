@@ -5,7 +5,7 @@ tags: [LLMs, Neurobiology, Qwen, Phi, Distillation, LocalLLaMA]
 math: true
 ---
 
-![Brain Atlas](/assets/img/brain_atlas.png)
+![Brain Atlas](/assets/img/small-llms/brain_atlas.png)
 
 ***Speculative Article - caveat emptor***
 
