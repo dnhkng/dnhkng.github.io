@@ -40,6 +40,12 @@ And a Magic 8-Ball to try: ***ask it your question, and receive exactly one answ
 
 <small><sup>*</sup>This offer is exclusive to Everettians; Copenhagenists will receive one answer only, and remain in the boring-interpretation universe.</small>
 
+
+<!-- markdownlint-disable -->
+> **Disclaimer**: Yes, this thing is really connected to my Quantum Random Number Generator, running in my basement in Bavaria. It might go offline occasionally!
+{: .prompt-danger }
+<!-- markdownlint-restore -->
+
 <a href="#magic-8-ball-target" onclick="event.preventDefault(); history.replaceState(null, '', '#the-quantum-magic-8-ball'); [0, 100, 300, 700, 1200].forEach(function(delay) { setTimeout(function() { document.getElementById('magic-8-ball-target').scrollIntoView(); }, delay); });">
   <span role="img" aria-label="8-ball" style="display:block; width:100%; aspect-ratio:1328 / 1302; background:url('/assets/img/building-the-beam-universe-splitter/8-ball.png') center / contain no-repeat;"></span>
 </a>
@@ -788,9 +794,9 @@ Long captures are collected in resumable blocks, usually 10 million bits at a ti
 
 ![testing](/assets/img/building-the-beam-universe-splitter/dilbert.png){: width="719" height="229" }
 
-The Validation section above leans on quick smoke tests. The heavier hammer is the full NIST Statistical Test Suite, and it earns its own section because *running it correctly* turned out to be half the battle.
+The Validation section above were a bunch of quick smoke tests.  They did the job, and found a few architectural bugs that were easily fixed.  The *heavier hammer* is the full NIST Statistical Test Suite.
 
-First, what STS is and isn't. NIST STS is not a certification machine, and it does not prove that a generator is quantum, secure, or physically well understood. What it is *spectacularly* good at is detecting streams with obvious statistical structure: bias, bad runs, repeated templates, linear-complexity problems, serial dependence, strange random-walk behaviour, and the other broad ways fake randomness can be uncovered. *Passing STS does not make you a good QRNG.* ***Failing it makes you a bad one.***
+First, what STS is and isn't: NIST STS is not a certification machine, and it does not prove that a generator is quantum, secure, or physically well understood (*that's a job for this blog article*). What it is *spectacularly* good at is detecting streams with obvious statistical structure: bias, bad runs, repeated templates, linear-complexity problems, serial dependence, strange random-walk behaviour, and the other broad ways fake randomness can be uncovered. *Passing STS does not make you a good QRNG.* ***Failing it makes you a bad one.***
 
 Provenance matters, so long captures live as resumable 10M-bit blocks, each with a sidecar JSON of capture metadata and `/health` snapshots. A block is only accepted if it has the expected size, the expected extractor settings, no FIFO underflow or overflow, plausible rates, and sane detector balance.
 
@@ -814,11 +820,11 @@ python tools/qrng_make_nist_input.py `
   --settings global_blank=5375,toeplitz_level=4
 ```
 
-This analysis ran in two acts. **Act one: does the thing really work?** I gave the conservative **level-3 Toeplitz** baseline a 600M-bit run, and it passed cleanly — 600 one-megabit sequences, 188 report rows, no pass-rate failures, and no p-value uniformity failures below the NIST threshold. That established the floor: ***at level 3 the stream is solid.***
+This analysis ran in two acts. *Act one: does the thing really work?* I gave the conservative *level-3 Toeplitz* baseline a 600M-bit run, and it passed cleanly — 600 one-megabit sequences, 188 report rows, no pass-rate failures, and no p-value uniformity failures below the NIST threshold. That established the floor: **at level 3 the stream is solid.**
 
-**Act two: now push for performance.** The relaxed **level-4 Toeplitz** setting is the one that buys the extra output bits, so the question was whether it survived the same scrutiny. The first 100M-bit run was *almost* clean, no p-value uniformity value fell below `0.0001`, but one Random Excursions row came in at `55/59`. That test only had 59 eligible sequences (*Random Excursions runs only on sequences with enough random-walk cycles*), so it is inherently noisier than the 100-sequence rows. The honest read at that point was "near-pass, not clean pass," and the temptation was to either wave it away or retreat to level 3.
+*Act two: now push for performance.* The relaxed *level-4 Toeplitz* setting is the one that buys the extra output bits, so the question was whether it survived the same scrutiny. The first 100M-bit run was *almost* clean, no p-value uniformity value fell below 0.0001, but one Random Excursions row came in at 55/59. That test only had 59 eligible sequences (*Random Excursions runs only on sequences with enough random-walk cycles*), so it is inherently noisier than the 100-sequence rows. The honest read at that point was "near-pass, not clean pass," and the temptation was to either wave it away or retreat to level 3.
 
-The right answer to a marginal result on a **smallish** dataset is a **bigger** dataset, so I scaled the level-4 capture out to a full billion bits. At 1B bits the relaxed configuration held up: the marginal Random Excursions wobble washed out as the eligible-sequence count grew, and nothing systematic took its place.
+The right answer to a marginal result on a *smallish* dataset is a *bigger* dataset, so I scaled the level-4 capture out to a full billion bits. At 1B bits the relaxed configuration held up: the marginal Random Excursions wobble washed out as the eligible-sequence count grew, and nothing systematic took its place.
 
 ---
 
@@ -830,7 +836,7 @@ The demo is intentionally whimsical, but the data path is the same one used by t
 
 One click, five bits, twenty answers, twenty multiverse branches.
 
-Wait, ***isn't 5 bits 32 possible outcomes, not 20?*** We consume the QRNG stream in 5-bit groups, interpreting each group as an unsigned integer from 0 to 31. Values 0 through 19 map directly to the 20 Magic 8 Ball responses. Values 20 through 31 are rejected and the next 5-bit group is tried. This rejection-sampling step keeps every answer exactly equally likely, avoiding the bias.
+Wait, *isn't 5 bits 32 possible outcomes, not 20?* We consume the QRNG stream in 5-bit groups, interpreting each group as an unsigned integer from 0 to 31. Values 0 through 19 map directly to the 20 Magic 8 Ball responses. Values 20 through 31 are rejected and the next 5-bit group is tried. This rejection-sampling step keeps every answer exactly equally likely, avoiding the bias.
 
 <span id="magic-8-ball-target"></span>
 
@@ -842,13 +848,13 @@ Wait, ***isn't 5 bits 32 possible outcomes, not 20?*** We consume the QRNG strea
   style="width:100%; max-width:680px; height:860px; border:0; border-radius:12px; background:#070612;"
 ></iframe>
 
-This is a complete Quantum Lever! But it has a fatal problems: ***The answer has to fit the question.*** "*Should I name my daughter Clara or Imogen?*" doesn't have a slot on an icosahedron. You can't fix this by adding more faces. The fix is an output space rich enough to fit any question, *which means natural language.*
+This is a complete Quantum Lever! But it has a fatal problems: *The answer has to fit the question.* "*Should I name my daughter Clara or Imogen?*" doesn't have a slot on an icosahedron. You can't fix this by adding more faces. The fix is an output space rich enough to fit any question, *which means natural language.*
 
 > That is focus of the next post...
 
 ---
 
-## What I Would Build Differently
+## Conclusion
 
 The funny thing about a QRNG is that generating random-looking bits is not the hard part. The hard part is proving the bits are not just your detector recovery curve wearing a trench coat.
 
