@@ -601,6 +601,67 @@ That split gives me two cool thing: Port `5000` is for really random numbers. Po
 
 ---
 
+## How "Quantum" is the bit, really?
+
+This section exists because fun discussion with [bregav on r/FPGA](https://www.reddit.com/r/FPGA/comments/1uffhl6/comment/otz3jvg/). The extractor removes bias, but that just raises the real question: of the entropy that survives, *how much is genuine Born collapse* vs thermal junk that *looks* random? bregav proposed pinning that down with the [**purity**](https://en.wikipedia.org/wiki/Purity_(quantum_mechanics)) of the source state.  Worth working through, because the corrected version is computable from things I already measured.
+
+Purity is:
+
+$$ \mathrm{Tr}(\rho^2) = \int S(\omega)^2\, d\omega $$
+
+the inverse participation ratio of the normalized spectrum: basically $1/N_\text{eff}$, the number of thermal modes I'm populating. Basically it's a measure of how alike my photons are. High purity means they're near-clones — same colour, same mode, one tight monochromatic formation of troops. Low purity means they are smeared across many wavelengths and angles, a mob of unruly photons. The later is what my LED broadband LED delivers, and why bregav brought up the topic.
+
+The problem I think is that purity is a property of the ***input state alone***. The thermal contamination of the *output bit* depends on input $\times$ coupling, so on exactly how mode-dependent the beam splitter is. The splitter response $R(\lambda,\theta)$ never appears anywhere in $\mathrm{Tr}(\rho^2)$, so purity structurally cannot be the quantum fraction of the bit, right?
+
+Let's take this to the extreme, for illustration. Take a *maximally impure source* (purity ($\to 1/N_\text{eff}$)), and run it through a *perfectly* mode-independent 50/50 splitter. Every mode now gives ($P(A \mid m) = \tfrac{1}{2}$) exactly, so knowing the mode tells you nothing about the bit —> the output is pure Born collapse *despite* a source that's as thermal as it gets. Purity is "maximally contaminated"; the bit is "perfectly quantum"; and the bit is the thing you sample. Contamination isn't set by how mixed the input is, it's set by how much the splitter distinguishes the mixture.
+
+A perfectly flat splitter is of course an idealization; real dielectric coatings ripple across $\lambda$ and $\theta$, which is the entire point of what follows.
+
+
+### The right object
+
+Decompose the output bit $X$ against the thermal mode $M$:
+
+$$ H(X) = \underbrace{H(X \mid M)}_{\text{Born}} + \underbrace{I(X;M)}_{\text{thermal}} $$
+
+$H(X \mid M)$ is what's left when an observer knows *exactly* which mode each photon was in, that's the irreducibly quantum part. $I(X;M)$ is the mutual information between mode and bit: precisely the thermal leakage an adversary who knew the mode could exploit. That mutual information is the "*how much is thermal*" number.
+
+The quantity I actually want is the mode-averaged Born entropy:
+
+$$ H(X \mid M) = \int p(m)\, H_2\!\big(P(A \mid m)\big)\, dm, $$
+
+which is the average of the per-mode entropy (*not* the per-mode bias), and I can compute it from the same spectrum I'd use for purity, weighted by the coating's $R(\lambda,\theta)$.
+
+We write each per-mode probability as $P(A \mid m) = \tfrac{1}{2} + \varepsilon_m$ and expand.[^expansion] To second order,
+
+$$ H(X \mid M) \approx 1 - \tfrac{2}{\ln 2}\,\langle \varepsilon_m^2 \rangle. $$
+
+The *marginal* bit only ever sees the mean bias, $H(X) \approx 1 - \tfrac{2}{\ln 2}\,\mu_\varepsilon^2$, so the leakage is
+
+$$ I(X;M) \approx \tfrac{2}{\ln 2}\,\sigma_\varepsilon^2. $$
+
+The thermal leakage is the **variance** of the splitter bias across populated modes, not the mean. The mean bias is exactly what von Neumann debiasing and the Toeplitz extractor already strip out; *the variance is the irreducibly mode-correlated part that survives them*.
+
+### The Quantum Spec for this Device
+
+Let's figure out a ballpark estimate for my build: The bias varies only a few percent across the LED's spectral and angular spread, so $P(A \mid m) \in {\sim}[0.47, 0.53]$. Taking the edge of that band as a conservative floor, $H_2(0.53) \approx 0.997$ bits, although the population-averaged $H(X \mid M)$ is *higher* than this, since the worst mode is rare, so treat $0.997$ as a floor rather than the mean. The leakage is $I(X;M) \approx \tfrac{2}{\ln 2}\sigma_\varepsilon^2 \approx 10^{-3}$ bits.
+
+One important refinement before anyone feeds these to an extractor: *$0.997$ is a Shannon number, and the extractor doesn't run on Shannon entropy*, ***it runs on min-entropy.*** Against the same adversary-knows-$M$ that justified $I(X;M)$ in the first place, the guessing probability is $p_\text{guess} = \tfrac{1}{2} + \langle\lvert \varepsilon_m \rvert\rangle$, so the conditional min-entropy is:
+
+$$ H_\infty(X \mid M) = -\log_2\!\big(\tfrac{1}{2} + \langle\lvert \varepsilon_m \rvert\rangle\big) \approx 1 - \tfrac{2}{\ln 2}\,\langle\lvert \varepsilon_m \rvert\rangle. $$
+
+That's **linear** in the bias, not quadratic. At the worst mode $-\log_2 0.53 \approx 0.916$ bits; averaged across the band it sits around $0.95$. So the extractor has to compress a few percent harder than the Shannon figure implies. 
+
+That basicallay gives us the specs for this DIY QRNG:
+
+- **Shannon quantum content** $H(X \mid M) \gtrsim 0.997$ bits — how much of the bit is collapse vs thermal. 
+- **Min-entropy** $H_\infty(X \mid M) \approx 0.95$ bits (floor $\approx 0.92$ at the worst mode) — the seed budget the Toeplitz extractor actually has to work with.
+- **Uniformity** $\approx 0.999$ — the marginal bias after debiasing. 
+
+[^expansion]: $H_2(p)$ in bits has second derivative $-4/\ln 2$ at $p = \tfrac{1}{2}$, giving $H_2(\tfrac{1}{2} + \varepsilon) = 1 - \tfrac{2}{\ln 2}\varepsilon^2 + O(\varepsilon^4)$. For the min-entropy line, the average guessing probability is $p_\text{guess} = \sum_m p(m)\,\max\big(P(A \mid m),\, 1 - P(A \mid m)\big) = \tfrac{1}{2} + \langle\lvert \varepsilon_m \rvert\rangle$, so $H_\infty = -\log_2(\tfrac{1}{2} + \langle\lvert \varepsilon_m \rvert\rangle) = 1 - \log_2(1 + 2\langle\lvert \varepsilon_m \rvert\rangle) \approx 1 - \tfrac{2}{\ln 2}\langle\lvert \varepsilon_m \rvert\rangle$.
+
+---
+
 ## Board Software
 
 The QRNG fabric is memory mapped at `0x40600000`. `qrngd` runs on the Red Pitaya ARM core and owns normal access to this register block.
@@ -796,3 +857,5 @@ If I started again, I would build the diagnostics first: timestamped event captu
 ***The most satisfying final shape is not a single clever trick. It is a stack of small honest decisions.***
 
 That is the thing I like most about the finished apparatus. It is not magic because it hides the mess. It is magic because the mess is visible, measured, and still produces a little stream of universe-splitter bits.
+
+## Appendix
