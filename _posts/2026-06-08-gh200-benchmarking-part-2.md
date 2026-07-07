@@ -18,6 +18,8 @@ This is that follow-up (*massively delayed by a much cooler project*). The workl
 
 ***TL;DR: For DSv4Flash on this dual GH200 box, use the Canada-Quant checkpoint, enable MTP, benchmark the acceptance rate, and avoid launch paths that compile TileLang kernels while serving.***
 
+> Now with DSpark-goodness; see the Addendum at the bottom
+
 ## The System Reminder
 
 The machine is a dual Grace Hopper workstation:
@@ -325,3 +327,129 @@ The next step was to ask what happens when the model is too large for this strat
 The robust lessons are: avoid unnecessary cross-GH200 traffic, use the checkpoint whose active path best matches the hardware, treat MTP level as a benchmarked parameter, and watch both MTP acceptance and runtime kernel compilation.
 
 In the high-acceptance sweep, getting MTP working gave me a >60 percent improvement for the single-stream benchmark, and I opened this as a narrow upstream vLLM PR: [vllm-project/vllm#44847](https://github.com/vllm-project/vllm/pull/44847).
+
+## Addendum: DSpark on current vLLM
+
+After the original write-up, the DeepSeek V4 Flash path moved again. The new path is not the old `--spec-method mtp` interface. DSpark speculative decoding is now enabled through `--speculative-config`:
+
+```bash
+--speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"greedy"}'
+```
+
+I tested this against `deepseek-ai/DeepSeek-V4-Flash-DSpark` on the same dual-GH200 workstation, using the same benchmark shape as the Flash runs above:
+
+| Setting                   |       Value |
+| ------------------------- | ----------: |
+| Prompt length             | 8192 tokens |
+| Output length             | 1024 tokens |
+| Number of prompts         |           5 |
+| Max concurrency           |           1 |
+| Tensor parallelism        |           2 |
+| `max_model_len`           |       32768 |
+| `max_num_batched_tokens`  |        8192 |
+| `max_num_seqs`            |           1 |
+| Sampling temperature      |           0 |
+| DSpark speculative tokens |           7 |
+| Draft sampling            |      greedy |
+
+### PRs needed
+
+Stock vLLM `main` already includes [#47716](https://github.com/vllm-project/vllm/pull/47716), which fixes the main DeepSeek V4 `fp8_ds_mla` KV reshape problem. That PR matters because the DSpark path uses the DeepSeek-specific 584-byte-per-token KV layout; without the fix, the SWA cache can be reshaped as the ordinary 512-byte layout and fail during sparse MLA decode.
+
+I also pulled two follow-up PRs on top of current `main`:
+
+- [#47618](https://github.com/vllm-project/vllm/pull/47618): unifies per-layer KV cache dtype selection across the v1/v2 model runners.
+- [#47776](https://github.com/vllm-project/vllm/pull/47776): preserves `kv_quant_mode` through the SWA MLA spec merge/unify path and adds a DSpark regression config.
+
+The local merge sequence was roughly:
+
+```bash
+git fetch upstream main --prune
+git merge upstream/main
+
+git fetch upstream pull/47618/head:pr-47618
+git merge pr-47618
+
+git fetch upstream pull/47776/head:pr-47776
+git merge pr-47776
+```
+
+In my fork I also needed three small merge-forward fixes before the server would actually run. These were compatibility fixes around my local branch state, not the core DSpark performance work:
+
+1. Lazy-import the ROCm DeepSeek V4 helper to avoid a circular import on NVIDIA.
+2. Guard `state.openai_serving_render` in generate-mode startup.
+3. Pass `model_config` into `SamplingParams._validate_structured_outputs()` after an upstream signature change.
+
+After that, the DSpark server started cleanly, loaded the draft model, captured CUDA graphs, and served requests.
+
+### Launch Config
+
+The important serving shape was:
+
+```bash
+vllm serve /mnt/storage8tb_2/deepseek-ai/DeepSeek-V4-Flash-DSpark \
+  --host 127.0.0.1 \
+  --port 8020 \
+  --served-model-name dsv4-dspark \
+  --trust-remote-code \
+  --tokenizer-mode deepseek_v4 \
+  --distributed-executor-backend mp \
+  --tensor-parallel-size 2 \
+  --pipeline-parallel-size 1 \
+  --max-model-len 32768 \
+  --max-num-batched-tokens 8192 \
+  --max-num-seqs 1 \
+  --block-size 256 \
+  --gpu-memory-utilization 0.95 \
+  --kv-cache-dtype fp8 \
+  --generation-config vllm \
+  --moe-backend auto \
+  --disable-custom-all-reduce \
+  --safetensors-load-strategy prefetch \
+  --safetensors-prefetch-num-threads 4 \
+  --safetensors-prefetch-block-size 67108864 \
+  --speculative-config '{"method":"dspark","num_speculative_tokens":7,"draft_sample_method":"greedy"}'
+```
+
+I kept the same topology assumptions as before: TP2, custom all-reduce disabled, FP8 KV cache, and a single active request stream.
+
+### Results
+
+The first corrected run was misleading if you only looked at the warm pass. Decode itself was fast, but one TTFT outlier dragged the headline throughput down:
+
+| Pass | Output throughput | Mean TPOT | Median TTFT | Mean TTFT |
+| ---- | ----------------: | --------: | ----------: | --------: |
+| Cold |       353.4 tok/s |   1.93 ms |      800 ms |    922 ms |
+| Warm |       142.4 tok/s |   1.92 ms |      299 ms |   5227 ms |
+
+That looked strange, so I reran the benchmark ten times against one warmed server and dropped the fastest and slowest run by output throughput.
+
+The 10-run trimmed result was:
+
+| Metric            | Trimmed mean | Trimmed median |
+| ----------------- | -----------: | -------------: |
+| Output throughput |  383.3 tok/s |    408.3 tok/s |
+| Mean TPOT         |      2.31 ms |        2.16 ms |
+| Median TPOT       |      2.20 ms |        2.00 ms |
+| Mean TTFT         |       366 ms |         285 ms |
+| Median TTFT       |       347 ms |         279 ms |
+
+The dropped runs were:
+
+| Dropped run | Reason  | Output throughput |
+| ----------- | ------- | ----------------: |
+| Run 02      | slowest |       125.9 tok/s |
+| Run 04      | fastest |       454.5 tok/s |
+
+So the practical result is much better than the one-off warm number suggested. With DSpark K=7, the machine is not merely matching the earlier MTP results; in this benchmark shape it is substantially faster on output throughput, with steady-state TPOT around 2 ms.
+
+### Updated takeaway
+
+For this dual-GH200 box, current vLLM plus the DSpark KV-cache fixes gives a much stronger DeepSeek V4 Flash result than the earlier MTP path:
+
+| Path                                    | Best/representative output throughput |
+| --------------------------------------- | ------------------------------------: |
+| Earlier Canada MTP3 high-acceptance run |                       about 193 tok/s |
+| DSpark K=7, 10-run trimmed median       |                       about 408 tok/s |
+
+Pretty damn awesome, but not a universal DSpark number, YMMV. It is the result for this long-prompt, long-generation, batch-1 benchmark on this topology. But it changes the practical conclusion: if you are running DeepSeek V4 Flash on GH200-class hardware today, the DSpark path is worth testing first, provided you have the KV-cache fixes in place.
