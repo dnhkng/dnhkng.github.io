@@ -864,4 +864,36 @@ If I started again, I would build the diagnostics first: timestamped event captu
 
 That is the thing I like most about the finished apparatus. It is not magic because it hides the mess. It is magic because the mess is visible, measured, and still produces a little stream of universe-splitter bits.
 
-## Appendix
+---
+
+## Addendum: Hardware Upgrade - The Live Status Matrix
+
+Because the machine already had a non-consuming latest-value tap, it was irresistible to add a tiny live display. A WS2812B 8x8 RGB LED matrix hangs off the Red Pitaya MOSI pin and runs from a small independent C program on the ARM core. It polls /health and the latest QRNG/Lever values, then paints a status row plus a random "rain" display.
+
+The first row is boring on purpose:
+
+|  LED | Meaning                      |
+| ---: | ---------------------------- |
+|    0 | Bitstream / daemon heartbeat |
+|    1 | LED enable                   |
+|    2 | PMT occupancy                |
+|    3 | ADC clipping                 |
+|    4 | A/B balance                  |
+|    5 | Lever rate                   |
+|    6 | QRNG rate                    |
+|    7 | FIFO state                   |
+
+The FIFO LED uses the same meanings as the real panel: **red** means a real underflow or a stopped source while empty, **yellow** means the buffer is low and being drained but the source is still producing, **orange** means full or under overflow pressure, and **green** means ordinary buffered state.
+
+The remaining 56 LEDs show live random data. At roughly 2 kbit/s, mapping one bit per LED would update too fast to see, so the display uses a bit-accurate rain mode: the consumed display bits determine the color and motion, while the refresh runs at a human-friendly rate. The display is explicitly not the entropy consumer. It samples the latest taps so the real TCP QRNG and Lever streams remain available.
+
+This also had its own tiny hardware adventure. WS2812 timing is fussy, the LED panel latches nonsense spectacularly, and an early bad waveform produced the classic all-white full-bright panic state. The working version uses SPI at about 3.2 MHz with a 4-bit encoding for each WS2812 data bit, scoped on MOSI before trusting the panel. Single red pixel first; then the matrix; then the rain.
+
+Before the physical panel worked, I built a fake one in HTML. That turned out to be more useful than expected: it made the status-row design visible, let me try different random-data displays without touching hardware, and produced the "rain" mode that eventually became the live display.
+
+<iframe
+  src="/assets/interactive/qrng/ws2812_panel_demo.html"
+  title="Simulated QRNG WS2812B panel"
+  style="width: 100%; height: 610px; border: 1px solid #343a42; border-radius: 8px; background: #101214;"
+  loading="lazy">
+</iframe>
