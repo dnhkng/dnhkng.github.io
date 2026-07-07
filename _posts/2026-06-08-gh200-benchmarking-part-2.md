@@ -374,11 +374,7 @@ git fetch upstream pull/47776/head:pr-47776
 git merge pr-47776
 ```
 
-In my fork I also needed three small merge-forward fixes before the server would actually run. These were compatibility fixes around my local branch state, not the core DSpark performance work:
-
-1. Lazy-import the ROCm DeepSeek V4 helper to avoid a circular import on NVIDIA.
-2. Guard `state.openai_serving_render` in generate-mode startup.
-3. Pass `model_config` into `SamplingParams._validate_structured_outputs()` after an upstream signature change.
+After merging current upstream/main and the DSpark follow-up PRs, I dropped my older Canada/MTP fallback patch from DeepSeekV4Attention and used the current upstream attention implementation instead. The only local fixes I still needed were branch-integration cleanup: a generate-mode guard for my quantum defaults hook (*more on that in a later post*), and a SamplingParams call-site update after an upstream structured-output signature change. In other words, the DSpark result below is not relying on the old Canada-specific O-projection fallback; it is current vLLM plus the DSpark KV-cache fixes.
 
 After that, the DSpark server started cleanly, loaded the draft model, captured CUDA graphs, and served requests.
 
