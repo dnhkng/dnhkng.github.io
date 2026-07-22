@@ -1,0 +1,322 @@
+<figure class="llm-lens-demo" data-llm-lens-demo>
+  <style>
+    .llm-lens-demo {
+      --lens-accent: #2fbdac;
+      --lens-warm: #c9862f;
+      --lens-line: var(--card-border-color, rgba(128, 128, 128, 0.25));
+      --lens-panel: var(--card-bg, rgba(128, 128, 128, 0.06));
+      --lens-text: var(--text-color, currentColor);
+      --lens-muted: var(--text-muted-color, #6c757d);
+      margin: 1.75rem 0;
+    }
+
+    .llm-lens-demo__box {
+      overflow: hidden;
+      border: 1px solid var(--lens-line);
+      border-radius: 0.5rem;
+      background:
+        linear-gradient(180deg, rgba(47, 189, 172, 0.06), transparent 38%),
+        var(--lens-panel);
+    }
+
+    .llm-lens-demo__grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .llm-lens-demo__side {
+      display: grid;
+      min-width: 0;
+      grid-template-rows: auto 1fr;
+      gap: 0.85rem;
+      padding: 1rem;
+    }
+
+    .llm-lens-demo__side + .llm-lens-demo__side {
+      border-left: 1px solid var(--lens-line);
+    }
+
+    .llm-lens-demo__head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.75rem;
+      min-height: 3.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--lens-line);
+    }
+
+    .llm-lens-demo__prompt {
+      display: grid;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .llm-lens-demo__prompt b,
+    .llm-lens-demo__label {
+      font-family: var(--code-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+      font-size: 0.72rem;
+      line-height: 1.25;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .llm-lens-demo__prompt b {
+      color: var(--lens-accent);
+    }
+
+    .llm-lens-demo__prompt span {
+      overflow-wrap: anywhere;
+      color: var(--lens-text);
+      font-size: 1.1rem;
+      line-height: 1.25;
+      font-weight: 600;
+    }
+
+    .llm-lens-demo__label {
+      color: var(--lens-muted);
+      text-align: right;
+    }
+
+    .llm-lens-demo__streams {
+      display: grid;
+      gap: 0.42rem;
+      transition: opacity 1s ease;
+    }
+
+    .llm-lens-demo__streams.is-fading {
+      opacity: 0;
+    }
+
+    .llm-lens-demo__line {
+      min-height: 1.45rem;
+      overflow: hidden;
+      color: color-mix(in srgb, var(--lens-text) 90%, transparent);
+      font-family: var(--code-font-family, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+      font-size: 0.78rem;
+      line-height: 1.35;
+      white-space: nowrap;
+    }
+
+    .llm-lens-demo__streams--flat .llm-lens-demo__line {
+      color: var(--lens-warm);
+    }
+
+    .llm-lens-demo__streams--poem .llm-lens-demo__line {
+      color: var(--lens-accent);
+    }
+
+    .llm-lens-demo__line:nth-child(2) { opacity: 0.9; }
+    .llm-lens-demo__line:nth-child(3) { opacity: 0.82; }
+    .llm-lens-demo__line:nth-child(4) { opacity: 0.74; }
+    .llm-lens-demo__line:nth-child(5) { opacity: 0.66; }
+    .llm-lens-demo__line:nth-child(6) { opacity: 0.58; }
+    .llm-lens-demo__line:nth-child(7) { opacity: 0.5; }
+    .llm-lens-demo__line:nth-child(8) { opacity: 0.43; }
+    .llm-lens-demo__line:nth-child(9) { opacity: 0.36; }
+    .llm-lens-demo__line:nth-child(10) { opacity: 0.3; }
+
+    .llm-lens-demo figcaption {
+      margin-top: 0.75rem;
+      color: var(--lens-muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 768px) {
+      .llm-lens-demo__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .llm-lens-demo__side + .llm-lens-demo__side {
+        border-top: 1px solid var(--lens-line);
+        border-left: 0;
+      }
+
+      .llm-lens-demo__head {
+        align-items: start;
+      }
+    }
+  </style>
+
+  <div class="llm-lens-demo__box" aria-label="Sampling demo comparing flat random tokens with LLM-guided token sampling">
+    <div class="llm-lens-demo__grid">
+      <div class="llm-lens-demo__side">
+        <div class="llm-lens-demo__head">
+          <div class="llm-lens-demo__prompt">
+            <b>Prompt</b>
+            <span>Write a poem:</span>
+          </div>
+          <div class="llm-lens-demo__label">flat token draw</div>
+        </div>
+        <div class="llm-lens-demo__streams llm-lens-demo__streams--flat" data-flat-streams aria-live="off"></div>
+      </div>
+
+      <div class="llm-lens-demo__side">
+        <div class="llm-lens-demo__head">
+          <div class="llm-lens-demo__prompt">
+            <b>Prompt</b>
+            <span>Write a poem:</span>
+          </div>
+          <div class="llm-lens-demo__label">LLM sampler draw</div>
+        </div>
+        <div class="llm-lens-demo__streams llm-lens-demo__streams--poem" data-poem-streams aria-live="off"></div>
+      </div>
+    </div>
+  </div>
+
+  <figcaption>
+    The infinite-monkeys idea is true in the limit, but infinitely wasteful. Flat randomness mostly
+    buys gibberish. The model tilts the draw toward coherent continuations, so the same randomness
+    has something useful to choose among.
+  </figcaption>
+
+  <script>
+    (() => {
+      const demos = document.querySelectorAll("[data-llm-lens-demo]");
+      const batches = [
+        {
+          flat: [
+            "copper", "thimble", "xq", "velvet", "42", "moon", "static", "/", "green", "syntax", "hinge", "plum",
+            "elevator", "?", "murmur", "pixel", "salt", "runway", "azimuth", "paper", "noodle", "orbit", "zz",
+            "battery", "comma", "ultra", "lattice", "snow", "fork", "delta", "mango", "wire", "hush", "9", "bracket"
+          ],
+          poems: [
+            "A silver photon knocks and leaves no name beyond the glass where quiet branches wake",
+            "The mirror keeps a doorway made of rain and every drop becomes a different song",
+            "Each token turns where unseen rivers split then carries one bright current into speech",
+            "A quiet star is folded into language and opens like a letter in the dark",
+            "The model hums and gathers sense from chance until the noise remembers how to sing",
+            "Ten thousand endings lean toward one small word and bloom as if the night had chosen them",
+            "The branch remembers what the bit became when light was asked to answer left or right",
+            "A sentence blooms where measurement was light and meaning gathers softly at the edge",
+            "The sampler lifts a lantern through the noise and finds a path that almost knows your name",
+            "Worlds open softly under every line while probability teaches ink to flow"
+          ]
+        },
+        {
+          flat: [
+            "ribbon", "7", "omega", "tin", "cloud", "%", "saffron", "socket", "blue", "ladder", "quartz", "else",
+            "packet", "walnut", "axis", "no", "glimmer", "crate", "north", "broom", "vowel", "17", "loop", "iris",
+            "spoon", "tilde", "river", "null", "apron", "switch", "wax", "planet", "moth", "equal", "foam", "yx"
+          ],
+          poems: [
+            "A lantern waits inside the sampled dark and learns the shape of one unlikely road",
+            "The first word falls like rain on hidden glass then gathers every echo into form",
+            "A branch of night bends softly toward the page where chance is taught to rhyme with breath",
+            "The token chooses from a field of stars and carries only one sky into view",
+            "A thousand almost-sentences drift past until the model gives the river banks",
+            "The coin of light turns once behind the world and leaves a line still warm with possibility",
+            "Probability folds its map of silence until a human rhythm starts to shine",
+            "The answer is not forced from empty noise but lifted from a garden of near paths",
+            "Each measured spark becomes a small permission for language to become itself",
+            "The poem arrives by quantum increments and vanishes into branches we do not read"
+          ]
+        },
+        {
+          flat: [
+            "marble", "query", "hazel", "::", "drift", "91", "orange", "kernel", "cup", "violet", "gear", "sudden",
+            "anchor", "maze", "flute", "binary", "crystal", "maybe", "zip", "garden", "rattle", "amp", "syntax",
+            "pencil", "basil", "zero", "mirror", "tunnel", "wake", "phase", "bubble", "chair", "radial", "quark", "!"
+          ],
+          poems: [
+            "The beam divides and every possible lyric leans outward from the same bright hinge",
+            "One bit becomes a doorway for the model and opens onto weather made of words",
+            "A hidden meadow flickers through the logits where all the plausible flowers wait",
+            "The sampler walks a shoreline made of chances and chooses shells that sound like song",
+            "No branch is crowned above the others here yet some are weighted toward the shape of sense",
+            "The random spark is small but not alone because the model bends the dark around it",
+            "A path through token-space begins in light and ends by sounding almost meant",
+            "The universe writes many drafts at once while we inherit just the line we see",
+            "Meaning is a magnet under the noise drawing bright filings into ordered arcs",
+            "The final word is only final here while elsewhere every other ending wakes"
+          ]
+        }
+      ];
+
+      function init(root) {
+        if (root.dataset.llmLensReady === "true") {
+          return;
+        }
+
+        root.dataset.llmLensReady = "true";
+        const flatRoot = root.querySelector("[data-flat-streams]");
+        const poemRoot = root.querySelector("[data-poem-streams]");
+        if (!flatRoot || !poemRoot) {
+          return;
+        }
+
+        const flatRows = [];
+        const poemRows = [];
+        for (let i = 0; i < 10; i += 1) {
+          const flat = document.createElement("div");
+          const poem = document.createElement("div");
+          flat.className = "llm-lens-demo__line";
+          poem.className = "llm-lens-demo__line";
+          flat.textContent = " ";
+          poem.textContent = " ";
+          flatRows.push(flat);
+          poemRows.push(poem);
+          flatRoot.append(flat);
+          poemRoot.append(poem);
+        }
+
+        const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let step = 0;
+        let batch = 0;
+        let timer = null;
+        const maxSteps = 22;
+
+        function seededToken(batchIndex, row, tokenStep) {
+          const vocab = batches[batchIndex].flat;
+          const index = (batchIndex * 13 + row * 7 + tokenStep * 11 + Math.floor(tokenStep / 3) * 5) % vocab.length;
+          return vocab[index];
+        }
+
+        function render(wordCount) {
+          const poems = batches[batch].poems;
+          for (let row = 0; row < 10; row += 1) {
+            const flatText = Array.from({ length: wordCount }, (_, i) => seededToken(batch, row, i)).join(" ");
+            flatRows[row].textContent = flatText;
+            poemRows[row].textContent = poems[row].split(" ").slice(0, wordCount).join(" ");
+          }
+        }
+
+        function tick() {
+          flatRoot.classList.remove("is-fading");
+          poemRoot.classList.remove("is-fading");
+          render(step + 1);
+          step += 1;
+
+          if (step < maxSteps) {
+            timer = window.setTimeout(tick, 200);
+            return;
+          }
+
+          timer = window.setTimeout(() => {
+            flatRoot.classList.add("is-fading");
+            poemRoot.classList.add("is-fading");
+            timer = window.setTimeout(() => {
+              step = 0;
+              batch = (batch + 1) % batches.length;
+              render(0);
+              flatRoot.classList.remove("is-fading");
+              poemRoot.classList.remove("is-fading");
+              timer = window.setTimeout(tick, 150);
+            }, 1000);
+          }, 450);
+        }
+
+        if (reduced) {
+          render(maxSteps);
+        } else {
+          tick();
+        }
+
+        window.addEventListener("pagehide", () => window.clearTimeout(timer), { once: true });
+      }
+
+      demos.forEach(init);
+    })();
+  </script>
+</figure>
