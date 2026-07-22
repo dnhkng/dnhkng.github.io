@@ -9,6 +9,8 @@ mermaid: true
 
 ![cover](/assets/img/building-the-beam-universe-splitter-ii/cover.png){: width="1672" height="941" }
 
+**TL;DR:** Here is the [NotebookLLM Podcast audio version](https://notebooklm.google.com/notebook/fa2e6b33-7a60-40f2-9b57-34d678267c31/artifact/1b41742d-4091-4520-a040-6b71929b29dc?utm_source=nlm_web_share&utm_medium=google_oo&utm_campaign=art_share_1&utm_content=&utm_smc=nlm_web_share_google_oo_art_share_1_).
+
 *In* [*Part 1*](/posts/building-the-beam-universe-splitter/), I built a Quantum Random Number Generator out of a pair of old lab-equipment photomultiplier tubes, a 50:50 beam splitter, and an FPGA, and then capped it with a [*Quantum Magic 8-Ball*](/posts/building-the-beam-universe-splitter/#the-quantum-magic-8-ball). The 8-Ball was the *minimum viable Quantum Lever*: five quantum-derived bits per question -> twenty answers -> *twenty distinct macroscopic multiverse branches*. It pushes individual quantum events into macroscopic events like selecting *"Signs point to Yes"* on the Magic 8-Ball. But we are limited to just twenty canned responses...
 
 *This is Part 2*: the plan here is narrow and practical: take the photon stream from Part 1 and in the spirit of Douglas Adams's [Infinite Improbability Drive](https://hitchhikersguidetoearth.fandom.com/wiki/Infinite_Improbability_Drive) *which passes through every conceivable point in every conceivable universe almost simultaneously*, this is the *finite* improbability drive. It will *drive an LLM through every reachable token sequence* with a Born weight my hardware can resolve, which is far fewer points but a lot more practical to build.
