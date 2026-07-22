@@ -9,13 +9,11 @@ mermaid: true
 
 ![cover](/assets/img/building-the-beam-universe-splitter-ii/cover.png){: width="1672" height="941" }
 
-> Note: This is going to be my ***Voight-Kampff Test***. Either you will think this whole project is amazing AF, or the dumbest shit you have ever read. Nothing in between. Just the way I like it.
-
 *In* [*Part 1*](/posts/building-the-beam-universe-splitter/), I built a Quantum Random Number Generator out of a pair of old lab-equipment photomultiplier tubes, a 50:50 beam splitter, and an FPGA, and then capped it with a [*Quantum Magic 8-Ball*](/posts/building-the-beam-universe-splitter/#the-quantum-magic-8-ball). The 8-Ball was the *minimum viable Quantum Lever*: five quantum-derived bits per question -> twenty answers -> *twenty distinct macroscopic multiverse branches*. It pushes individual quantum events into macroscopic events like selecting *"Signs point to Yes"* on the Magic 8-Ball. But we are limited to just twenty canned responses...
 
-*This is Part 2*, and it is the least philosophical part of the series, which is a strange thing to say about a post whose entire justification is an interpretation of quantum mechanics. But the plan here is narrow and practical: take the photon stream from Part 1 and in the spirit of Douglas Adams's [Infinite Improbability Drive](https://hitchhikersguidetoearth.fandom.com/wiki/Infinite_Improbability_Drive) *which passes through every conceivable point in every conceivable universe almost simultaneously*, this is the *finite* improbability drive. It will *drive an LLM through every reachable token sequence* with a Born weight my hardware can resolve, which is *far fewer points* but a lot more practical to build.
+*This is Part 2*: the plan here is narrow and practical: take the photon stream from Part 1 and in the spirit of Douglas Adams's [Infinite Improbability Drive](https://hitchhikersguidetoearth.fandom.com/wiki/Infinite_Improbability_Drive) *which passes through every conceivable point in every conceivable universe almost simultaneously*, this is the *finite* improbability drive. It will *drive an LLM through every reachable token sequence* with a Born weight my hardware can resolve, which is far fewer points but a lot more practical to build.
 
-We will also hack llama.cpp/vLLM and convert regular large-language-model inference systems that sample randomly into steering wheels that drive us down all possible roads in the multiverse. This requires a few interesting hacks, such as avoiding *silently deleting most of the multiverse*. And as a bonus, *you will be able to run my fork of vLLM or llama.cpp and split the multiverse yourself!*
+We will also hack llama.cpp/vLLM and convert regular large-language-model inference systems that sample randomly into steering wheels that drive us down all possible roads in the multiverse. This requires a few interesting hacks, to avoid deleting most of the potential multiverse branches.
 
 Later, in Part 3 (*unpublished*), we'll unleash the Quantum Rig on the unsuspecting multiverse, armed only with a credit card and root access.
 
@@ -33,8 +31,7 @@ Here's what we'll cover: why the Many-Worlds Interpretation is the entire reason
 
 Everything in this series rests on one choice, so I am going to make it absolutely clear from the beginning:
 
-I choose the [**Many-Worlds Interpretation**](https://en.wikipedia.org/wiki/Many-worlds_interpretation) (MWI) of how our universe operates. The wave-function never collapses. Every outcome with non-zero amplitude is realized in some decohered branch. *Part 3* gives the full history and arguments for and against MWI; here I just need you to hold the stance long enough to see why it changes what an LLM sampler *is* in this interpretation. No quantum woo; just a viable and relatively common interpretation of the math of quantum mechanics.
-
+I choose the [**Many-Worlds Interpretation**](https://en.wikipedia.org/wiki/Many-worlds_interpretation) (MWI) of how our universe operates. The wave-function never collapses. Every outcome with non-zero amplitude is realized in some decohered branch. I just need you to hold the stance long enough to see why it changes what an LLM sampler *is* in this interpretation. No quantum woo; just a viable and relatively common interpretation of the math of quantum mechanics.
 
 ### Just a Sec... Does Using QRNG Make Any *Measurable* Difference?
 
@@ -50,9 +47,9 @@ But the randomness we *see* in the bits is not the point. What the *apparent ran
 
 > Under MWI, when a single photon hits the beam splitter, both detector outcomes occur in parallel: in one branch PMT A fires, in another PMT B does. The ADCs digitize the pulses, the FPGA thresholds them to bits and assembles those bits into 32-bit words. Across the branches, the samplers sees *every possible* 32-bit number — and so *the model samples every possible token*, each in its own universe. The branches aren't a metaphor for the randomness; they're where the *apparent* randomness comes from. From inside any single universe, we see a number and some of us wonder why it was picked randomly. Step up to the multiverse perspective and we see it as it really is: there's a universe for each one! MWI matches the idea that "*God does not play dice with the universe*".
 
-Part 3 of the series will cover the quantum mechanics properly, but one short and defensible reason to take MWI literally is [David Deutsch](https://en.wikipedia.org/wiki/David_Deutsch)'s challenge: a quantum computer with $N$ qubits manipulates $2^N$ complex amplitudes simultaneously. ***For 300 qubits that is more amplitudes than there are particles in the observable universe.*** Something physical is doing an enormous amount of work, and you should be able to *point at it*. Copenhagen says don't ask (*WTF*). Bohm says the guiding wave does it (*a wave that contains exactly the same branching structure MWI has...*). Many-Worlds simply says: the other branches are doing the work, they are as physically real as this one, and that is where the computational resources live. Whatever you think of the answer, the challenge is hard to dismiss.
+Part 3 of the series will cover the quantum mechanics properly, but one short and defensible reason to take MWI literally is [David Deutsch](https://en.wikipedia.org/wiki/David_Deutsch)'s challenge: a quantum computer with $N$ qubits manipulates $2^N$ complex amplitudes simultaneously. ***For 300 qubits that is more amplitudes than there are particles in the observable universe.*** Something physical is doing an enormous amount of work, and you should be able to *point at it*. Copenhagen says don't ask. Bohm says the guiding wave does it (*a wave that contains exactly the same branching structure MWI has...*). Many-Worlds simply says: the other branches are doing the work, they are as physically real as this one, and that is where the computational resources live. Whatever you think of the answer, the challenge is hard to dismiss.
 
-But I am not committing to MWI because of Deutsch. I am committing to an entirely reasonable interpretation of quantum mechanics and pushing it to the logical extremes, because it's entertaining AF. You can pick from any of the mathematically valid interpretations of quantum mechanics you like; ***I choose interesting.***
+But I am not committing to MWI because of Deutsch. I am committing to an entirely reasonable interpretation of quantum mechanics and pushing it to the logical extremes, because it's entertaining. You can pick from any of the mathematically valid interpretations of quantum mechanics you like; I choose interesting.
 
 This post is committing to MWI and seeing what we can engineer:
 
@@ -62,15 +59,13 @@ This post is committing to MWI and seeing what we can engineer:
 
 ## Why Use a Language Model At All?
 
-Before fixing the sampler, one other objection has to be cleared, because it threatens the whole premise.
-
 *If the multiverse realizes every possibility, why use a language model? Just sample tokens uniformly from a Unicode range with quantum randomness. Every possible string exists somewhere in the wave-function, including all of Shakespeare, the perfect recipe for fried chicken and every winning lottery number in a row. Infinite monkeys, but real!*
 
-My answer is the *bowling-ball problem*, a stock example from undergraduate statistical thermodynamics: in principle, every air molecule beneath a bowling ball could happen to move upward at the same instant, and the ball would launch itself at the ceiling. *Nobody has ever seen this happen.* The probability mass on the boring outcome is so overwhelming that the exotic configurations never show up.
+The *bowling-ball problem* is stock example from undergraduate statistical thermodynamics: in principle, every air molecule beneath a bowling ball could happen to move upward at the same instant, and the ball would launch itself at the ceiling. But the probability mass on the boring outcome is so overwhelming that the exotic configurations never show up.
 
-Uniform token sampling has the same shape. The branch where randomly drawn Unicode produces a coherent essay exists, but its Born weight rounds to zero. Yes, the perfect answer is in there, but so every typo and every keyboard smash. Entropy reigns supreme in a uniform distribution.
+Uniform LLM token sampling has the same shape. The branch where randomly drawn Unicode produces a coherent essay exists, but its Born weight rounds to zero. Yes, the perfect answer is in there, but so every typo and every keyboard smash. Entropy reigns supreme in a uniform distribution.
 
-***But an LLM is a lens.*** A good model has compressed an enormous amount of human reasoning into its next-token distribution. It bends probability mass toward continuations *that make sense*, while leaving some wiggle room for the weirdness. It drags the perfect outcomes out of the bowling-ball regime and into the merely *improbable*, where the photons can actually find them.
+A good LLM model has compressed an enormous amount of human reasoning into its next-token distribution. It bends probability mass toward continuations *that make sense*, while leaving some wiggle room for the weirdness. It drags the perfect outcomes out of the bowling-ball regime and into the merely *improbable*, where the photons can actually find them.
 
 That is the entire reason a language model sits in the middle of a quantum-mechanics project. The photons provide the branching. The model provides the *weights* on the branching: it decides which of the reachable continuations are coherent enough to matter. The model is why this device makes the multiverse interesting instead of just generating mostly noise.
 
@@ -78,18 +73,14 @@ That is the entire reason a language model sits in the middle of a quantum-mecha
 
 The lens works in both directions. The hot RL technique behind modern reasoning models is [GRPO](https://arxiv.org/abs/2402.03300): sample a strong model many times on the same hard problem, score the answers, reinforce the good ones. You already do this by hand: when you get a bad reply from a chatbot, just smash the retry button and (*hopefully*) get a better one. GRPO works because frontier models usually *know* the answer, they just don't cough it up on the first try.
 
-Squint through the MWI lens. *Quantum sampling is GRPO's rollout phase, running across decohered branches.* Every retry, in parallel, one per branch, the model's full distribution of answers realized at once. But the catch is brutal and total: we find ourselves in exactly one branch, and the two things that make GRPO actually work are both forbidden to us. We can't recombine the answers (*they are in inaccessible universes*), and we can't nudge ourselves toward a good branch (*that would be quantum woo, and this is not quantum woo*).
-
 So a Quantum LLM is, in this branch, indistinguishable from a regular LLM with a slightly more expensive RNG,  ***except philosophically***. Somewhere, for a sufficiently generous value of *somewhere*, a version of you just got the perfect answer. *You will almost certainly never be that version.*
 
 ---
 ## Cosmicide: How Standard Samplers Delete the Multiverse
 
-Here is where the ordinary inference stack falls apart.
+A regular inference stack is not quantum-friendly out of the box. It needs some surgery first because a 250k-token vocabulary has a long and skinny tail. The bottom 100,000 tokens carry probabilities like $10^{-25}$. LLMs are trained with cross-entropy loss on *real examples*: for any given next-token position there were maybe a dozen or two valid targets in training, and what happens to the other ~249,990 tokens is simply not important to the loss. This shows up as a noisy floor of arbitrary tiny values.
 
-A regular inference stack is not quantum-friendly out of the box. It needs some surgery first because a 250k-token vocabulary has a long and skinny tail. The bottom 100,000 tokens carry probabilities like $10^{-25}$. These are not real probabilities; they are numerical sludge at the bottom of the network's Softmax. LLMs are trained with cross-entropy loss on *real examples*: for any given next-token position there were maybe a dozen or two valid targets in training, and what happens to the other ~249,990 tokens is simply not important to the loss. This shows up as a noisy floor of arbitrary tiny values.
-
-So, standard inference samplers do violent things to that distribution, for good reasons:
+So, standard inference samplers cleverly delete that part of the distribution, for good reasons:
 
 - **`top_k`** keeps the top *k* tokens and deletes the rest
 - **`top_p`** keeps the nucleus (probability mass) and deletes the tail
@@ -101,8 +92,6 @@ These are all sensible for stopping a model from generating weird gibberish, but
 
 **Truncation is cosmicide.**
 
-Under MWI this is not a figure of speech, but here's where need to double click: The photon-level branching still happens; nothing at the sampler can stop the wavefunction from splitting. What the sampler controls is the *map* from micro-branches to macroscopic futures. A fair sampler spreads the $2^{32}$ micro-branches across every token the model assigns mass to, so different branches cash out as different texts, different conversations, different worlds-as-experienced. A truncating sampler redraws that map: every micro-branch that would have reached a tail token is re-pointed at a token in the head. The branch-points still fire, the which-path records still decohere into the environment, but they all purchase the *same* futures. The macroscopic realities that would have contained those continuations are gone from the reachable set. That is the cosmicide: not the deletion of branches, but the deletion of *worlds the branches could have become*.
-
 Every one of those sensible `top_k`-style options commits a tiny cosmicide. If the perfect token for some unlikely-but-real branch was at rank 151, `top_k = 150` erased that world from the entire multiverse. The photons got a vote, and the sampler rigged the election.
 
 The fix is to keep every token reachable, so the right move is a probability *floor*, not a ceiling.
@@ -111,7 +100,7 @@ The fix is to keep every token reachable, so the right move is a probability *fl
 
 The trick is simple: we have $2^{32}$ slots for our logit CDF, right? If rounding minuscule probabilities kills tokens, we can instead guarantee each token a minimum number of slots. The sampler gives each token an integer number of slots proportional to its probability, scaled so the slots sum to $2^{32}$. Any token whose natural slot count would fall below $K$ gets *lifted* to $K$, and the resolved tokens are renormalized to fill the remaining space. Nothing in the deep vocabulary is unreachable!
 
-This costs probability mass, what I call the **multiverse tax**. At a vocabulary of 250k tokens and a [Zipf-shaped](https://en.wikipedia.org/wiki/Zipf%27s_law) distribution with slope $s \approx 1.8$, the headline numbers for $K = 64$ are:
+This costs probability mass, a **multiverse tax**. At a vocabulary of 250k tokens and a [Zipf-shaped](https://en.wikipedia.org/wiki/Zipf%27s_law) distribution with slope $s \approx 1.8$, the headline numbers for $K = 64$ are:
 
 |  $K$ | floor logprob | tokens lifted | original tail mass $$S_K$$ | floor mass $$F_K$$ | multiverse tax $$\Delta_K$$ |
 | ---: | ------------: | ------------: | -------------------------: | -----------------: | --------------------------: |
@@ -213,9 +202,7 @@ flowchart TD
     F -->|no| H["..."]
 ```
 
-This is the general shape of an integer-CDF sampler: the most probable token gets a huge chunk of the address space starting at *zero*, so high-probability tokens align with high-order detector bits. Almost all the decision weight sits in the first few bits. I don't like that at all — *I want lots of bits to pick the next token!* And it's dangerous on physical grounds: any residual defect in the high-order bits of the address (after-pulse residue, ADC quirks, threshold drift) can cause disproportionate effects. A single biased PMT bit can drag whole regions of the CDF off-centre.
-
-The fix does not change the probabilities, only the *geometry*. Insert a bijection $\pi : \text{uint32} \to \text{uint32}$ before the CDF lookup. With a perfectly uniform input, a bijection changes nothing at all: uniform in, uniform out, token distribution untouched. With a *biased* input — which is what real detectors give you — it is where the magic happens: a well-chosen $\pi$ makes each output bit a parity of many input bits, so the CDF boundaries no longer land on convenient bit-prefixes of the raw quantum sample.
+The fix does not change the probabilities, only the *geometry*. Insert a bijection $\pi : \text{uint32} \to \text{uint32}$ before the CDF lookup. With a perfectly uniform input, a bijection changes nothing at all: uniform in, uniform out, token distribution untouched. With a *biased* input (*which is what real detectors give you*), it is where the magic happens: a well-chosen $\pi$ makes each output bit a parity of many input bits, so the CDF boundaries no longer land on convenient bit-prefixes of the raw quantum sample.
 
 The spreader I use is:
 
@@ -243,7 +230,7 @@ Four useful properties fall out:
 - **Cheap:** a handful of instructions per word.
 - **Auditable:** no seed, no magic table, one named construction.
 
-For a parity of $k$ independent biased bits, the residual bias is $\delta^k$. At a 55:45 detector split, $\delta = 0.1$, and the minimum parity fan-in of 15 gives $0.1^{15} = 10^{-15}$ — the detectors can be *visibly* lopsided, and after the spreader the head tokens are biased by one part in a quadrillion. (15 is the worst case: only 15 of the 32 output bits sit at that minimum; the rest draw on 17 or 31 input bits and do even better.)
+For a parity of $k$ independent biased bits, the residual bias is $\delta^k$. At a 55:45 detector split, $\delta = 0.1$, and the minimum parity fan-in of 15 gives $0.1^{15} = 10^{-15}$, the detectors can be *visibly* lopsided, and after the spreader the head tokens are biased by one part in a quadrillion.
 
 The spreader attacks the head of the distribution; the floor attacks the tail.
 
