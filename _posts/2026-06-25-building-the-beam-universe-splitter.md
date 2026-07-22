@@ -50,6 +50,12 @@ And a Magic 8-Ball to try: ***ask it your question, and receive exactly one answ
   <span role="img" aria-label="8-ball" style="display:block; width:100%; aspect-ratio:1328 / 1302; background:url('/assets/img/building-the-beam-universe-splitter/8-ball.png') center / contain no-repeat;"></span>
 </a>
 
+### Warning
+
+> This is going to be a long and technical read. If you are just here to play with the 8-Ball, click the image above...
+![alt text](/assets/img/building-the-beam-universe-splitter/rick_morty.jpg)
+
+
 ## Background
 
 This did not emerge fully formed. Well, the idea *kinda* did, but the final architecture is the survivor of several wrong-but-plausible versions:
