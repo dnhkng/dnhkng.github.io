@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QRNG WS2812 Panel Demo</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101214;
+      --panel: #181b1f;
+      --panel-2: #20242a;
+      --line: #343a42;
+      --text: #eef2f3;
+      --muted: #a9b2b8;
+      --accent: #35c46f;
+      --warn: #f3bf3f;
+      --orange: #ff8e3c;
+      --bad: #ff5364;
+      --blue: #52a8ff;
+      --cell: min(5.2vw, 38px);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 410px) minmax(300px, 1fr);
+      gap: 14px;
+      width: min(980px, calc(100vw - 20px));
+      margin: 0 auto;
+      padding: 12px 0;
+    }
+
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 18px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 650;
+    }
+
+    .status {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(53, 196, 111, 0.8);
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .display-wrap { padding: 12px; }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(8, var(--cell));
+      grid-template-rows: repeat(8, var(--cell));
+      gap: 5px;
+      justify-content: center;
+      padding: 8px;
+      background: #08090a;
+      border: 1px solid #2b3036;
+      border-radius: 8px;
+      box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.65);
+    }
+
+    .led {
+      position: relative;
+      width: var(--cell);
+      height: var(--cell);
+      border-radius: 50%;
+      background: rgb(4, 4, 5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 -4px 10px rgba(0, 0, 0, 0.5);
+      transition: background 120ms linear, box-shadow 120ms linear, transform 120ms linear;
+    }
+
+    .led.status-led::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      pointer-events: none;
+    }
+
+    .caption {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 5px;
+      padding: 0 10px 8px;
+      color: var(--muted);
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .controls {
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .group { display: grid; gap: 4px; }
+
+    label, .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 620;
+      text-transform: uppercase;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    .toggles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 28px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+      text-transform: none;
+      font-weight: 500;
+    }
+
+    .toggle input { accent-color: var(--blue); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .metric {
+      padding: 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .metric .name {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .metric .value {
+      font-variant-numeric: tabular-nums;
+      font-size: 17px;
+      font-weight: 680;
+    }
+
+    .bars {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 66px 1fr 58px;
+      gap: 7px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .track {
+      height: 10px;
+      background: #0b0d0f;
+      border: 1px solid #252a30;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      width: 0%;
+      background: var(--blue);
+      border-radius: inherit;
+    }
+
+    @media (max-width: 640px) {
+      main { grid-template-columns: 1fr; }
+      header { align-items: flex-start; flex-direction: column; }
+      :root { --cell: min(10vw, 40px); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QRNG WS2812B 8x8 Panel</h1>
+      <div class="status"><span class="dot" id="runDot"></span><span id="statusText">simulated 100 ms rain display</span></div>
+    </header>
+
+    <section class="panel display-wrap">
+      <div class="caption">
+        <span>SYS</span><span>LED</span><span>PMT</span><span>ADC</span><span>BAL</span><span>LV</span><span>QRNG</span><span>FIFO</span>
+      </div>
+      <div class="matrix" id="matrix" aria-label="8 by 8 simulated LED panel"></div>
+    </section>
+
+    <section class="panel controls">
+      <div class="group">
+        <div class="label">Lab knobs</div>
+        <div class="toggles">
+          <label class="toggle"><input id="ledEnable" type="checkbox" checked> LED on</label>
+          <label class="toggle"><input id="systemAlive" type="checkbox" checked> System running</label>
+        </div>
+      </div>
+
+      <div class="group">
+        <label for="ledPower">LED power <span id="ledPowerValue">108</span></label>
+        <input id="ledPower" type="range" min="0" max="160" step="1" value="108">
+      </div>
+
+      <div class="group">
+        <label for="pmtA">PMT A sensitivity <span id="pmtAValue">176</span></label>
+        <input id="pmtA" type="range" min="40" max="255" step="1" value="176">
+      </div>
+
+      <div class="group">
+        <label for="pmtB">PMT B sensitivity <span id="pmtBValue">176</span></label>
+        <input id="pmtB" type="range" min="40" max="255" step="1" value="176">
+      </div>
+
+      <div class="group">
+        <label for="thresholdMargin">Threshold margin <span id="thresholdMarginValue">6.0</span> sigma</label>
+        <input id="thresholdMargin" type="range" min="2" max="10" step="0.1" value="6">
+      </div>
+
+      <div class="group">
+        <label for="pulseHeight">Pulse height <span id="pulseHeightValue">70</span>%</label>
+        <input id="pulseHeight" type="range" min="10" max="140" step="1" value="70">
+      </div>
+
+      <div class="group">
+        <label for="readDemand">Sampling demand <span id="readDemandValue">4200</span> bit/s</label>
+        <input id="readDemand" type="range" min="0" max="22000" step="100" value="4200">
+      </div>
+
+      <div class="metrics">
+        <div class="metric"><div class="name">Lever Raw</div><div class="value" id="leverRateMetric">0 b/s</div></div>
+        <div class="metric"><div class="name">QRNG</div><div class="value" id="qrngRate">0 b/s</div></div>
+        <div class="metric"><div class="name">Accepted A</div><div class="value" id="accA">0/s</div></div>
+        <div class="metric"><div class="name">Balance Error</div><div class="value" id="balance">0%</div></div>
+      </div>
+
+      <div class="bars">
+        <div class="bar-row"><span>PMT A</span><div class="track"><div class="fill" id="barA"></div></div><span id="barAText"></span></div>
+        <div class="bar-row"><span>PMT B</span><div class="track"><div class="fill" id="barB"></div></div><span id="barBText"></span></div>
+        <div class="bar-row"><span>Lever</span><div class="track"><div class="fill" id="barL"></div></div><span id="barLText"></span></div>
+        <div class="bar-row"><span>QRNG</span><div class="track"><div class="fill" id="barQ"></div></div><span id="barQText"></span></div>
+        <div class="bar-row"><span>FIFO</span><div class="track"><div class="fill" id="barF"></div></div><span id="barFText"></span></div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    const UPDATE_MS = 100;
+    const DATA_PIXELS = 56;
+    const matrix = document.getElementById("matrix");
+    const leds = [];
+
+    for (let i = 0; i < 64; i++) {
+      const el = document.createElement("div");
+      el.className = i < 8 ? "led status-led" : "led";
+      matrix.appendChild(el);
+      leds.push(el);
+    }
+
+    const state = {
+      brightness: 36,
+      tick: 0,
+      accA: 2900,
+      accB: 3100,
+      lever: 6000,
+      qrng: 1900,
+      fifo: 0.48,
+      occupancyA: 0.006,
+      occupancyB: 0.007,
+      clipHold: 0,
+      fifoEmpty: false,
+      fifoFull: false,
+      rainBits: Array.from({ length: DATA_PIXELS }, () => 0),
+      rng: 0x51f00d
+    };
+
+    const els = {
+      systemAlive: document.getElementById("systemAlive"),
+      ledPower: document.getElementById("ledPower"),
+      ledPowerValue: document.getElementById("ledPowerValue"),
+      pmtA: document.getElementById("pmtA"),
+      pmtAValue: document.getElementById("pmtAValue"),
+      pmtB: document.getElementById("pmtB"),
+      pmtBValue: document.getElementById("pmtBValue"),
+      thresholdMargin: document.getElementById("thresholdMargin"),
+      thresholdMarginValue: document.getElementById("thresholdMarginValue"),
+      pulseHeight: document.getElementById("pulseHeight"),
+      pulseHeightValue: document.getElementById("pulseHeightValue"),
+      readDemand: document.getElementById("readDemand"),
+      readDemandValue: document.getElementById("readDemandValue"),
+      leverRateMetric: document.getElementById("leverRateMetric"),
+      accA: document.getElementById("accA"),
+      qrngRate: document.getElementById("qrngRate"),
+      balance: document.getElementById("balance"),
+      runDot: document.getElementById("runDot"),
+      statusText: document.getElementById("statusText"),
+      ledEnable: document.getElementById("ledEnable"),
+      barA: document.getElementById("barA"),
+      barB: document.getElementById("barB"),
+      barL: document.getElementById("barL"),
+      barQ: document.getElementById("barQ"),
+      barF: document.getElementById("barF"),
+      barAText: document.getElementById("barAText"),
+      barBText: document.getElementById("barBText"),
+      barLText: document.getElementById("barLText"),
+      barQText: document.getElementById("barQText"),
+      barFText: document.getElementById("barFText")
+    };
+
+    function bindRange(input, output, format = (v) => String(v)) {
+      input.addEventListener("input", () => {
+        output.textContent = format(Number(input.value));
+        render();
+      });
+      output.textContent = format(Number(input.value));
+    }
+
+    bindRange(els.ledPower, els.ledPowerValue);
+    bindRange(els.pmtA, els.pmtAValue);
+    bindRange(els.pmtB, els.pmtBValue);
+    bindRange(els.thresholdMargin, els.thresholdMarginValue, (v) => v.toFixed(1));
+    bindRange(els.pulseHeight, els.pulseHeightValue);
+    bindRange(els.readDemand, els.readDemandValue);
+
+    for (const id of ["ledEnable", "systemAlive"]) {
+      els[id].addEventListener("change", render);
+    }
+
+    function rnd() {
+      state.rng ^= state.rng << 13;
+      state.rng ^= state.rng >>> 17;
+      state.rng ^= state.rng << 5;
+      return (state.rng >>> 0) / 4294967296;
+    }
+
+    function randByte() {
+      return Math.floor(rnd() * 256) & 255;
+    }
+
+    function clamp(v, lo = 0, hi = 1) {
+      return Math.max(lo, Math.min(hi, v));
+    }
+
+    function rgb(r, g, b) {
+      const scale = state.brightness / 64;
+      return [Math.round(r * scale), Math.round(g * scale), Math.round(b * scale)];
+    }
+
+    function setPixel(buf, x, y, color) {
+      if (x < 0 || x > 7 || y < 0 || y > 7) return;
+      buf[y * 8 + x] = color;
+    }
+
+    function clear() {
+      return Array.from({ length: 64 }, () => rgb(0, 0, 0));
+    }
+
+    function statusColor(level) {
+      if (level === "red") return rgb(255, 38, 58);
+      if (level === "orange") return rgb(255, 126, 34);
+      if (level === "yellow") return rgb(255, 190, 45);
+      if (level === "blue") return rgb(68, 145, 255);
+      if (level === "dim") return rgb(12, 16, 18);
+      return rgb(22, 220, 105);
+    }
+
+    function balanceLevel(err) {
+      if (err <= 0.05) return "green";
+      if (err <= 0.15) return "yellow";
+      if (err <= 0.25) return "orange";
+      return "red";
+    }
+
+    function rateLevel(value, target) {
+      if (value >= target) return "green";
+      if (value >= target * 0.7) return "yellow";
+      if (value >= target * 0.35) return "orange";
+      return "red";
+    }
+
+    function occupancyLevel(a, b) {
+      const worstLow = Math.min(a, b);
+      const worstHigh = Math.max(a, b);
+      if (worstLow < 0.0008 || worstHigh > 0.08) return "red";
+      if (worstLow < 0.002 || worstHigh > 0.04) return "orange";
+      if (worstLow < 0.003 || worstHigh > 0.02) return "yellow";
+      return "green";
+    }
+
+    function fifoLevel() {
+      const produced = state.qrng + state.lever;
+      const demanded = Number(els.readDemand.value);
+      if (state.fifoEmpty || (!els.systemAlive.checked && state.fifo < 0.04)) return "red";
+      if (state.fifoFull || state.fifo > 0.92) return "orange";
+      if (state.fifo < 0.20 && produced > 0 && demanded > produced * 0.7) return "yellow";
+      return "green";
+    }
+
+    function simulateHealth() {
+      const phase = state.tick / 18;
+      const alive = els.systemAlive.checked;
+      const ledOn = els.ledEnable.checked;
+      const ledPower = Number(els.ledPower.value);
+      const pmtA = Number(els.pmtA.value);
+      const pmtB = Number(els.pmtB.value);
+      const threshold = Number(els.thresholdMargin.value);
+      const pulseHeight = Number(els.pulseHeight.value);
+      const readDemand = Number(els.readDemand.value);
+
+      const ledFactor = ledOn ? clamp(ledPower / 108, 0, 1.45) * (ledPower > 128 ? clamp(1 - (ledPower - 128) / 120, 0.45, 1) : 1) : 0;
+      const pmtAFactor = clamp((pmtA - 58) / 118, 0, 1.7);
+      const pmtBFactor = clamp((pmtB - 58) / 118, 0, 1.7);
+      const thresholdFactor = clamp(1.34 - threshold * 0.055, 0.42, 1.18);
+      const lowThresholdNoise = Math.max(0, 5.2 - threshold);
+      const avgPmt = (pmtAFactor + pmtBFactor) / 2;
+      const source = alive ? 6200 * ledFactor * avgPmt * thresholdFactor : 0;
+      const shimmer = 1 + Math.sin(phase * 0.53) * 0.025 + (rnd() - 0.5) * 0.018;
+      const leverProduced = Math.max(0, source * shimmer);
+      const pmtSum = Math.max(0.001, pmtAFactor + pmtBFactor);
+      const darkNoiseA = alive ? lowThresholdNoise * pmtAFactor * 140 : 0;
+      const darkNoiseB = alive ? lowThresholdNoise * pmtBFactor * 140 : 0;
+
+      state.lever = leverProduced + darkNoiseA + darkNoiseB;
+      state.qrng = Math.max(0, state.lever * 0.315 + Math.sin(phase * 0.71) * 22 + (rnd() - 0.5) * 18);
+      state.accA = Math.max(0, leverProduced * (pmtAFactor / pmtSum) + darkNoiseA + (rnd() - 0.5) * 65);
+      state.accB = Math.max(0, leverProduced * (pmtBFactor / pmtSum) + darkNoiseB + (rnd() - 0.5) * 65);
+      state.occupancyA = clamp(0.00035 + state.accA / 650000 + lowThresholdNoise * 0.004 + Math.sin(phase) * 0.0008);
+      state.occupancyB = clamp(0.00035 + state.accB / 650000 + lowThresholdNoise * 0.004 + Math.cos(phase * 0.8) * 0.0008);
+
+      const produced = state.qrng + state.lever;
+      const demanded = readDemand;
+      const pressure = (produced - demanded) / 22000;
+      state.fifo = clamp(state.fifo + pressure + Math.sin(phase * 0.21) * 0.002 + (rnd() - 0.5) * 0.004);
+      state.fifoEmpty = demanded > produced * 1.12 && state.fifo < 0.04;
+      state.fifoFull = produced > demanded * 2.5 && state.fifo > 0.96;
+      state.clipHold = Math.max(0, state.clipHold - UPDATE_MS);
+      if ((alive && ledOn && pulseHeight > 112 && (pmtAFactor > 1.2 || pmtBFactor > 1.2)) || pulseHeight > 128 || rnd() < 0.0015) state.clipHold = 500;
+      ingestRandomData(UPDATE_MS);
+    }
+
+    function ingestRandomData(dtMs) {
+      state.rainBits = Array.from({ length: 8 }, () => randByte() & 1).concat(state.rainBits.slice(0, DATA_PIXELS - 8));
+    }
+
+    function drawStatusRow(buf) {
+      const total = state.accA + state.accB || 1;
+      const balanceErr = Math.abs(state.accA - state.accB) / total;
+      const systemState = els.systemAlive.checked ? "green" : "red";
+      const ledState = els.ledEnable.checked ? "green" : "dim";
+      const adcState = state.clipHold > 0 ? "red" : "green";
+
+      setPixel(buf, 0, 0, statusColor(systemState));
+      setPixel(buf, 1, 0, statusColor(ledState));
+      setPixel(buf, 2, 0, statusColor(occupancyLevel(state.occupancyA, state.occupancyB)));
+      setPixel(buf, 3, 0, statusColor(adcState));
+      setPixel(buf, 4, 0, statusColor(balanceLevel(balanceErr)));
+      setPixel(buf, 5, 0, statusColor(rateLevel(state.lever, 5000)));
+      setPixel(buf, 6, 0, statusColor(rateLevel(state.qrng, 1800)));
+      setPixel(buf, 7, 0, statusColor(fifoLevel()));
+    }
+
+    function drawRain(buf) {
+      for (let y = 1; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const i = (y - 1) * 8 + x;
+          const bit = state.rainBits[i];
+          const age = y - 1;
+          const on = [
+            rgb(255, 255, 255),
+            rgb(190, 230, 255),
+            rgb(130, 200, 255),
+            rgb(85, 160, 235),
+            rgb(55, 120, 205),
+            rgb(35, 85, 165),
+            rgb(22, 55, 120)
+          ][age];
+          setPixel(buf, x, y, bit ? on : rgb(0, 0, 0));
+        }
+      }
+    }
+
+    function panelBuffer() {
+      const buf = clear();
+      drawStatusRow(buf);
+      drawRain(buf);
+      return buf;
+    }
+
+    function paint(buf) {
+      for (let i = 0; i < 64; i++) {
+        const [r, g, b] = buf[i];
+        leds[i].style.background = `rgb(${r}, ${g}, ${b})`;
+        const glow = Math.max(r, g, b) / 255;
+        leds[i].style.transform = glow > 0.55 ? "scale(1.03)" : "scale(1)";
+        leds[i].style.boxShadow = `0 0 ${Math.round(4 + glow * 24)}px rgba(${r}, ${g}, ${b}, ${0.18 + glow * 0.55}), inset 0 -4px 10px rgba(0, 0, 0, 0.5)`;
+      }
+    }
+
+    function setBarEl(el, textEl, value, text, color = "var(--blue)") {
+      const pct = Math.round(clamp(value) * 100);
+      el.style.width = `${pct}%`;
+      el.style.background = color;
+      textEl.textContent = text;
+    }
+
+    function updateMetrics() {
+      const total = state.accA + state.accB || 1;
+      const balanceErr = Math.abs(state.accA - state.accB) / total;
+      const fault = !els.systemAlive.checked || state.fifoEmpty || state.clipHold > 0;
+
+      els.leverRateMetric.textContent = `${Math.round(state.lever)} b/s`;
+      els.accA.textContent = `${Math.round(state.accA)}/s`;
+      els.qrngRate.textContent = `${Math.round(state.qrng)} b/s`;
+      els.balance.textContent = `${(balanceErr * 100).toFixed(1)}%`;
+      setBarEl(els.barA, els.barAText, state.accA / 6500, `${Math.round(state.accA)}`, "#3482ff");
+      setBarEl(els.barB, els.barBText, state.accB / 6500, `${Math.round(state.accB)}`, "#20ce78");
+      setBarEl(els.barL, els.barLText, state.lever / 12000, `${Math.round(state.lever)}`, "#61d7ff");
+      setBarEl(els.barQ, els.barQText, state.qrng / 3600, `${Math.round(state.qrng)}`, "#c47cff");
+      const fifoColor = fifoLevel() === "red" ? "var(--bad)" : fifoLevel() === "orange" ? "var(--orange)" : fifoLevel() === "yellow" ? "var(--warn)" : "var(--accent)";
+      setBarEl(els.barF, els.barFText, state.fifo, `${Math.round(state.fifo * 100)}%`, fifoColor);
+
+      els.runDot.style.background = fault ? "var(--bad)" : "var(--accent)";
+      els.runDot.style.boxShadow = fault ? "0 0 14px rgba(255,83,100,0.85)" : "0 0 14px rgba(53,196,111,0.8)";
+      els.statusText.textContent = fault ? "simulated warning state" : "simulated 100 ms rain display";
+    }
+
+    function render() {
+      paint(panelBuffer());
+      updateMetrics();
+    }
+
+    function loop() {
+      state.tick++;
+      simulateHealth();
+      render();
+      setTimeout(loop, UPDATE_MS);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
