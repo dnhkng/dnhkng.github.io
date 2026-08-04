@@ -15,7 +15,7 @@ For large dense models, or for MoE models with experts offloaded to Grace memory
 
 So I measured the box as a memory system. HBM, local Grace LPDDR, remote Grace LPDDR, GPU to GPU staging, STREAM, NVBandwidth, BabelStream, custom latency probes, and custom sustained copy tests. This post is the reference sheet I wanted before starting model deployment work.
 
-[Part 2](/posts/gh200-benchmarking-part-2/) uses these numbers to explain the DeepSeek V4 Flash serving results. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) pushes the same topology into GLM-5.2, where Grace memory becomes part of the hot path.
+[Part 2](/posts/gh200-benchmarking-part-2/) uses these numbers to explain the DeepSeek V4 Flash serving results. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) pushes the same topology into GLM-5.2, where Grace memory becomes part of the hot path. [Part 4](/posts/gh200-benchmarking-part-4-dsv4-released/) returns to DeepSeek V4 Flash once it shipped, with DSpark and a full 1M-token context that stays entirely in HBM.
 
 ## The System
 
@@ -265,4 +265,4 @@ If you run similar tests on another Grace Hopper system, the numbers I most want
 
 ## Coming Up
 
-[Part 2](/posts/gh200-benchmarking-part-2/) uses these measurements for DeepSeek V4 Flash and Pro. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) uses the same ruler for GLM-5.2 expert offload and CPU-only GGUF serving. The recurring question is how much active model state can stay on the fast side of the topology, and how quickly performance falls once an engine starts using remote Grace memory or the staged GPU to GPU path.
+[Part 2](/posts/gh200-benchmarking-part-2/) uses these measurements for DeepSeek V4 Flash and Pro. [Part 3](/posts/gh200-benchmarking-part-3-glm52/) uses the same ruler for GLM-5.2 expert offload and CPU-only GGUF serving. [Part 4](/posts/gh200-benchmarking-part-4-dsv4-released/) revisits DeepSeek V4 Flash after its public release, with DSpark speculative decoding and a 1M-token context. The recurring question is how much active model state can stay on the fast side of the topology, and how quickly performance falls once an engine starts using remote Grace memory or the staged GPU to GPU path.
