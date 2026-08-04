@@ -13,6 +13,7 @@ Series:
 1. [Memory paths for LLM inference](/posts/gh200-benchmarking/)
 2. vLLM, DeepSeek V4 Flash/Pro, and MTP
 3. [GLM-5.2, expert offload, and the CPU question](/posts/gh200-benchmarking-part-3-glm52/)
+4. [DeepSeek V4 Flash released, DSpark, and SGLang vs vLLM](/posts/gh200-benchmarking-part-4-dsv4-released/)
 
 This is that follow-up (*massively delayed by a much cooler project*). The workload here is ***DeepSeek V4 Flash in vLLM*** on a dual GH200 workstation. The short version is that the hardware behaves exactly like the memory benchmarks predicted. Tensor parallelism can work, but it needs care. The official checkpoint is slower than I hoped, but I was saved by the quantized checkpoint from [Canada-Quant](https://huggingface.co/canada-quant/DeepSeek-V4-Flash-W4A16-FP8-MTP), which turned out to be faster. There was some wrangling to get multi-token prediction working, but once the checkpoint and vLLM path were made to agree with each other, I got a very large single-stream speed-up (*for my Chonky local Hermes Agent, bwHaHahahaaa...*).
 

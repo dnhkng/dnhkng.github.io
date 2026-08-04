@@ -317,7 +317,7 @@ The footprint values are approximate model-weight footprints from the artifacts 
 
 ## Series Takeaway
 
-Across the three posts, the useful deployment map is:
+Across the series, the useful deployment map is:
 
 | Goal                      | Best answer from the series                                                   |
 | ------------------------- | ----------------------------------------------------------------------------- |
@@ -326,3 +326,5 @@ Across the three posts, the useful deployment map is:
 | Largest vLLM model tested | GLM-5.2 INT4 with strict local-NUMA expert offload and experimental MTP graft |
 | CPU-only huge model       | GLM-5.2 IQ2 works, but only at low single-digit decode                        |
 | Main hardware rule        | Keep hot traffic local to each GH200 module                                   |
+
+[Part 4](/posts/gh200-benchmarking-part-4-dsv4-released/) revisits DeepSeek V4 Flash after its public release, where DSpark and the compact DSV4 cache layout serve a full 1M-token context on this box with no CPU offload at all.
