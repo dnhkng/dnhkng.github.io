@@ -275,6 +275,21 @@ That retains the fast short-prompt path while shrinking only when the accumulate
 
 Measured cleanly (not as a warm serve after a 1M request), the final native-FP8 profile reached 9,915 tok/s at 8K, 10,220 tok/s at 32K, 308.6 tok/s on the code-review workload, and a 182.8 tok/s median across five 1,024-token story generations. Those prefill rates sit a little below the original 65K-context table above, because this single server configuration now also holds the full 1M context; the maximum-context validation and the speed tests use the same launcher.
 
+### Concurrency, if you do want to batch
+
+Everything above optimises for one interactive user (`--max-running-requests 1`, decode graph at batch 1). The box will batch, though. Running the same native-FP8 build as a batching profile (`--max-running-requests 4`, `--cuda-graph-bs-decode 1 2 4`, otherwise the same launcher) on a fixed 8K input → 2,048 output shape:
+
+| Concurrency | Per-request TG  |    Aggregate TG |
+| ----------: | --------------: | --------------: |
+|           1 |     263.0 tok/s |     263.0 tok/s |
+|           2 |     223.2 tok/s |     416.9 tok/s |
+|           4 | **177.8 tok/s** | **630.3 tok/s** |
+|           8 |     122.1 tok/s |     598.4 tok/s |
+
+Aggregate throughput peaks at concurrency 4 (630.3 tok/s) and regresses at 8, while per-request decode falls the whole way (263 → 122 tok/s). Past c4 the tensor-parallel traffic across the weak Hopper-to-Hopper link stops paying off, the same Part 1 topology limit. This is the batching profile and a fixed 8K→2,048 shape, so read it as a self-contained scaling curve, not against the single-user code-review 308.6 above.
+
+Concurrency 8 also needs a chunk change: the inherited 12,288-token prefill chunk caused severe 32K-prefill degradation and eventually a watchdog failure under load; dropping to 8,192-token chunks restored roughly 10K aggregate prefill tok/s. That is the opposite direction from the 1M capacity profile, which needs *smaller* chunks. The prefill chunk is a per-workload knob, not a single best value.
+
 ### The SGLang launchers
 
 The quality-first SGLang launcher essentials are:
@@ -319,5 +334,6 @@ Plus `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`, `SGLANG_DSV4_MHC_PREWAR
 | **Recommended SGLang, up to 32K** | **Upstream fixes, native-FP8 shared experts, adaptive prefill; ~309 tok/s code, ~183 story (a superseded FP4 local-patch build reached ~317)** |
 | **vLLM 1M context**               | **vLLM v0.26.0 + PR #48993, DSpark k=6, entirely in HBM**                                                                                      |
 | **SGLang 1M context**             | **Validated at 1,048,536 total tokens; adaptive chunks, ~360-second full prefill**                                                             |
+| **Aggregate throughput (batching)** | **SGLang batching profile peaks at concurrency 4 (~630 tok/s); regresses by 8, and c8 needs 8K prefill chunks**                              |
 | Largest vLLM model tested         | GLM-5.2 INT4 + strict local-NUMA expert offload + MTP graft (Part 3)                                                                           |
 | CPU-only huge model               | GLM-5.2 IQ2 works, but only single-digit decode (Part 3)                                                                                       |
