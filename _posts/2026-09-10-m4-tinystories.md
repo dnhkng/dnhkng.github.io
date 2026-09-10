@@ -10,11 +10,10 @@ mermaid: true
 ![m4](../assets/img/m4/m4.png)
 ## Introduction
 
-Language models are designed in linear algebra and translated onto hardware afterwards. You pick an architecture, then you bend CUDA, Metal, or BLAS to your will to run it.
+Language models are designed in linear algebra, PyTorch functions, and translated onto hardware afterwards. You pick an architecture, then you bend CUDA, Metal, or BLAS to your will to run it, hoping the compilers will do a good job with graph optimisation.
+An ARM core already contains a pile of very fast operations that nobody invented for language models. It compares floating-point lanes in parallel, shuffles bytes inside vector registers, XORs packed bit patterns, counts set bits, takes groups of signed 8-bit dot products, and widens half-precision products into FP32 accumulators. Decades of cryptography, codec and signal processing work paid for that highly optimised silicon, and now we are going to have some fun hacking it into something new.
 
-An ARM core already contains a pile of very fast operations that nobody invented for language models. It compares floating-point lanes in parallel, shuffles bytes inside vector registers, XORs packed bit patterns, counts set bits, takes groups of signed 8-bit dot products, and widens half-precision products into FP32 accumulators. Decades of cryptography, codec and signal processing work paid for that highly optimised silicon.
-
-*So I tried it the other way round.* What does a language model look like if the *instruction set is part of the architecture*, and we let them battle it out with the loss curve deciding which instructions survive?
+What does a language model look like if the instruction set is part of the architecture, and we let competing instructions battle it out, with the loss curve deciding which instructions survive?
 
 The current answer is a 5-layer, 512-wide TinyStories model with 3,531,795 deployed learned values and a 3,265,024-byte weight image. Weights plus a full 256-token KV allocation come to 3.36 MB, which stays resident in the L2 of the Performance Core it decodes on, generates at a median **20,882 tokens/second**, and reaches **0.8786 bits per byte** in the native binary on the same validation slice as the framework evaluation.
 
