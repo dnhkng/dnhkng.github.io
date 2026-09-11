@@ -246,6 +246,46 @@ One attention layer is skipped entirely, and layers 3 and 4 reuse the same saved
 
 ---
 
+## Backprop through a truth table
+
+At inference, every LUT3 cell is a lookup: index an eight-entry table with $4a + 2b + c$ and read one bit. The derivative of a lookup is zero almost everywhere and undefined at the threshold, so backprop gets nothing from it. Training needs a stand-in for the missing gradient, and the code ends up using different stand-ins in different parts of the graph. For the cells themselves, `boolean_backward` selects between `ste`, `multilinear`, `softened` and `hybrid`.
+
+The usual answer in binary networks is the straight-through estimator (STE): treat the gate as the identity on the way back and pass the gradient through unchanged. Training doesn't stall, but every input is told it mattered, including inputs the cell's table ignores.
+
+### Exact sensitivity from the table
+
+Any three-input Boolean function has a unique multilinear extension, a polynomial on $[0,1]^3$ that is linear in each variable and matches the table $t$ at all eight corners. Its derivative with respect to $a$ is
+
+$$
+\frac{\partial f}{\partial a} = (t_4 - t_0)(1-b)(1-c) + (t_5 - t_1)(1-b)\,c + (t_6 - t_2)\,b\,(1-c) + (t_7 - t_3)\,b\,c
+$$
+
+and likewise for $b$ and $c$. In the forward pass $b$ and $c$ are hard bits, so three of the four terms are zero and the derivative reduces to
+
+$$
+\frac{\partial f}{\partial a} = f(1,b,c) - f(0,b,c)
+$$
+
+That asks whether flipping $a$ would have changed the output, with $b$ and $c$ held where they are. The answer is $-1$, $0$ or $+1$, read straight off the table. STE answers $1$ every time.
+
+The zeros are a problem. An AND-like cell is insensitive to $a$ whenever $b = 0$, which is correct, but if enough cells sit in that state for a batch, large parts of the network stop learning. The `hybrid` mode, which the selected model uses, keeps the exact derivative and replaces zeros with a leak of 0.05: the leaky-ReLU trick, applied to a truth table. `softened` takes another route and pulls the hard bits towards 0.5 with a temperature-scaled sigmoid before evaluating the same formula, so all four terms contribute. It is smoother, and no longer exact at the corners.
+
+### Training the table
+
+The table entries are learned too. Each cell has eight logits, thresholded at zero in the forward pass, with the same sigmoid-derivative surrogate the `FCMGE` thresholds use on the way back. Getting the gradient to the right entry needs no approximation. A lookup isn't differentiable with respect to its address, but it is with respect to the value stored there, so the output gradient goes to the one entry that was read and the other seven get nothing.
+
+The logits are initialised at $-0.02$ with a standard deviation of 0.01, so about 98% of entries start at 0 and about 83% of cells start as the all-zero table. XORing a zero branch into the state does nothing, which means the Boolean FFN starts close to a no-op, and each cell has to earn its way into changing the state. `noop_program_fraction` in the training diagnostics counts how many haven't yet.
+
+### The residual XOR
+
+Each round XORs the cell outputs back into the Boolean state. XOR has an exact derivative as well, $\partial(a \oplus b)/\partial a = 1 - 2b$, and it's in the code, but the FFN's residual XOR doesn't use it: whatever `boolean_backward` says, the gradient crosses each residual XOR unchanged. The exact form would flip the gradient's sign wherever the branch bit is 1; the identity keeps the sign intact through all three rounds.
+
+### Keeping the bits balanced
+
+A table only learns the entries that get read. If the Boolean state drifts towards all zeros, most cells keep reading entry 0 and the other seven stop receiving gradient; a state near all ones does the same with entry 7. A bit stuck at one value also tells the decoder nothing. So the objective adds a small balance penalty, the squared distance of the fraction of set bits from 0.5, measured after encoding and after every round, with a weight of 0.001.
+
+---
+
 ## The native program
 
 Deployment is a standalone macOS binary with embedded weights. The exporter freezes the Boolean programs, quantises the numerical matrices, packs the live hardware tickets, emits shape constants and builds the weight image. The ABI is generic across widths, head geometries, correction ranks, skipped layers and shared-source layouts, so all three allocation arms above compiled without a new kernel or a per-shape specialisation.
