@@ -3,3 +3,11 @@
   data-goatcounter="https://tracking-dnhkng.quantumlever.stream/count"
   async
   src="https://tracking-dnhkng.quantumlever.stream/count.js"></script>
+
+{% if page.scholar %}
+  <!-- Highwire Press citation tags (Google Scholar); opt-in per page via `scholar: true` -->
+  <meta name="citation_title" content="{{ page.title | escape }}">
+  <meta name="citation_author" content="Ng, David Noel">
+  <meta name="citation_publication_date" content="{{ page.date | date: '%Y/%m/%d' }}">
+  {% if page.doi %}<meta name="citation_doi" content="{{ page.doi }}">{% endif %}
+{% endif %}

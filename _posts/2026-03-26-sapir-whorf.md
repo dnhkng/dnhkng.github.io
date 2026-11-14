@@ -5,6 +5,7 @@ categories: [LLMs, Research]
 tags: [llm, neuroanatomy, sapir-whorf, chomsky, universal-grammar, universal-language, representation]
 math: true
 pin: true
+scholar: true
 ---
 
 ![cover](/assets/img/sapir-whorf/universal.png)
