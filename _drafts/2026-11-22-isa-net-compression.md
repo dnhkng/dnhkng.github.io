@@ -31,6 +31,8 @@ Here's what came out, measured end to end on an Apple M4 Pro:
 
 ***TL;DR: a 7 MB integer/Boolean network that never leaves the L2 cache compresses Wikipedia about as well as cmix on a megabyte, beats paq8px, and does a gigabyte in 75 minutes on four M4 Pro cores instead of a week.***
 
+> You can find the code, the 7 MB model and the benchmark harness here: https://github.com/dnhkng/ISA-NET
+
 <!-- markdownlint-capture -->
 <!-- markdownlint-disable -->
 > **The caveat, up front:** the model was trained on the first 900 MB of enwik9, so the full-file number is corpus-tuned. Everything in the head-to-head comparison with cmix is measured on bytes the model never saw. I'll repeat this wherever it matters.
@@ -253,6 +255,9 @@ The same silicon that two months ago was telling children's stories about girls 
 * [paq8px](https://github.com/hxim/paq8px)
 * Dmitry Shkarin, PPMd and PPMonstr
 * The previous post: [Teaching an M4 CPU to Tell Stories with XOR, Popcount and SDOT](/posts/m4-tinystories/)
+
+The codec, the Jolt model, the training code and the benchmark harness (with the raw results behind every chart) are here:
+[https://github.com/dnhkng/ISA-NET](https://github.com/dnhkng/ISA-NET)
 
 Benchmark protocol: single core unless marked, encode and decode timed separately, median of 3-5 runs for fast tools and Jolt, 1 run for cmix and paq8px, peak memory from `/usr/bin/time -l`, every round trip verified by SHA-256. Machine: Apple M4 Pro, 24 GB, macOS 27.2, Apple clang 21.
 
