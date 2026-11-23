@@ -5,7 +5,6 @@ categories: [hardware, LLMs]
 tags: [llm, compression, apple-silicon, arm, neon, enwik9, cmix, optimisation]
 math: true
 mermaid: true
-published: false
 ---
 
 ![A gigabyte of Wikipedia, as bits](/assets/img/isa-net-compression/hero.png)
