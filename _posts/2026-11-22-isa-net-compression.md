@@ -17,19 +17,19 @@ Some people think "Comnpression is Intelligence", but Marcus Hutter  put his mon
 
 **No, I didn't win anything.**
 
-I definitely gave is a shot, and though I didn't win on the compression ratio (*the intelligence*), I still built something I pretty cool: a **7 MB network made of XORs, popcounts and INT8 dot products** that compresses Wikipedia text about as well as cmix, while running **38 times faster** and using **a thousandth of the memory**, while neatly fitting in the L2 cache of a single M4 core.
+I definitely gave is a shot, and though I didn't win on the compression ratio (*the intelligence*), I still built something I pretty cool: a *7 MB network made of XORs, popcounts and INT8 dot products* that compresses Wikipedia text about as well as cmix, while running **38 times faster** and using **a thousandth of the memory**, while neatly fitting in the L2 cache of a single M4 core.
 
 In the [last post](/posts/m4-tinystories/), an M4 CPU learned to tell children's stories with a language model built from the the ISA instructions set: `FCMGE` compares to make bits, `EXT`/`BSL`/`EOR` logic to transform them, `CNT` and `SDOT` to turn them back into numbers. The obvious next step was poking at one of the oldest questions in machine learning: *how well can you predict the next byte?*
 
 
 This whole project is tailored to the Apple M4 Pro CPU, but could be tuned to any CPU instruction set and L2 cache size. That said, here as the specifics for the M4:
 
-* **enwik9** (the first gigabyte of an English Wikipedia dump) goes down to **155,874,783 bytes**, and comes back out **byte-for-byte identical**. With the zipped decompressor and its embedded 7 MB model, that's **161,855,306 bytes, 1.295 bits per byte**, which would sit about **56th** on Matt Mahoney's [Large Text Compression Benchmark](https://mattmahoney.net/dc/text.html), a few places behind PPMonstr.
-* On held-out Wikipedia text, on the same Mac, it compresses within **0.1 %** of **cmix v21**, one of the strongest compressors ever written, while running **38× faster** on one core and using **14 MB** of memory instead of **18.6 GB**.
+* **enwik9** (the first gigabyte of an English Wikipedia dump) goes down to 155,874,783 bytes, and comes back out *byte-for-byte identical*. With the zipped decompressor and its embedded 7 MB model, that's 161,855,306 bytes, 1.295 bits per byte, which would sit about 56th on Matt Mahoney's [Large Text Compression Benchmark](https://mattmahoney.net/dc/text.html), a few places behind PPMonstr.
+* On held-out Wikipedia text, on the same Mac, it compresses within 0.1 % of cmix v21, one of the strongest compressors ever written, while running **38× faster** on one core and using **14 MB** of memory instead of *18.6 GB*.
 
-***TL;DR: a 7 MB integer/Boolean network that never leaves the L2 cache compresses Wikipedia about as well as cmix on a megabyte, beats paq8px, and does a gigabyte in 75 minutes on four M4 Pro cores instead of a week.***
+> ***TL;DR:*** a 7 MB integer/Boolean network that never leaves the L2 cache compresses Wikipedia about as well as cmix on a megabyte, beats paq8px, and does a gigabyte in 75 minutes on four M4 Pro cores instead of a week.
 
-> You can find the code, the 7 MB model and the benchmark harness here: https://github.com/dnhkng/ISA-NET
+You can find the code, the 7 MB model and the benchmark harness here: https://github.com/dnhkng/ISA-NET
 
 
 ---
