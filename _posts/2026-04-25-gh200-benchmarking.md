@@ -3,6 +3,10 @@ layout: post
 title: "What 2x GH200 delivers: memory paths for LLM inference"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, server, benchmark]
+image:
+  path: /assets/img/hopper/main.jpg
+  hide: true
+series: "2x GH200 for LLM inference"
 ---
 
 ## Introduction

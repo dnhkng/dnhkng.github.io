@@ -1,0 +1,23 @@
+{%- comment -%}
+  Series navigation box. Opt in per post with `series: <name>` in front matter;
+  every post sharing that name is listed in date order.
+{%- endcomment -%}
+{%- if page.series -%}
+  {%- assign series_posts = site.posts | where: 'series', page.series | sort: 'date' -%}
+  {%- if series_posts.size > 1 -%}
+    <blockquote class="prompt-info series-nav">
+      <p>This post is part of the series <strong>{{ page.series }}</strong>:</p>
+      <ol>
+        {%- for p in series_posts -%}
+          <li>
+            {%- if p.url == page.url -%}
+              <strong>{{ p.title }}</strong> (you are here)
+            {%- else -%}
+              <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ol>
+    </blockquote>
+  {%- endif -%}
+{%- endif -%}

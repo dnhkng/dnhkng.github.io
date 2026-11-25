@@ -35,7 +35,8 @@ script_includes:
         </span>
       {% endif %}
 
-      {% if page.image %}
+      {% comment %} `image.hide: true` keeps the image for link previews and home cards without repeating an inline hero {% endcomment %}
+      {% if page.image and page.image.hide != true %}
         {% capture src %}src="{{ page.image.path | default: page.image }}"{% endcapture %}
         {% capture class %}class="preview-img{% if page.image.no_bg %}{{ ' no-bg' }}{% endif %}"{% endcapture %}
         {% capture alt %}alt="{{ page.image.alt | xml_escape | default: "Preview Image" }}"{% endcapture %}
@@ -122,6 +123,7 @@ script_includes:
   {% endif %}
 
   <div class="content">
+    {% include series.html %}
     {{ content }}
   </div>
 

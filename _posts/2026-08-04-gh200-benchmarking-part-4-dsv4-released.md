@@ -2,6 +2,10 @@
 title: "2x GH200 for LLM inference, Part 4: DeepSeek V4 Flash - SGLang vs vLLM at 1M context"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, gh200, vllm, sglang, deepseek, benchmark]
+image:
+  path: /assets/img/hopper/main.jpg
+  hide: true
+series: "2x GH200 for LLM inference"
 ---
 
 ## Introduction

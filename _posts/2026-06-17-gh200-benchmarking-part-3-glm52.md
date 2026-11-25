@@ -2,6 +2,10 @@
 title: "2x GH200 for LLM inference, Part 3: GLM-5.2, expert offload, and the CPU question"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, gh200, vllm, glm, benchmark]
+image:
+  path: /assets/img/hopper/main.jpg
+  hide: true
+series: "2x GH200 for LLM inference"
 ---
 
 ## Introduction

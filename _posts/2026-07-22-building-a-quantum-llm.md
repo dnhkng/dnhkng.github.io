@@ -5,9 +5,13 @@ categories: [hardware, LLMs, quantum mechanics]
 tags: [qrng, llm, sampler, mwi, vllm, llamacpp]
 math: true
 mermaid: true
+image:
+  path: /assets/img/building-the-beam-universe-splitter-ii/cover.webp
+  hide: true
+series: "Building the Universe Splitter"
 ---
 
-![cover](/assets/img/building-the-beam-universe-splitter-ii/cover.png){: width="1672" height="941" }
+![cover](/assets/img/building-the-beam-universe-splitter-ii/cover.webp){: width="1672" height="941" }
 
 **TL;DR:** Here is the [NotebookLLM Podcast audio version](https://notebooklm.google.com/notebook/fa2e6b33-7a60-40f2-9b57-34d678267c31/artifact/1b41742d-4091-4520-a040-6b71929b29dc?utm_source=nlm_web_share&utm_medium=google_oo&utm_campaign=art_share_1&utm_content=&utm_smc=nlm_web_share_google_oo_art_share_1_).
 

@@ -2,6 +2,10 @@
 title: "2x GH200 for LLM inference, Part 2: vLLM, DeepSeek V4 Flash/Pro, and MTP"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, gh200, vllm, benchmark]
+image:
+  path: /assets/img/hopper/main.jpg
+  hide: true
+series: "2x GH200 for LLM inference"
 ---
 
 ## Introduction

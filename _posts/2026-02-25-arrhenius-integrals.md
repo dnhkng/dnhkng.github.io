@@ -3,6 +3,9 @@ title: "Arrhenius Integrals, IR Lasers, and Cooking Proteins"
 categories: [protein engineering, biophysics]
 tags: [laser, proteins]
 math: true
+image:
+  path: /assets/img/arrhenius-integrals/laser.webp
+  hide: true
 ---
 
 ***
@@ -108,7 +111,7 @@ If the protein was reversible, we modeled the renaturation using the Van’t Hof
  
 $$ F(T) = \frac{F_N(T) + F_U(T) \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)}{1 + \exp\left( \frac{\Delta H_m (T-T_m)}{R T T_m} \right)} $$
 
-![Figure 3: ](/assets/img/arrhenius-integrals/laser.png)
+![Figure 3: ](/assets/img/arrhenius-integrals/laser.webp)
 
 *1480nm Laser pulsing. Each vertical blue line (yes, there are lots), is the sample being heated or cooled ridiculously fast. Why fast cooling? We are only heating a teeny tiny sample, at the focal point of the laser, and as soon as its turned off, the bulk solution around it cools and replaces the targetted zone. You can clearly see the reversible renaturation baseline (blue) pulling away from the forward melt curve (green) the moment irreversible aggregation kicks in.*
 

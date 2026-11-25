@@ -5,6 +5,10 @@ categories: [hardware, FPGA, quantum mechanics]
 tags: [qrng, fpga, red-pitaya, pmt, magic-8-ball]
 math: true
 mermaid: true
+image:
+  path: /assets/img/building-the-beam-universe-splitter/final.jpeg
+  hide: true
+series: "Building the Universe Splitter"
 ---
 
 ![cover](/assets/img/building-the-beam-universe-splitter/final.jpeg){: width="1920" height="1080" }
@@ -47,7 +51,7 @@ And a Magic 8-Ball to try: ***ask it your question, and receive exactly one answ
 <!-- markdownlint-restore -->
 
 <a href="#magic-8-ball-target" onclick="event.preventDefault(); history.replaceState(null, '', '#the-quantum-magic-8-ball'); [0, 100, 300, 700, 1200].forEach(function(delay) { setTimeout(function() { document.getElementById('magic-8-ball-target').scrollIntoView(); }, delay); });">
-  <span role="img" aria-label="8-ball" style="display:block; width:100%; aspect-ratio:1328 / 1302; background:url('/assets/img/building-the-beam-universe-splitter/8-ball.png') center / contain no-repeat;"></span>
+  <span role="img" aria-label="8-ball" style="display:block; width:100%; aspect-ratio:1328 / 1302; background:url('/assets/img/building-the-beam-universe-splitter/8-ball.webp') center / contain no-repeat;"></span>
 </a>
 
 ### Warning
@@ -79,7 +83,7 @@ This did not emerge fully formed. Well, the idea *kinda* did, but the final arch
 
 In my first attempt to harness the quantum realm, I messed about with a gem in my lens collection: an early Canon FD 55mm F1.2 Aspherical lens, with a rear element made with thoriated glass. Hold a Geiger counter to it and it makes you wonder if holding a camera to your eye with this beast mounted is really such a great idea (*but OMG, the **Bokeh**...*).
 
-![canon](/assets/img/building-the-beam-universe-splitter/canon.png){: width="1027" height="504" }
+![canon](/assets/img/building-the-beam-universe-splitter/canon.webp){: width="1027" height="504" }
 
 But I didn't like it conceptually. Sure, the time between counts is random, but not the cool kind of random I wanted. Timing between the pulses and taking the least significant bit *is random*, but not sexy random. I wanted a proper quantum coin flip.
 
@@ -101,14 +105,14 @@ If PMT A fires, it's a 0. If PMT B fires, it's a 1.  We see which universe we re
 
 A friend gave me a pair of Hamamatsu photomultiplier tubes (PMTs).  These came from the core of a nano-differential scanning fluorimetry instrument, and were used to analyse protein structure via tryptophan fluorescence, which absorbs light at 280 nm. Like most fluorophores, its emission properties change depending on its chemical environment. When the proteins are all nicely folded up, and the tryptophans are nestled and cosy inside the protein, they're protected from aqueous solution and have a fluorescence emission peak at 330 nm. But when the proteins denature, and their structures scramble, the tryptophan is exposed to water, and the fluorescence is red-shifted to a maximum at 350 nm.
 
-![optics circuit](/assets/img/building-the-beam-universe-splitter/optics.png){: width="1600" height="865" }
+![optics circuit](/assets/img/building-the-beam-universe-splitter/optics.webp){: width="1600" height="865" }
 *The optical pathway, and swapping the dichroic for an ultraviolet 50:50 mirror*
 
 Obviously, I had to take the entire thing apart, poke around, and rip out the dichroic beam splitter. That's the bit that directs light >340 nm down one path and <340 nm down the other, into each of the awaiting PMTs.  The ratio of light measured by the two detectors tells you about how stable the protein is: slowly heat up the protein until it denatures (*cooks...*), as measured ratiometrically as described, and you know how heat-tolerant it is.
 
 I replaced the dichroic beam splitter with a 50:50 half-mirror that works in the UV range. Roughly the same basic hardware, completely different physics. Now the photons would each reach the mirror, and *the detection -- not the photon -- is what forks the world*. We only ever see one of the paths taken, and wonder whether the other path even existed like a damn Copenhagenist...
 
-![optics swap](/assets/img/building-the-beam-universe-splitter/swap.png){: width="912" height="577" }
+![optics swap](/assets/img/building-the-beam-universe-splitter/swap.webp){: width="912" height="577" }
 
 The optics module expects a protein sample in a quartz glass capillary tube to absorb 280 nm light, and emit ~340 nm light, but I didn't have that stuff handy, and protein samples would break down (*I don't want to grow bacteria in the setup*). So, I tried random stuff like paper and plastics, and it turns out that 3D printed filament is a great material for this project: I can print a lens cover that both blocks ambient light AND is faintly fluorescent at the right wavelength!  The faintness is a bonus, as we are trying to get to the single photon range, and a lit room does between $10^{13}$ and $10^{15}\text{ photons/cm}^2\text{/s}$. But the beam splitter optical setup was just the photogenic part (*get it? lol*). Then came the actual engineering: coincidence rejection, dead-time handling, dark-count filtering, and handling PMT pair biases...
 
@@ -133,7 +137,7 @@ The FPGA system monitors the BNC-connected PMTs, and registers a bit whenever ex
 My manual circuit control wasn't going to cut it for this project. There are lots of parameters to sweep, and the 10 kΩ pots make this extremely fiddly and boring. ***Why spend 2 hours tuning a circuit by hand, when you can spend 10 hours building an automated tuning system?*** The Red Pitaya has 4 digital-to-analog converters (DACs), and a bunch of digital I/O, as well as 3.3 V and 5 V power sources. Perfect for controlling the system via scripts to manage light intensity and PMT gain programmatically.
 
 ![control circuit](/assets/img/building-the-beam-universe-splitter/circuit.jpg){: width="3508" height="2480" }
-![circuit construction](/assets/img/building-the-beam-universe-splitter/building.png){: width="2160" height="686" }
+![circuit construction](/assets/img/building-the-beam-universe-splitter/building.webp){: width="2160" height="686" }
 *Pro tip: Ask Codex to set pins high or low, and you can focus on getting the probes in the right place while it operates the Red Pitaya GPIOs*
 
 The circuit is split into three main sections: the LED current controller, the reed-relay LED gate, and the relay coil driver. The PMT gain control is handled separately with simple resistor dividers. The power supply is trivial, two Traco Power 5 V DC/DC devices, the TEN 20-2411W1 and the smaller TEN 8-2411W1 at 4 A and 1.6 A respectively. These are isolated, so are stacked together for the necessary -5 V, 0 V and +5 V rails needed for the PMT. These are massively overpowered, but were found in my "*random gear box*", and thus were the correct parts.
@@ -191,7 +195,7 @@ With everything set up, it was time to tune the device. That involved first find
 
 Mechanically, tuning the photon detection rate was done with highly technical approach of ***covering some of the optical path with sticky tape***. UV seems to get blocked a bit. With 3 guesses on tape placement, I had the PMTs balanced to below 5% difference, and decided to call it a day, (*because taking the damn thing apart and reassembling it over and over is both boring and a guaranteed way to break something eventually*).
 
-![detector tuning](/assets/img/building-the-beam-universe-splitter/filter.png){: width="814" height="714" }
+![detector tuning](/assets/img/building-the-beam-universe-splitter/filter.webp){: width="814" height="714" }
 
 How do we actually detect the photons *really really fast?* We code all the processing stuff in VHDL ([*VHSIC Hardware Description Language*](https://en.wikipedia.org/wiki/VHDL)). This 'code' is a description of the circuit we build in the field programmable gate array (**FPGA**). For example, this is the edge detector that finds photons from the ADC voltage pulses:
 
@@ -487,7 +491,7 @@ Blanking does not make the ones and zeroes balanced. It makes the bits closer to
 
 ### Layer 2: First Attempt - von Neumann Debiasing
 
-![von Neumann](/assets/img/building-the-beam-universe-splitter/von_neumann.png){: width="1119" height="1405" }
+![von Neumann](/assets/img/building-the-beam-universe-splitter/von_neumann.webp){: width="1119" height="1405" }
 
 The simplest way to fix detector imbalance is [von Neumann debiasing](https://mcnp-green.lanl.gov/pdf_files/InBook_Computing_1961_Neumann_JohnVonNeumannCollectedWorks_VariousTechniquesUsedinConnectionwithRandomDigits.pdf).
 

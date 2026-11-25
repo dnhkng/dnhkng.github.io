@@ -3,13 +3,16 @@ layout: post
 title: "Building & Benchmarking: LLMs on a 16GB Jetson Orin NX for Hermes Agent"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, jetson, benchmark, hermes-agent]
+image:
+  path: /assets/img/jetson-orin-nx-vram-tuning/jetson_finished_2.webp
+  hide: true
 ---
 
 ## Introduction
 
 Small AI computers are usually sold with large dreams and shitty memory buses.
 
-![Finished](/assets/img/jetson-orin-nx-vram-tuning/jetson_finished_2.png)
+![Finished](/assets/img/jetson-orin-nx-vram-tuning/jetson_finished_2.webp)
 
 I have a [ridiculous server](/posts/hopper/) that pulls a few kilowatts, but I wanted a local Hermes Agent box that could sit on a shelf, stay near silent, draw laptop-class power, and still run a serious model with enough context for real agent work: always available, and cheap enough that leaving it on doesn’t generate anxiety.
 

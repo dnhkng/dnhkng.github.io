@@ -3,6 +3,9 @@ title: "Optimising a 2× GH200 system for Claude Code"
 categories: [LLMs, workstations]
 tags: [llm, nvidia, hopper, server]
 math: true
+image:
+  path: /assets/img/vllm-optimization-gh200/claude.png
+  hide: true
 ---
 
 ![Grace Hopper Claude](/assets/img/vllm-optimization-gh200/claude.png)

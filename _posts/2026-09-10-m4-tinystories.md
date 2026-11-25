@@ -5,9 +5,13 @@ categories: [hardware, LLMs]
 tags: [llm, apple-silicon, arm, neon, assembly, tinystories, optimisation]
 math: true
 mermaid: true
+image:
+  path: /assets/img/m4/m4.webp
+  hide: true
+series: "XOR, Popcount and SDOT"
 ---
 
-![m4](../assets/img/m4/m4.png)
+![m4](../assets/img/m4/m4.webp)
 ## Introduction
 
 Language models are designed in linear algebra, PyTorch functions, and translated onto hardware afterwards. You pick an architecture, then you bend CUDA, Metal, or BLAS to your will to run it, hoping the compilers will do a good job with graph optimisation.

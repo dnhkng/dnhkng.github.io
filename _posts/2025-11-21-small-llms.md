@@ -3,9 +3,12 @@ title: "The Cortical Ratio: A Thought Experiment on the 'Final' Size of AGI"
 categories: [LLMs, Neurobiology]
 tags: [LLMs, Neurobiology, Qwen, Phi, Distillation, LocalLLaMA]
 math: true
+image:
+  path: /assets/img/small-llms/brain_atlas.webp
+  hide: true
 ---
 
-![Brain Atlas](/assets/img/small-llms/brain_atlas.png)
+![Brain Atlas](/assets/img/small-llms/brain_atlas.webp)
 
 ***Speculative Article - caveat emptor***
 

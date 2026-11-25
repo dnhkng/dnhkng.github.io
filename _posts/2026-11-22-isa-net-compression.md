@@ -5,19 +5,23 @@ categories: [hardware, LLMs]
 tags: [llm, compression, apple-silicon, arm, neon, enwik9, cmix, optimisation]
 math: true
 mermaid: true
+image:
+  path: /assets/img/isa-net-compression/hero.webp
+  hide: true
+series: "XOR, Popcount and SDOT"
 ---
 
-![A gigabyte of Wikipedia, as bits](/assets/img/isa-net-compression/hero.png)
+![A gigabyte of Wikipedia, as bits](/assets/img/isa-net-compression/hero.webp)
 
 ## Introduction
 
-Some people think "Compression is Intelligence" but Marcus Hutter has put his money where his mouth is, and offers €5,000 for every percent you can squeeze down the first gigabyte of an English Wikipedia dump smaller than the current record. The prize has been paying out over the years, with winner running descendants of cmix, and hundreds of hand-built context models, a small neural network mixing them, gigabytes of RAM, and days of CPU time to compress Wikipedia as tightly as possible.
+Some people think "Compression is Intelligence" but Marcus Hutter has put his money where his mouth is, and offers €5,000 for every percent you can squeeze down the first gigabyte of an English Wikipedia dump smaller than the current record. The prize has been paying out over the years, with winners running descendants of cmix: hundreds of hand-built context models, a small neural network mixing them, gigabytes of RAM, and days of CPU time to compress Wikipedia as tightly as possible.
 
 > The premise of the Hutter Prize is that compressing text well *requires* understanding it. A model that knows English, and Wikipedia, and how articles are put together, can guess the next byte better, and every better guess is a smaller file.
 
 **No, I didn't win any cash.**
 
-I definitely gave is a shot, and though I didn't win on the compression ratio (*the intelligence bit*), I still built something I think is pretty cool: a *7 MB neural network made of XORs, popcounts and INT8 dot products* that compresses Wikipedia text about as well as cmix, while running **38 times faster** and using **a thousandth of the memory**, and neatly fitting in the L2 cache of a single Apple M4 core.
+I definitely gave it a shot, and though I didn't win on the compression ratio (*the intelligence bit*), I still built something I think is pretty cool: a *7 MB neural network made of XORs, popcounts and INT8 dot products* that compresses Wikipedia text about as well as cmix, while running **38 times faster** and using **a thousandth of the memory**, and neatly fitting in the L2 cache of a single Apple M4 core.
 
 In the [last post](/posts/m4-tinystories/), an M4 CPU learned to tell children's stories with a language model built from the the ISA instructions set: `FCMGE` compares to make bits, `EXT`/`BSL`/`EOR` logic to transform them, `CNT` and `SDOT` to turn them back into numbers. The obvious next step was poking at one of the oldest questions in machine learning: *how well can you predict the next byte?*
 
