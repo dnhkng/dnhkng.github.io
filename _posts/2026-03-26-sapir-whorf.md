@@ -524,6 +524,11 @@ Code and datasets: [github.com/dnhkng/RYS](https://github.com/dnhkng/RYS)
 
 ---
 
+## Cited By
+
+- **[Test-Time Latent Computation to Improve Visual Perception in Multimodal Large Language Models](https://arxiv.org/abs/2611.30480)** — Chen Yang, Zheng Fang, Wenqi Fan, Jun Xia, arXiv:2611.30480, November 2026.
+  Their method, Lobals ("Look Back in the Latent Space"), re-runs a window of middle layers in vision-language models at each decoding step, choosing the window that pays the most attention to the image tokens. This post is cited in the opening paragraph, alongside Wu et al. (2025) and Wendler et al. (2024), for the claim that *"middle layers often form a shared semantic space, supporting their role as a central region for reasoning."* That is the argument of this post, and they use it the way I hoped someone would. The shared middle is why that part of the stack is the one worth running again, and they cite [Part I](/posts/rys/) for the running-it-again part.
+
 ## Citing this work
 
 ```bibtex
